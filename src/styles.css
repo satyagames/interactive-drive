@@ -1,0 +1,190 @@
+:root {
+  --ui-bg: rgba(16, 18, 24, 0.55);
+  --ui-border: rgba(255, 255, 255, 0.18);
+  --ui-fg: #f2f4f8;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #10121a;
+  color: var(--ui-fg);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Stop iOS rubber-banding and double-tap zoom over the canvas. */
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+
+#loader {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #10121a;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  transition: opacity 0.4s ease;
+  z-index: 30;
+}
+#loader.hidden { opacity: 0; pointer-events: none; }
+
+#hud {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: 12px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  backdrop-filter: blur(8px);
+  font-variant-numeric: tabular-nums;
+  z-index: 10;
+  pointer-events: none;
+}
+#hud[hidden] { display: none; }
+#hud-speed { font-size: 26px; font-weight: 600; }
+#hud small { opacity: 0.55; margin-left: 5px; font-size: 11px; }
+/* Frame rate sits under the speed: it is a development readout, so it should
+   never compete with the speedometer for attention. */
+#hud-fps {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  opacity: 0.55;
+}
+#hud-fps[hidden] { display: none; }
+
+/* ---------- progress indicator ---------- */
+
+#progress {
+  position: fixed;
+  /* Sits just under the speed HUD regardless of whether that's hidden. */
+  top: calc(max(12px, env(safe-area-inset-top)) + 54px);
+  left: 12px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  backdrop-filter: blur(8px);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+  z-index: 10;
+  pointer-events: none;
+}
+#progress-count { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* ---------- exhibit panel ---------- */
+
+#exhibit-panel {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92vw, 420px);
+  max-height: min(62vh, 480px);
+  overflow-y: auto;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  backdrop-filter: blur(10px);
+  z-index: 15;
+  pointer-events: auto;
+}
+#exhibit-panel[hidden] { display: none; }
+
+#exhibit-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--ui-border);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ui-fg);
+  font-size: 16px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+#exhibit-image {
+  display: block;
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+#exhibit-image[hidden] { display: none; }
+
+#exhibit-title { margin: 0 0 4px; padding-right: 24px; font-size: 18px; }
+#exhibit-pitch { margin: 0 0 8px; font-size: 13px; font-weight: 600; opacity: 0.85; }
+#exhibit-description { margin: 0; font-size: 13px; line-height: 1.5; opacity: 0.8; }
+
+/* ---------- touch controls ---------- */
+
+#touch { position: fixed; inset: 0; z-index: 20; pointer-events: none; }
+#touch[hidden] { display: none; }
+
+.touch-cluster {
+  position: absolute;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  display: flex;
+  gap: 14px;
+}
+.touch-left  { left: max(20px, env(safe-area-inset-left)); }
+.touch-right { right: max(20px, env(safe-area-inset-right)); flex-direction: column-reverse; }
+
+.touch-btn {
+  pointer-events: auto;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-bg);
+  backdrop-filter: blur(8px);
+  color: var(--ui-fg);
+  font-size: 24px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  touch-action: none;
+  transition: transform 0.08s ease, background 0.08s ease;
+}
+.touch-btn.is-active {
+  background: rgba(120, 170, 255, 0.5);
+  transform: scale(0.94);
+}
+
+.touch-aux {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  font-size: 17px;
+  left: max(20px, env(safe-area-inset-left));
+}
+.touch-aux[data-action="handbrake"] { bottom: calc(max(24px, env(safe-area-inset-bottom)) + 88px); }
+.touch-respawn { bottom: calc(max(24px, env(safe-area-inset-bottom)) + 150px); }
+
+/* Keep lil-gui clear of the HUD. */
+.lil-gui.root { z-index: 25; }

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <title>Driving Prototype</title>
+  </head>
+  <body>
+    <canvas id="app"></canvas>
+
+    <div id="loader"><span>loading physics…</span></div>
+
+    <div id="hud" aria-hidden="true">
+      <span id="hud-speed">0</span><small>km/h</small>
+      <span id="hud-fps" hidden></span>
+    </div>
+
+    <div id="progress" aria-live="polite">
+      <span id="progress-count">0</span>&nbsp;/&nbsp;<span id="progress-total">4</span> found
+    </div>
+
+    <!-- Exhibit info panel. Non-modal: shown while inside a `trigger_`
+         volume, dismissed on exit / close button / Escape. Driving keeps
+         working the whole time it's open. -->
+    <section id="exhibit-panel" hidden aria-label="Exhibit info">
+      <button id="exhibit-close" aria-label="Close">&times;</button>
+      <img id="exhibit-image" alt="" hidden />
+      <h2 id="exhibit-title"></h2>
+      <p id="exhibit-pitch"></p>
+      <p id="exhibit-description"></p>
+    </section>
+
+    <!-- Touch controls. Hidden by default; shown on coarse-pointer devices
+         or when forced from the debug panel. -->
+    <div id="touch" hidden>
+      <div class="touch-cluster touch-left">
+        <button class="touch-btn" data-action="steerLeft" aria-label="Steer left">&#9664;</button>
+        <button class="touch-btn" data-action="steerRight" aria-label="Steer right">&#9654;</button>
+      </div>
+      <div class="touch-cluster touch-right">
+        <button class="touch-btn" data-action="throttle" aria-label="Accelerate">&#9650;</button>
+        <button class="touch-btn" data-action="reverse" aria-label="Brake / reverse">&#9660;</button>
+      </div>
+      <button class="touch-btn touch-aux" data-action="handbrake" aria-label="Handbrake">H</button>
+      <button class="touch-btn touch-aux touch-respawn" data-action="respawn" aria-label="Respawn">&#10227;</button>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

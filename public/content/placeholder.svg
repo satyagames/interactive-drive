@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+  <rect width="640" height="360" fill="#2a3040"/>
+  <rect x="1" y="1" width="638" height="358" fill="none" stroke="#4a5468" stroke-width="2" stroke-dasharray="10 8"/>
+  <g fill="none" stroke="#5b6780" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="220" y="120" width="200" height="140" rx="8"/>
+    <circle cx="270" cy="165" r="16"/>
+    <path d="M220 240 L290 190 L340 220 L390 175 L420 200 L420 250 L220 250 Z"/>
+  </g>
+  <text x="320" y="305" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" fill="#7c88a3" text-anchor="middle" letter-spacing="2">
+    IMAGE PLACEHOLDER
+  </text>
+</svg>

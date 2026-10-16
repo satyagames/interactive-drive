@@ -1,0 +1,30 @@
+[
+  {
+    "id": "exhibit_a",
+    "title": "Project One",
+    "pitch": "One-line placeholder pitch for Project One.",
+    "description": "Placeholder description for Project One. Swap this whole entry out once the real project is decided -- title, pitch, description and image are the only fields the panel reads.",
+    "image": "content/placeholder.svg"
+  },
+  {
+    "id": "exhibit_b",
+    "title": "Project Two",
+    "pitch": "One-line placeholder pitch for Project Two.",
+    "description": "Placeholder description for Project Two. Swap this whole entry out once the real project is decided -- title, pitch, description and image are the only fields the panel reads.",
+    "image": "content/placeholder.svg"
+  },
+  {
+    "id": "exhibit_c",
+    "title": "Project Three",
+    "pitch": "One-line placeholder pitch for Project Three.",
+    "description": "Placeholder description for Project Three. Swap this whole entry out once the real project is decided -- title, pitch, description and image are the only fields the panel reads.",
+    "image": "content/placeholder.svg"
+  },
+  {
+    "id": "exhibit_d",
+    "title": "Project Four",
+    "pitch": "One-line placeholder pitch for Project Four.",
+    "description": "Placeholder description for Project Four. Swap this whole entry out once the real project is decided -- title, pitch, description and image are the only fields the panel reads.",
+    "image": "content/placeholder.svg"
+  }
+]
