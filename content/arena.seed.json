@@ -1,0 +1,645 @@
+{
+  "$schema": "./arena.schema.json",
+  "version": 1,
+  "meta": {
+    "title": "Pursuit Arena",
+    "subtitle": "USI Pursuits COE · 10 Years",
+    "organisation": "Deloitte USI",
+    "note": "Area ids in Blender are area_<station id>. Stations with status 'placeholder' show a visible 'Content coming soon' tag."
+  },
+  "hq": {
+    "id": "hq",
+    "name": "Pursuits HQ — Command Tower",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "color": "#86BC25",
+    "leader": {
+      "name": "Vineet K. Arora",
+      "title": "Senior Vice President",
+      "role": "USI Pursuits COE Lead",
+      "welcome": "Welcome message to be supplied and approved.",
+      "photo": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    "stations": [
+      {
+        "id": "hq_leadership",
+        "title": "Leadership Balcony",
+        "body": "Content to be supplied by the USI Pursuits COE team.",
+        "image": "content/placeholder.svg",
+        "links": [],
+        "status": "placeholder"
+      },
+      {
+        "id": "hq_org",
+        "title": "Our COE at a glance",
+        "body": "Content to be supplied by the USI Pursuits COE team.",
+        "image": "content/placeholder.svg",
+        "links": [],
+        "status": "placeholder"
+      },
+      {
+        "id": "hq_submission_portal",
+        "title": "Submission Portal",
+        "body": "Finish line of the Deadline Dash.",
+        "status": "final",
+        "links": []
+      }
+    ]
+  },
+  "rfpGate": {
+    "id": "rfp_gate",
+    "position": [
+      0.0,
+      0,
+      105.0
+    ],
+    "spawn": "spawn_rfp_gate",
+    "stations": [
+      {
+        "id": "gate_how_to_drive",
+        "title": "How to drive",
+        "status": "final",
+        "body": "W/↑ drive · S/↓ brake & reverse · A D steer · Shift boost · Space brake · R reset · H horn · Enter interact · C camera · M mute · Esc menu",
+        "links": []
+      },
+      {
+        "id": "gate_deadline_dash",
+        "title": "Deadline Dash",
+        "status": "final",
+        "body": "Pick up the RFP, hit every checkpoint, submit at HQ before the deadline.",
+        "links": []
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "id": "year_1",
+      "label": "Year 1",
+      "year": null,
+      "title": "Milestone 1",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_2",
+      "label": "Year 2",
+      "year": null,
+      "title": "Milestone 2",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_3",
+      "label": "Year 3",
+      "year": null,
+      "title": "Milestone 3",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_4",
+      "label": "Year 4",
+      "year": null,
+      "title": "Milestone 4",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_5",
+      "label": "Year 5",
+      "year": null,
+      "title": "Milestone 5",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_6",
+      "label": "Year 6",
+      "year": null,
+      "title": "Milestone 6",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_7",
+      "label": "Year 7",
+      "year": null,
+      "title": "Milestone 7",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_8",
+      "label": "Year 8",
+      "year": null,
+      "title": "Milestone 8",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_9",
+      "label": "Year 9",
+      "year": null,
+      "title": "Milestone 9",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_10",
+      "label": "Year 10",
+      "year": null,
+      "title": "Milestone 10",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    }
+  ],
+  "territories": [
+    {
+      "id": "audit",
+      "kind": "territory",
+      "name": "Audit: Assurance Citadel",
+      "landmark": "Ledger towers + magnifying glass",
+      "position": [
+        -31.0,
+        0,
+        -53.7
+      ],
+      "angleDeg": 330,
+      "color": "#0D8390",
+      "stampTrigger": "trigger_stamp_audit",
+      "miniGame": "chart_stack",
+      "stations": [
+        {
+          "id": "audit_managers",
+          "title": "Audit Managers",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "audit_designers",
+          "title": "Audit Designers",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "audit_researchers",
+          "title": "Audit Researchers",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "tax",
+      "kind": "territory",
+      "name": "Tax: Tax Terrace",
+      "landmark": "Calculator buildings + coin tower",
+      "position": [
+        31.0,
+        0,
+        -53.7
+      ],
+      "angleDeg": 30,
+      "color": "#00A3E0",
+      "stampTrigger": "trigger_stamp_tax",
+      "miniGame": "coin_run",
+      "stations": [
+        {
+          "id": "tax_managers",
+          "title": "Tax Managers",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "tax_designers",
+          "title": "Tax Designers",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "consulting",
+      "kind": "territory",
+      "name": "Consulting Services: Consulting Skyline",
+      "landmark": "Gears + flowchart bridge",
+      "position": [
+        62.0,
+        0,
+        -0.0
+      ],
+      "angleDeg": 90,
+      "color": "#26890D",
+      "stampTrigger": "trigger_stamp_consulting",
+      "miniGame": "idea_spark",
+      "stations": [
+        {
+          "id": "consulting_designers",
+          "title": "Consulting Services Designers",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "pace",
+      "kind": "territory",
+      "name": "PACE: PACE Speedway",
+      "landmark": "Mini oval + pace tower",
+      "position": [
+        31.0,
+        0,
+        53.7
+      ],
+      "angleDeg": 150,
+      "color": "#ED8B00",
+      "stampTrigger": "trigger_stamp_pace",
+      "miniGame": "pace_lap",
+      "stations": [
+        {
+          "id": "pace_managers",
+          "title": "PACE Managers",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "pace_designers",
+          "title": "PACE Designers",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "studio",
+      "kind": "territory",
+      "name": "Pursuit Studio: The Studio",
+      "landmark": "Pencil obelisk + swatch wall",
+      "position": [
+        -31.0,
+        0,
+        53.7
+      ],
+      "angleDeg": 210,
+      "color": "#62B5E5",
+      "stampTrigger": "trigger_stamp_studio",
+      "miniGame": "paint_trail",
+      "stations": [
+        {
+          "id": "studio_designers",
+          "title": "Pursuit Studio Designers",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "catalyst",
+      "kind": "territory",
+      "name": "Israel Catalyst Team: Catalyst Bridge",
+      "landmark": "Bridge + globe + twin clocks",
+      "position": [
+        -62.0,
+        0,
+        0.0
+      ],
+      "angleDeg": 270,
+      "color": "#007680",
+      "stampTrigger": "trigger_stamp_catalyst",
+      "miniGame": "bridge_run",
+      "stations": [
+        {
+          "id": "catalyst_team",
+          "title": "Israel Catalyst Team",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        }
+      ]
+    }
+  ],
+  "pillars": [
+    {
+      "id": "innovation",
+      "kind": "pillar",
+      "name": "II. Innovation Lab",
+      "landmark": "Glass dome with orbiting rings",
+      "position": [
+        0.0,
+        0,
+        -105.0
+      ],
+      "angleDeg": 0,
+      "color": "#00ABAB",
+      "stampTrigger": "trigger_stamp_innovation",
+      "miniGame": "ninja_hunt",
+      "stations": [
+        {
+          "id": "innovation_1",
+          "title": "Upcoming events & activities",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "innovation_2",
+          "title": "The intelligent update",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "innovation_3",
+          "title": "Behind the scenes",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "innovation_4",
+          "title": "Calling all Proposal ninjas",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "rnr",
+      "kind": "pillar",
+      "name": "III. R&R Arena",
+      "landmark": "Trophy stadium",
+      "position": [
+        90.9,
+        0,
+        -52.5
+      ],
+      "angleDeg": 60,
+      "color": "#E3B505",
+      "stampTrigger": "trigger_stamp_rnr",
+      "miniGame": "strike_a_win",
+      "stations": [
+        {
+          "id": "rnr_1",
+          "title": "ApplauD",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "rnr_2",
+          "title": "Reward and Excellence",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "rnr_3",
+          "title": "Bright Star Awards",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "lnd",
+      "kind": "pillar",
+      "name": "V. L&D Campus",
+      "landmark": "Open-book amphitheatre",
+      "position": [
+        90.9,
+        0,
+        52.5
+      ],
+      "angleDeg": 120,
+      "color": "#7F5BA6",
+      "stampTrigger": "trigger_stamp_lnd",
+      "miniGame": null,
+      "stations": [
+        {
+          "id": "lnd_1",
+          "title": "What we did",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "lnd_2",
+          "title": "What's new",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "lnd_3",
+          "title": "Metrics and useful links",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "toolkit",
+      "kind": "pillar",
+      "name": "VI. Toolkit Depot",
+      "landmark": "Giant open toolbox",
+      "position": [
+        -90.9,
+        0,
+        52.5
+      ],
+      "angleDeg": 240,
+      "color": "#53565A",
+      "stampTrigger": "trigger_stamp_toolkit",
+      "miniGame": "red_tape_wall",
+      "stations": [
+        {
+          "id": "toolkit_1",
+          "title": "Time reporting guidance",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "toolkit_2",
+          "title": "Proposal writing guide",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "toolkit_3",
+          "title": "Quick links",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "toolkit_4",
+          "title": "Site contact",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "culture",
+      "kind": "pillar",
+      "name": "IV. Culture Commons",
+      "landmark": "Park + bandstand",
+      "position": [
+        -90.9,
+        0,
+        -52.5
+      ],
+      "angleDeg": 300,
+      "color": "#E86A5C",
+      "stampTrigger": "trigger_stamp_culture",
+      "miniGame": null,
+      "stations": [
+        {
+          "id": "culture_1",
+          "title": "Birthdays",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "culture_2",
+          "title": "Service awards",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "culture_3",
+          "title": "Deloitte Chronicles",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        },
+        {
+          "id": "culture_4",
+          "title": "Insider Scoop",
+          "body": "Content to be supplied by the USI Pursuits COE team.",
+          "image": "content/placeholder.svg",
+          "links": [],
+          "status": "placeholder"
+        }
+      ]
+    }
+  ],
+  "feeds": {
+    "birthdays": [
+      {
+        "name": "Sample Person",
+        "date": "--10-24",
+        "status": "placeholder"
+      }
+    ],
+    "serviceAwards": [],
+    "events": []
+  },
+  "gamification": {
+    "ranks": [
+      [
+        "Bid Rookie",
+        0
+      ],
+      [
+        "Proposal Writer",
+        300
+      ],
+      [
+        "Solution Shaper",
+        800
+      ],
+      [
+        "Pursuit Lead",
+        1500
+      ],
+      [
+        "Win Strategist",
+        2500
+      ],
+      [
+        "Pursuit Legend",
+        "fullPassport"
+      ]
+    ],
+    "xp": {
+      "stamp": 100,
+      "panelFirstOpen": 20,
+      "dot": 5,
+      "goldenDot": 50,
+      "shuriken": 75,
+      "badge": 150
+    },
+    "collectibles": {
+      "dot": 100,
+      "golden": 10,
+      "shuriken": 8
+    },
+    "deadlineDash": {
+      "medals": {
+        "gold": 75,
+        "silver": 100,
+        "bronze": 130
+      },
+      "collisionPenaltySec": 2
+    }
+  }
+}
