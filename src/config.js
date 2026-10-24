@@ -55,6 +55,80 @@ export const settings = {
     drivetrain: 'rwd',
   },
 
+  /**
+   * The 'arcade2019' preset (`src/vehicle/arcadePhysics.js`): Rapier's
+   * DynamicRayCastVehicleController driven by the 2019 folio's control model.
+   *
+   * Every value here is in **reference units**, exactly as recorded in
+   * docs/pursuit-arena/01-reference-analysis.md §7, and is scaled by
+   * `rebuild.worldScale` at use time following the rules in
+   * docs/pursuit-arena/07-feel-targets.md §3: lengths, speeds, forces and
+   * impulses x s; times, rates, angles, stiffness (1/s^2, Rapier multiplies it
+   * by chassis mass -- verified in Phase 1), damping (1/s) and friction
+   * coefficients unscaled. Keeping the reference units means the debug panel
+   * and the doc can be compared number for number.
+   */
+  arcade: {
+    /** Drive force per rear wheel. Constant: the reference has no ramp-in. */
+    engineForce: 272,
+    boostEngineForce: 476,
+    /** Speed gate, units/s: drive force is cut at or above it (not faded). */
+    maxSpeed: 9.706,
+    boostMaxSpeed: 19.41,
+    /** Brake applied to all four wheels while Space/Ctrl is held. */
+    brakeForce: 1.35,
+    /**
+     * With neither throttle nor reverse held, an impulse of
+     * `coastImpulse * |v|` opposes the direction of travel every 1/60 s step.
+     * This, not rolling friction, is what slows a coasting car.
+     */
+    coastImpulse: 0.1,
+
+    /** Steering angle change rate, rad/s (the reference's 0.015 rad/ms). */
+    steerRate: 15,
+    /** Max road-wheel angle, rad (pi * 0.17). */
+    maxSteer: 0.534,
+
+    suspensionStiffness: 50,
+    dampingRelaxation: 1.8,
+    dampingCompression: 1.5,
+    maxSuspensionTravel: 0.3,
+    maxSuspensionForce: 100000,
+    frictionSlip: 10,
+    sideFrictionStiffness: 1,
+    /**
+     * Our addition, not in the reference: rear side-friction multiplier while
+     * the handbrake (Q) is held, for a deliberate drift. 1 disables it.
+     */
+    handbrakeSideFriction: 0.3,
+
+    /** Visual wheel spin while a driven wheel slides, rad/s. */
+    slidingWheelSpin: -30,
+    /** Sideways speed (units/s) above which a wheel counts as sliding. */
+    slideSpeed: 1,
+
+    /** Auto-flip when the chassis up axis . world up stays below this... */
+    flipUpDot: 0.5,
+    /** ...for this long, s. */
+    flipDelay: 1,
+    /** Time after a flip before another can trigger, s. */
+    flipCooldown: 1,
+    /** Upward impulse, applied 0.1 units off-centre so it rolls the car over. */
+    flipImpulse: 150,
+    flipLever: 0.1,
+
+    /** Horn (H) hop impulse and its minimum spacing, s. */
+    hopImpulse: 150,
+    hopCooldown: 0.4,
+    /** Respawn drops the car from this height above the spawn point. */
+    respawnDrop: 12,
+
+    /** Antenna spring, per 1/60 s step (reference `Car.js` values). */
+    antennaStrength: 10,
+    antennaDamping: 0.035,
+    antennaPullBack: 0.02,
+  },
+
   suspension: {
     /** Uncompressed distance from the wheel anchor to the wheel centre, m. */
     restLength: 0.34,
@@ -306,6 +380,61 @@ export const settings = {
  * reload (world), so they live apart from the live-tunable `settings`.
  */
 export const rebuild = {
+  vehicle: {
+    /**
+     * 'arcade2019' (default) or 'sim' (the original force-based model in
+     * `src/vehicle/simVehicle.js`). Switching rebuilds the body and the
+     * physics world's gravity, so it is a reload, not a live setting: add
+     * `?vehicle=sim` to the URL, or use the debug panel's dropdown.
+     */
+    preset: 'arcade2019',
+  },
+
+  /**
+   * Reference units -> metres for the arcade preset. 1.6 makes the car about
+   * 3.25 m long: toy-sized next to 6-20 m buildings (doc 01 §6).
+   */
+  worldScale: 1.6,
+
+  /** Arcade-preset geometry, in reference units (doc 01 §7). Scaled by `worldScale`. */
+  arcade: {
+    chassis: {
+      width: 1.02,
+      height: 1.16,
+      depth: 2.03,
+      /**
+       * The collider box sits this far above the body origin, and the centre
+       * of mass stays at the origin (set explicitly -- Rapier would otherwise
+       * put it at the box centre), which is what keeps the car planted.
+       */
+      offsetUp: 0.41,
+      /** Kept unscaled: props keep their reference masses too (doc 07 §3). */
+      mass: 40,
+      friction: 0,
+      restitution: 0.2,
+      /** cannon's default body damping, which the reference never changed. */
+      linearDamping: 0.01,
+      angularDamping: 0.01,
+    },
+    wheels: {
+      radius: 0.25,
+      width: 0.24,
+      /** Distance ahead of / behind the body origin. */
+      frontOffset: 0.635,
+      backOffset: 0.475,
+      halfTrack: 0.39,
+      restLength: 0.1,
+    },
+    /** World gravity while this preset is active, units/s^2. */
+    gravity: -13,
+    /**
+     * Visual-only: where the placeholder body mesh sits relative to the body
+     * origin, metres (unscaled -- it is a property of our model, not the
+     * reference's). Retune when the Phase 10 cart replaces it.
+     */
+    visualOffsetY: 0.1,
+  },
+
   chassis: {
     /** Visual + collider box size in metres (width, height, length). */
     size: { x: 1.68, y: 0.7, z: 4.1 },

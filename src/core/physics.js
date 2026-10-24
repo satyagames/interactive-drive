@@ -1,6 +1,7 @@
 import RAPIER from '@dimforge/rapier3d-compat'
 
 import { rebuild } from '../config.js'
+import { arcadeGravity } from '../vehicle/arcadePhysics.js'
 
 /**
  * Boots Rapier's wasm module and creates the world.
@@ -11,7 +12,9 @@ import { rebuild } from '../config.js'
 export async function createPhysics() {
   await RAPIER.init()
 
-  const { gravity, timestep } = rebuild.physics
+  const { timestep } = rebuild.physics
+  // The arcade preset brings the reference's stronger gravity with it.
+  const gravity = rebuild.vehicle.preset === 'sim' ? rebuild.physics.gravity : arcadeGravity()
   const world = new RAPIER.World(gravity)
   world.timestep = timestep
 

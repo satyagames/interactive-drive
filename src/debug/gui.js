@@ -1,8 +1,10 @@
 import GUI from 'lil-gui'
 
-import { defaultSettings, qualityTiers, settings } from '../config.js'
+import { defaultSettings, qualityTiers, rebuild, settings } from '../config.js'
+import { runFeelProbe } from './feelProbe.js'
 
 const STORAGE_KEY = 'driving-prototype/tuning'
+const PRESETS = ['arcade2019', 'sim']
 
 /**
  * Live tuning panel. Everything here writes straight into `settings`, which the
@@ -11,12 +13,55 @@ const STORAGE_KEY = 'driving-prototype/tuning'
  * Tuned values can be stashed in localStorage so a good feel survives a
  * refresh, and dumped as JSON to paste back into `src/config.js`.
  */
-export function createDebugGui({ vehicle, camera, hud, resize }) {
+export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, debugMode }) {
   const gui = new GUI({ title: 'Tuning', width: Math.min(300, window.innerWidth - 30) })
   // On a phone the panel would cover most of the screen, so start it shut.
   if (window.matchMedia?.('(pointer: coarse)').matches) gui.close()
 
-  // ---- vehicle ------------------------------------------------------------
+  // ---- preset -------------------------------------------------------------
+  // A reload, not a live switch: the preset owns the body and world gravity.
+  const preset = { value: rebuild.vehicle.preset }
+  gui
+    .add(preset, 'value', PRESETS)
+    .name('vehicle preset (reloads)')
+    .onChange((value) => {
+      const url = new URL(window.location.href)
+      url.searchParams.set('vehicle', value)
+      window.location.assign(url)
+    })
+  const isSim = rebuild.vehicle.preset === 'sim'
+
+  // ---- arcade 2019 --------------------------------------------------------
+  // Reference units (doc 01 §7); the preset scales them by worldScale.
+  const arcadeFolder = gui.addFolder(`Arcade 2019 (ref units, x${rebuild.worldScale})`)
+  const a = settings.arcade
+  arcadeFolder.add(a, 'engineForce', 0, 1000, 1).name('engine force')
+  arcadeFolder.add(a, 'boostEngineForce', 0, 1500, 1).name('boost engine force')
+  arcadeFolder.add(a, 'maxSpeed', 1, 40, 0.01).name('speed cap (u/s)')
+  arcadeFolder.add(a, 'boostMaxSpeed', 1, 60, 0.01).name('boost speed cap (u/s)')
+  arcadeFolder.add(a, 'brakeForce', 0, 5, 0.01).name('brake')
+  arcadeFolder.add(a, 'coastImpulse', 0, 0.5, 0.005).name('coast drag')
+  arcadeFolder.add(a, 'steerRate', 1, 40, 0.5).name('steer rate (rad/s)')
+  arcadeFolder.add(a, 'maxSteer', 0.1, 1, 0.001).name('max steer (rad)')
+  const wheelFolder = arcadeFolder.addFolder('Suspension & tyres').close()
+  wheelFolder.add(a, 'suspensionStiffness', 5, 300, 1).name('stiffness (x mass)')
+  wheelFolder.add(a, 'dampingRelaxation', 0, 10, 0.05).name('damping relaxation')
+  wheelFolder.add(a, 'dampingCompression', 0, 10, 0.05).name('damping compression')
+  wheelFolder.add(a, 'maxSuspensionTravel', 0, 1, 0.01).name('max travel')
+  wheelFolder.add(a, 'frictionSlip', 0, 30, 0.1).name('friction slip')
+  wheelFolder.add(a, 'sideFrictionStiffness', 0, 3, 0.01).name('side friction')
+  wheelFolder.add(a, 'handbrakeSideFriction', 0, 1, 0.01).name('handbrake (Q) rear grip')
+  const extrasFolder = arcadeFolder.addFolder('Flip, hop & antenna').close()
+  extrasFolder.add(a, 'flipDelay', 0, 5, 0.1).name('flip delay (s)')
+  extrasFolder.add(a, 'flipImpulse', 0, 500, 1).name('flip impulse')
+  extrasFolder.add(a, 'hopImpulse', 0, 500, 1).name('horn hop impulse')
+  extrasFolder.add(a, 'respawnDrop', 0, 30, 0.5).name('respawn drop (u)')
+  extrasFolder.add(a, 'antennaStrength', 0, 50, 0.5).name('antenna kick')
+  extrasFolder.add(a, 'antennaDamping', 0, 0.2, 0.001).name('antenna damping')
+  extrasFolder.add(a, 'antennaPullBack', 0, 0.1, 0.001).name('antenna spring')
+  if (isSim) arcadeFolder.hide()
+
+  // ---- sim vehicle --------------------------------------------------------
   const vehicleFolder = gui.addFolder('Vehicle')
   const v = settings.vehicle
   vehicleFolder.add(v, 'engineForce', 0, 12000, 50).name('engine force (N/wheel)')
@@ -55,6 +100,7 @@ export function createDebugGui({ vehicle, camera, hud, resize }) {
   bodyFolder.add(settings.body, 'linearDamping', 0, 2, 0.01).name('linear damping')
   bodyFolder.add(settings.body, 'angularDamping', 0, 5, 0.01).name('angular damping')
   bodyFolder.add(settings.body, 'airRighting', 0, 20000, 100).name('air self-righting')
+  if (!isSim) for (const folder of [vehicleFolder, suspFolder, bodyFolder]) folder.hide()
 
   // ---- camera -------------------------------------------------------------
   const cameraFolder = gui.addFolder('Camera')
@@ -139,8 +185,19 @@ export function createDebugGui({ vehicle, camera, hud, resize }) {
   // ---- actions ------------------------------------------------------------
   const actions = {
     respawn() {
-      vehicle.respawn()
-      camera.reset()
+      if (respawn) {
+        respawn()
+      } else {
+        vehicle.respawn()
+        camera.reset()
+      }
+    },
+    /** docs/pursuit-arena/07 targets, in a throwaway world; results in the console. */
+    feelProbe() {
+      const { rows, sanity, passed } = runFeelProbe({ RAPIER })
+      console.table(rows)
+      for (const [label, ok] of sanity) console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}`)
+      console.log(passed ? 'Feel probe: all targets within tolerance.' : 'Feel probe: some targets out of tolerance.')
     },
     resetTuning() {
       deepAssign(settings, defaultSettings)
@@ -165,6 +222,7 @@ export function createDebugGui({ vehicle, camera, hud, resize }) {
   }
 
   gui.add(actions, 'respawn').name('Respawn (R)')
+  if (debugMode && !isSim) debugFolder.add(actions, 'feelProbe').name('Run feel probe (console)')
   const ioFolder = gui.addFolder('Tuning I/O').close()
   ioFolder.add(actions, 'save').name('Save to localStorage')
   ioFolder.add(actions, 'load').name('Load from localStorage')

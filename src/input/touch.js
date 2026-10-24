@@ -59,7 +59,10 @@ export function createTouchControls(root = document.getElementById('touch')) {
       return {
         throttle: (isDown('throttle') ? 1 : 0) - (isDown('reverse') ? 1 : 0),
         steer: (isDown('steerLeft') ? 1 : 0) - (isDown('steerRight') ? 1 : 0),
-        handbrake: isDown('handbrake'),
+        brake: isDown('brake'),
+        // Boost and the joystick arrive with the Phase 2 touch pad.
+        boost: false,
+        handbrake: false,
       }
     },
     consumeRespawn() {

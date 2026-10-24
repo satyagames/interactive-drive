@@ -93,3 +93,29 @@ rear 0.025 u, × s). If they differ, convert stiffness to an absolute value (k �
 4. V9: hold reverse 5 s; V11–V13: hold throttle with a speed governor plus full right lock for 4 s, measure yaw rate and speed after 1 s, radius = v/ω.
 5. V14: apply the horn impulse; airtime = time with no wheel in contact.
 6. Print a pass/fail table against the "Ours" column.
+
+## 5. Phase 1 results (`npm run probe:feel`)
+
+The Rapier implementation (`src/vehicle/arcadePhysics.js`) passes every target **using the scaled reference values as
+they are**; no fudge factors were needed. Suspension convention verified first: Rapier also multiplies spring and damper
+force by chassis mass (compressed lengths identical at 40 kg and 400 kg; 0.048/0.028 u vs cannon's 0.045/0.025 u).
+
+| # | Expected | Measured | Error |
+|---|---|---|---|
+| V1 top speed | 15.89 m/s | 15.54 | −2.2% |
+| V2 0→90% time / distance | 0.65 s / 4.70 m | 0.667 / 4.95 | +2.6% / +5.2% |
+| V3 0→99% time | 0.72 s | 0.733 | +1.9% |
+| V4 boost top speed | 31.25 m/s | 31.10 | −0.5% |
+| V5 0→90% boost time / distance | 0.75 s / 10.93 m | 0.767 / 11.41 | +2.2% / +4.4% |
+| V6 brake from V1 time / distance | 1.12 s / 8.53 m | 1.117 / 8.13 | −0.3% / −4.7% |
+| V7 brake from V4 time / distance | 2.10 s / 29.92 m | 2.05 / 29.57 | −2.4% / −1.2% |
+| V8 coast half-time / distance | 4.33 s / 96.96 m | 4.35 / 96.31 | +0.5% / −0.7% |
+| V9 reverse top speed | 15.58 m/s | 15.59 | 0.0% |
+| V11 / V12 / V13 full-lock radius | 3.30 / 3.47 / 14.75 m | 3.31 / 3.30 / 14.78 | +0.3% / −4.9% / +0.2% |
+| V14 hop airtime | 0.52 s | 0.517 | −0.6% |
+| V16 ride height | 0.454 m | 0.458 | +0.7% |
+
+Sanity rows also pass: forward input moves the car towards −Z (nose first), and positive steer yaws left.
+Not covered by the probe: V10 (by construction, same rate code) and V15 (derived, no ramp in the test scene).
+Rapier exposes no `rollInfluence` setter; with the centre of mass pinned at the body origin the radii above match
+without it.

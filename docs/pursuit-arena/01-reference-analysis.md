@@ -106,7 +106,7 @@ Sound in detail: each sample set has a minimum delay (0–1000 ms), a minimum im
 The reference car is about 2 units long. Our world is in metres. Set `rebuild.worldScale = 1.6` so the car is about 3.2 m long and toy-like next to 6–20 m buildings. **(corrected)** Not every value scales by `s`: lengths, speeds, accelerations (gravity) and forces/impulses (at equal mass) scale by `s`; times, rates, angles, stiffness (1/s²), damping (1/s) and friction coefficients do not. The full rule set and the scaled numbers are in `07-feel-targets.md` §3. Phase 1 confirms the scale by feel.
 
 ## 7. Confirmed values
-Reference values are verified against source; "Ours" is `s = 1.6` applied per the rules in doc 07 §3 (Phase 1 will tune and overwrite this column).
+Reference values are verified against source; "Ours" is `s = 1.6` applied per the rules in doc 07 §3. Phase 1 confirmed this column needs no tuning: every feel target passes with these values (doc 07 §5).
 
 | Param | Reference (verified) | Source | Ours (s = 1.6, pre-tune) |
 |---|---|---|---|

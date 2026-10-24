@@ -19,6 +19,7 @@ npm run dev        # dev server at http://localhost:5173
 npm run build      # static output in dist/
 npm run preview    # serve the built dist/ at http://localhost:4173
 npm run serve:dist # same thing, spelled out for anyone just here to demo it
+npm run probe:feel # arcade car vs docs/pursuit-arena/07-feel-targets.md (Node, no browser)
 ```
 
 `dist/` is a fully static, self-contained bundle — no CDN scripts, no fonts,
@@ -90,10 +91,15 @@ Two platform notes worth passing on if a recipient hits them:
 | | Keyboard | Touch |
 |---|---|---|
 | Accelerate | `W` / `↑` | ▲ (bottom right) |
-| Brake / reverse | `S` / `↓` | ▼ |
+| Reverse | `S` / `↓` | ▼ |
 | Steer | `A` `D` / `←` `→` | ◀ ▶ (bottom left) |
-| Handbrake | `Space` | `H` |
-| Respawn | `R` | ⟲ |
+| Brake | `Space` / `Ctrl` | ■ |
+| Boost | `Shift` | — (Phase 2) |
+| Handbrake drift | `Q` | — |
+| Horn (the car hops) | `H` | — |
+| Respawn at the nearest spawn | `R` | ⟲ |
+
+In the `sim` preset (`?vehicle=sim`) `Space` keeps its old handbrake role.
 
 The touch pad appears automatically on coarse-pointer devices, and can be
 forced on for desktop testing from **Debug → force touch pad**.
@@ -114,6 +120,7 @@ blender/
                         (those four run in that order -- see Art pipeline)
 tools/
   generate-matcaps.mjs  the colour palette + the matcaps it bakes it into
+  feel-probe.mjs        npm run probe:feel -- runs src/debug/feelProbe.js in Node
 scripts/
   package-share.mjs    npm run package:share -> share/ + portfolio-share.zip
   launchers/           the two double-click server+browser launchers it
@@ -152,7 +159,13 @@ src/
     panel.js          the exhibit info card shown while inside a trigger
     progress.js       "N of 4 found" tracker behind the HUD indicator
   vehicle/
-    vehicle.js        raycast vehicle: chassis body + 4 suspension rays
+    vehicle.js        picks the preset (rebuild.vehicle.preset / ?vehicle=)
+    arcadePhysics.js  'arcade2019' (default): Rapier vehicle controller + the
+                      2019 reference control model, no rendering
+    arcadeVehicle.js  its visuals: body, wheels, antenna, brake/reverse lights
+    simVehicle.js     'sim': the original force-based raycast vehicle
+  ui/
+    screenFade.js     full-screen fade that hides respawn teleports
   camera/
     chaseCamera.js    smoothed follow camera
   input/
@@ -161,6 +174,7 @@ src/
     touch.js
   debug/
     gui.js            lil-gui panel bound to config.js
+    feelProbe.js      scripted feel test of the arcade car (#debug button)
     physicsDebug.js   collider wireframe overlay
     fps.js            frame-rate readout in the HUD
 ```
@@ -170,8 +184,8 @@ src/
 `src/config.js` holds three objects:
 
 - **`settings`** — read live every step, so every value is safe to change from
-  the lil-gui panel while driving. Grouped into `vehicle`, `suspension`,
-  `body`, `camera`, `shadow`, `post`, `render`, `debug`.
+  the lil-gui panel while driving. Grouped into `vehicle`, `arcade`,
+  `suspension`, `body`, `camera`, `shadow`, `post`, `render`, `debug`.
 - **`rebuild`** — structural values (chassis size, wheel positions, mass,
   spawn point, gravity, timestep). Changing these needs a respawn or a reload.
 - **`rendering`** — which matcap and which AO bake each object gets, matched
@@ -189,6 +203,23 @@ starts collapsed instead, since it would otherwise cover most of the screen;
 tap the title bar to open it there too.
 
 ## How the vehicle works
+
+There are two presets with the same public API, chosen at load
+(`rebuild.vehicle.preset`, or `?vehicle=sim` in the URL; the debug panel has a
+dropdown).
+
+**`arcade2019` (default)** reproduces the feel of Bruno Simon's 2019 folio car
+(numbers verified from its source in `docs/pursuit-arena/01-reference-analysis.md`).
+It is Rapier's `DynamicRayCastVehicleController` with the reference's suspension
+and tyre values, driven by its control model: constant rear-wheel drive force
+that cuts out at a hard speed cap, Shift boost, all-wheel brake, a coast impulse
+when no pedal is held, linear-rate steering, an off-centre kick that rights the
+car after 1 s on its side, and a horn hop. All values in `settings.arcade` /
+`rebuild.arcade` are in reference units and scaled by `rebuild.worldScale`
+(1.6) per the rules in `docs/pursuit-arena/07-feel-targets.md` §3, which is also
+what `npm run probe:feel` checks against (all within ±5% today).
+
+**`sim`** is the original model, described below.
 
 One dynamic box rigid body for the chassis. Each of the four wheels casts a ray
 straight down from its anchor every physics step; a wheel that hits something
@@ -241,9 +272,11 @@ it twice -- read its docstring before changing the widths.
 
 - Axis convention is three.js-native: local **-Z forward, +X right, +Y up**.
 - The glTF spec says assets face **+Z**, so the vehicle model gets a 180° yaw
-  on load (`rebuild.model.yawOffset = Math.PI`, applied in `vehicle.js`).
-- `vehicle.js` loads `vehicle.glb` straight into the `chassis-visual` child
-  group; nothing else about the physics, camera or input paths changed.
+  on load (`rebuild.model.yawOffset = Math.PI`, applied in both vehicle presets).
+- `arcadeVehicle.js` / `simVehicle.js` load `vehicle.glb` straight into the
+  `chassis-visual` child group; nothing else about the physics, camera or input
+  paths looks inside it. The arcade preset scales the placeholder body to its
+  shorter chassis until the Phase 10 cart replaces it.
 - `world.js` loads `world.glb` and classifies every node by name prefix
   (`collision_`, `spawn_`, `trigger_`, or plain-visual) rather than a
   hardcoded layout table. See **`docs/blender-conventions.md`** for the full

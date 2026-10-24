@@ -18,7 +18,8 @@ import { loadRenderAssets, syncRenderSettings, syncShaderEffects } from './rende
 import { createPostProcessing } from './render/post.js'
 import { createShadowBlob } from './render/shadowBlob.js'
 import { createSky } from './render/sky.js'
-import { createVehicle } from './vehicle/vehicle.js'
+import { createScreenFade } from './ui/screenFade.js'
+import { createVehicle, vehiclePresets } from './vehicle/vehicle.js'
 import { createLighting } from './world/lighting.js'
 import { createTriggerWatcher } from './world/triggers.js'
 import { createWorld } from './world/world.js'
@@ -30,7 +31,27 @@ function contentIdForTrigger(trigger) {
     : trigger.name
 }
 
+/** Closest `spawn_` point to `position`, or undefined if the world has none. */
+function nearestSpawn(spawns, position) {
+  let best
+  let bestDistance = Infinity
+  for (const spawn of Object.values(spawns)) {
+    const distance = spawn.position.distanceToSquared(position)
+    if (distance < bestDistance) {
+      best = spawn
+      bestDistance = distance
+    }
+  }
+  return best
+}
+
 async function bootstrap() {
+  // `?vehicle=sim` swaps the preset for this load (it rebuilds physics, so it
+  // can't be a live setting -- see `rebuild.vehicle.preset`).
+  const presetParam = new URLSearchParams(window.location.search).get('vehicle')
+  if (presetParam in vehiclePresets) rebuild.vehicle.preset = presetParam
+  const debugMode = window.location.hash === '#debug'
+
   const canvas = document.getElementById('app')
   const loaderEl = document.getElementById('loader')
   const hudEl = document.getElementById('hud')
@@ -61,6 +82,9 @@ async function bootstrap() {
   }
 
   const vehicle = await createVehicle({ scene, world, RAPIER, renderAssets })
+  // The arcade car drops in from above its spawn, as the reference's does.
+  vehicle.respawn()
+  const screenFade = createScreenFade(document.getElementById('fade'))
   const shadowBlob = createShadowBlob({ scene, world, RAPIER, vehicle })
 
   const projectsById = new Map(projects.map((entry) => [entry.id, entry]))
@@ -101,7 +125,15 @@ async function bootstrap() {
   const post = createPostProcessing({ renderer, scene, camera, canvas })
   onResize(post.setSize)
 
-  createDebugGui({ vehicle, camera: chaseCamera, hud: hudEl, resize })
+  /** R: fade out, drop back in at the nearest `spawn_`, fade in. */
+  const respawnVehicle = () => {
+    screenFade.run(() => {
+      vehicle.respawn(nearestSpawn(gameWorld.spawns, vehicle.position))
+      chaseCamera.reset()
+    })
+  }
+
+  createDebugGui({ vehicle, camera: chaseCamera, hud: hudEl, resize, respawn: respawnVehicle, RAPIER, debugMode })
   hudEl.hidden = !settings.debug.showHud
 
   vehicle.sync()
@@ -113,7 +145,7 @@ async function bootstrap() {
   setTimeout(() => loaderEl.remove(), 500)
 
   // Handy from the devtools console while tuning:
-  //   __proto.vehicle.state, __proto.settings.vehicle.engineForce = 8000
+  //   __proto.vehicle.state, __proto.settings.arcade.engineForce = 300
   //   await __proto.benchmark.run()  -- post-processing frame-cost table
   if (import.meta.env.DEV) {
     window.__proto = {
@@ -132,10 +164,9 @@ async function bootstrap() {
     elapsed += delta
     const inputState = input.update()
 
-    if (input.consumeRespawn()) {
-      vehicle.respawn()
-      chaseCamera.reset()
-    }
+    if (input.consumeRespawn()) respawnVehicle()
+    // Audio (Phase 8) will hang the horn sound off this too.
+    if (input.consumeHorn()) vehicle.horn()
 
     // Vehicle forces must be applied inside the fixed step, not per frame,
     // or the feel changes with the display refresh rate.
@@ -151,7 +182,7 @@ async function bootstrap() {
     syncRenderSettings()
     syncShaderEffects({
       time: elapsed,
-      speed: Math.min(vehicle.state.speed / Math.max(settings.vehicle.topSpeed, 1), 1),
+      speed: Math.min(vehicle.state.speed / Math.max(vehicle.topSpeed, 1), 1),
       interaction,
     })
 

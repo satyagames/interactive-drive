@@ -7,6 +7,8 @@ import { createTouchControls } from './touch.js'
  * Merges keyboard and touch into one axis set:
  *   throttle  -1 (reverse/brake) .. +1 (accelerate)
  *   steer     -1 (right) .. +1 (left)
+ *   brake, boost, handbrake   held flags
+ * plus edge-triggered `consumeRespawn()` / `consumeHorn()`.
  */
 export function createInput() {
   const keyboard = createKeyboard()
@@ -14,7 +16,7 @@ export function createInput() {
 
   touch.setVisible(touch.isTouchDevice)
 
-  const state = { throttle: 0, steer: 0, handbrake: false }
+  const state = { throttle: 0, steer: 0, brake: false, boost: false, handbrake: false }
   let lastForcedVisibility = null
 
   return {
@@ -32,8 +34,13 @@ export function createInput() {
       const t = touch.state
       state.throttle = clamp(k.throttle + t.throttle, -1, 1)
       state.steer = clamp(k.steer + t.steer, -1, 1)
+      state.brake = k.brake || t.brake
+      state.boost = k.boost || t.boost
       state.handbrake = k.handbrake || t.handbrake
       return state
+    },
+    consumeHorn() {
+      return keyboard.consumeHorn()
     },
     consumeRespawn() {
       // Both are edge-triggered, so evaluate both -- do not short-circuit.

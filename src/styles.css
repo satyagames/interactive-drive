@@ -183,8 +183,20 @@ html, body {
   font-size: 17px;
   left: max(20px, env(safe-area-inset-left));
 }
-.touch-aux[data-action="handbrake"] { bottom: calc(max(24px, env(safe-area-inset-bottom)) + 88px); }
+.touch-aux[data-action="brake"] { bottom: calc(max(24px, env(safe-area-inset-bottom)) + 88px); }
 .touch-respawn { bottom: calc(max(24px, env(safe-area-inset-bottom)) + 150px); }
 
 /* Keep lil-gui clear of the HUD. */
 .lil-gui.root { z-index: 25; }
+
+#fade {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition-property: opacity;
+  transition-timing-function: ease-in-out;
+  z-index: 25;
+}
+#fade.is-covering { opacity: 1; }

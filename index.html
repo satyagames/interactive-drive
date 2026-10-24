@@ -13,6 +13,9 @@
 
     <div id="loader"><span>loading physics…</span></div>
 
+    <!-- Covers respawn teleports; see src/ui/screenFade.js. -->
+    <div id="fade" aria-hidden="true"></div>
+
     <div id="hud" aria-hidden="true">
       <span id="hud-speed">0</span><small>km/h</small>
       <span id="hud-fps" hidden></span>
@@ -44,7 +47,7 @@
         <button class="touch-btn" data-action="throttle" aria-label="Accelerate">&#9650;</button>
         <button class="touch-btn" data-action="reverse" aria-label="Brake / reverse">&#9660;</button>
       </div>
-      <button class="touch-btn touch-aux" data-action="handbrake" aria-label="Handbrake">H</button>
+      <button class="touch-btn touch-aux" data-action="brake" aria-label="Brake">&#9632;</button>
       <button class="touch-btn touch-aux touch-respawn" data-action="respawn" aria-label="Respawn">&#10227;</button>
     </div>
 
