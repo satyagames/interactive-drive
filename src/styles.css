@@ -583,3 +583,24 @@ html, body {
   margin-top: 18px; padding: 8px 14px; border-radius: 10px; border: 1px solid #C8102E;
   background: transparent; color: #ff8a95; font: inherit; font-weight: 600; cursor: pointer;
 }
+
+/* VFX floaters ("+5 XP" over pickups): positioned per frame by src/vfx/floaters.js. */
+#vfx-floaters {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  overflow: hidden;
+  pointer-events: none;
+}
+.vfx-floater {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--brand);
+  text-shadow: 0 1px 0 #000, 0 0 6px rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+.vfx-floater--gold { color: #E3B505; font-size: 22px; }

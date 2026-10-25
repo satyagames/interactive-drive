@@ -3,12 +3,12 @@ import './styles.css'
 import arena from '../content/arena.seed.json'
 
 import { createCameraRig } from './camera/cameraRig.js'
-import { rebuild, rendering, settings, world as worldConfig } from './config.js'
+import { qualityTiers, rebuild, rendering, settings, world as worldConfig } from './config.js'
 import { createExploreMenu } from './content/explore.js'
 import { buildContentModel } from './content/model.js'
 import { createStationPanel } from './content/panel.js'
 import { applyUiStrings, t } from './content/ui.js'
-import { runPostBenchmark } from './debug/benchmark.js'
+import { runPostBenchmark, runVfxBenchmark } from './debug/benchmark.js'
 import { createProgressTracker } from './content/progress.js'
 import { createLoop } from './core/loop.js'
 import { createPhysics, createStepper } from './core/physics.js'
@@ -30,8 +30,10 @@ import { createGameHud } from './ui/gameHud.js'
 import { createPassportScreen } from './ui/passportScreen.js'
 import { createScreenFade } from './ui/screenFade.js'
 import { createVehicle, vehiclePresets } from './vehicle/vehicle.js'
+import { createVfx } from './vfx/index.js'
 import { createLighting } from './world/lighting.js'
 import { createAreas } from './world/areas.js'
+import { createImpacts } from './world/impacts.js'
 import { createReveal } from './world/reveal.js'
 import { createTriggerWatcher } from './world/triggers.js'
 import { createWorld } from './world/world.js'
@@ -78,6 +80,10 @@ async function bootstrap() {
   // can't be a live setting -- see `rebuild.vehicle.preset`).
   const presetParam = new URLSearchParams(window.location.search).get('vehicle')
   if (presetParam in vehiclePresets) rebuild.vehicle.preset = presetParam
+  // `?quality=medium|low` picks a quality tier for this load (the debug
+  // panel's preset does the same live).
+  const qualityParam = new URLSearchParams(window.location.search).get('quality')
+  if (qualityParam in qualityTiers) applyQualityTier(qualityParam)
   const debugMode = window.location.hash === '#debug'
 
   // Interface copy comes from content/ui.json; the arena tree from the seed.
@@ -109,7 +115,9 @@ async function bootstrap() {
 
   // Rapier's wasm has to finish initialising before any world exists.
   const { RAPIER, world } = await createPhysics()
-  const step = createStepper(world)
+  // Contact-force events (collision impacts) are drained after every step.
+  const eventQueue = new RAPIER.EventQueue(true)
+  const step = createStepper(world, eventQueue)
 
   // Prop blob shadows exist before the world: every dyn_ prop gets one.
   const blobs = createBlobShadows({ scene, capacity: 1024 })
@@ -168,6 +176,8 @@ async function bootstrap() {
   // mini-games, badges. Every way a station opens (area, Explore, trigger)
   // goes through the panel, so the panel is where the game hears about it.
   const game = createGame({ seed: arena, content, gameWorld, vehicle, scene, world, RAPIER, renderAssets })
+  // Hard knocks -> `impact` events on the game bus (VFX now, SFX in Phase 8).
+  const impacts = createImpacts({ world, queue: eventQueue, props: gameWorld.props, vehicle, events: game.events })
   for (const id of Object.keys(game.store.state.opened)) progress.markFound(id)
   stationPanel.onChange((node) => {
     if (!node) return
@@ -231,6 +241,12 @@ async function bootstrap() {
   const post = createPostProcessing({ renderer, scene, camera, canvas })
   onResize(post.setSize)
 
+  // Visual effects (doc 05 §2), all driven by the game's events and the car.
+  const vfx = createVfx({
+    scene, camera, cameraRig, renderer, renderAssets, vehicle, game, gameWorld, seed: arena,
+    floaterRoot: document.getElementById('vfx-floaters'),
+  })
+
   /** R: fade out, drop back in at the nearest `spawn_`, fade in. */
   const respawnVehicle = () => {
     screenFade.run(() => {
@@ -268,8 +284,11 @@ async function bootstrap() {
     window.__proto = {
       vehicle, world, scene, camera, settings, input, stationPanel, explore, content, progress, gameWorld,
       renderer, renderAssets, post, shadowBlob, sky, fps, cameraRig, floor, blobs, propStress, areas, reveal,
-      game, passport,
-      benchmark: { run: (options) => runPostBenchmark({ renderer, scene, camera }, options) },
+      game, passport, vfx, impacts,
+      benchmark: {
+        run: (options) => runPostBenchmark({ renderer, scene, camera }, options),
+        vfx: (options) => runVfxBenchmark({ renderer, scene, camera, vfx }, options),
+      },
     }
   }
 
@@ -280,7 +299,7 @@ async function bootstrap() {
 
   let streamed = false
   let dashHold = false
-  createLoop((delta) => {
+  const loop = createLoop((delta) => {
     elapsed += delta
     // The outer-ring districts load once the first frame is on screen.
     if (!streamed) {
@@ -325,7 +344,7 @@ async function bootstrap() {
     step(delta, (fixedDelta) => {
       gameWorld.props.fixedUpdate(fixedDelta)
       vehicle.update(fixedDelta, inputState)
-    })
+    }, impacts.drain)
 
     vehicle.sync()
     triggerWatcher(vehicle.position)
@@ -338,6 +357,7 @@ async function bootstrap() {
     shadowBlob.update()
     gameWorld.props.update(delta)
     dashHold = game.update(delta).hold
+    vfx.update(delta)
     gameHud.update(vehicle.position)
     propStress?.update()
     blobs.update()
@@ -359,6 +379,17 @@ async function bootstrap() {
 
     post.render(delta)
   })
+  if (import.meta.env.DEV) window.__proto.loop = loop
+}
+
+/** Apply a `qualityTiers` preset (the same fields the debug panel's preset sets). */
+function applyQualityTier(name) {
+  const tier = qualityTiers[name]
+  settings.quality = name
+  settings.render.pixelRatioCap = tier.pixelRatioCap
+  settings.post.aa.mode = tier.aaMode
+  settings.post.enabled = tier.postEnabled
+  settings.vfx.density = tier.vfxDensity
 }
 
 /**

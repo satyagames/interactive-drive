@@ -23,7 +23,7 @@
 | Submission Portal | always | rotating rings, scrolling-UV energy shader, bloom (the only bright emissive) |
 | Camera FX | boost, landing | FOV kick ±4°, micro-shake (disabled with reduced motion) |
 
-Bloom: enable it only for emissive layers (selective bloom via a layer mask). See the existing `config.js` note on why global bloom fails with matcaps.
+Bloom: enable it only for emissive layers (selective bloom via a layer mask). See the existing `config.js` note on why global bloom fails with matcaps. (Phase 7 implements the mask as an HDR band: emissives are drawn above 1.0, which matcap surfaces cannot reach, and the threshold sits just above it. See `settings.post.bloom`.)
 
 ## 3. SFX and music (Web Audio; files in `public/audio/`, licence-logged in `CREDITS.md`)
 - **Engine**: 2–3 looping layers (idle, mid, high) crossfaded by speed; pitch 0.8 → 1.8 by speed; gain plus throttle; boost adds a turbo whine layer.

@@ -184,15 +184,17 @@ function patchMaterial(material, profile) {
         #endif
         `,
       )
+      // three r154+ renamed output_fragment to opaque_fragment; the old name
+      // matched nothing, so until Phase 7 the rims and accents never rendered.
       .replace(
-        '#include <output_fragment>',
+        '#include <opaque_fragment>',
         `
-        float fresnel = pow( 1.0 - max( dot( normalize( vNormal ), normalize( -vViewPosition ) ), 0.0 ), uFresnelPower );
+        float fresnel = pow( 1.0 - max( dot( normal, normalize( -vViewPosition ) ), 0.0 ), uFresnelPower );
         float pulse = 0.5 + 0.5 * sin( uTime * 2.2 + dot( vViewPosition, vec3( 0.17, 0.11, 0.07 ) ) );
         float animatedAccent = mix( 0.35, 1.0, pulse ) * ( 0.35 + 0.65 * uInteraction );
         outgoingLight += uAccentColor * fresnel * uFresnelStrength;
         outgoingLight += uAccentColor * animatedAccent * uEmissionStrength * ( 0.25 + 0.75 * uSpeed );
-        #include <output_fragment>
+        #include <opaque_fragment>
         `,
       )
   }

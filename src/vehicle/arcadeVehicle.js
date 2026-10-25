@@ -64,6 +64,7 @@ export async function createArcadeVehicle({ scene, world, RAPIER, renderAssets }
   const hubMaterial = createMatcapMaterial(renderAssets, rendering.hubMatcap)
   const hubGeometry = new THREE.BoxGeometry(spec.wheels.width * s + 0.02, 0.12, 0.12)
 
+  const contactUp = new THREE.Vector3()
   const wheels = physics.wheels.map((wheel) => {
     const mesh = new THREE.Mesh(wheelGeometry, wheelMaterial)
     mesh.rotation.order = 'YXZ'
@@ -188,6 +189,19 @@ export async function createArcadeVehicle({ scene, world, RAPIER, renderAssets }
     respawn,
     /** Horn: the reference's hop. Returns true if it fired (not cooling down). */
     horn: () => physics.hop(),
+    /**
+     * World-space ground contact of wheel `i` (0 FL, 1 FR, 2 RL, 3 RR) into
+     * `out`; false while that wheel is off the ground. For tyre effects.
+     */
+    wheelContact(i, out) {
+      if (!physics.controller.wheelIsInContact(i)) return false
+      // The wheel's centre one radius down the body's up axis: matches
+      // Rapier's contact point to a few mm, without the per-call objects
+      // `wheelContactPoint` allocates.
+      wheels[i].mesh.getWorldPosition(out)
+      out.addScaledVector(contactUp.set(0, 1, 0).applyQuaternion(object3D.quaternion), -wheelRadius)
+      return true
+    },
     /** What the shadow blob needs to fit this car rather than the sim one. */
     shadow: { groundClearance: physics.restHeight, scale: modelScale },
     /**

@@ -62,7 +62,10 @@ export function createArcadePhysics({ world, RAPIER, position, rotation }) {
       // Collider-local centre of mass, so it lands on the body origin.
       .setMassProperties(m, { x: 0, y: -offsetUp, z: 0 }, inertia, { x: 0, y: 0, z: 0, w: 1 })
       .setFriction(chassis.friction)
-      .setRestitution(chassis.restitution),
+      .setRestitution(chassis.restitution)
+      // Hard knocks against walls and props become `impact` events (world/impacts.js).
+      .setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS)
+      .setContactForceEventThreshold((m * settings.impacts.carMinDeltaV) / rebuild.physics.timestep),
     body,
   )
 

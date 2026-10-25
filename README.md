@@ -176,6 +176,16 @@ src/
     blobShadows.js    instanced floor blobs for props (sun offset, height fade)
     floorGradient.js  world-space 4-corner floor colour + fade into the fog
     post.js           EffectComposer chain (bloom, vignette, output)
+  vfx/
+    index.js          every doc 05 §2 effect, wired to game.events and the car
+    particles.js      pooled instanced particles (one draw call per pool)
+    atlas.js          the sprite atlas, drawn on a canvas at boot
+    ribbon.js         skid marks + paint trail (ring buffer, shader fade)
+    speedLines.js     boost streaks in clip space
+    fireworks.js      GPU firework shells ("10" and dots)
+    stamp.js          passport stamp slam, ink splash, light pillar
+    portal.js         Submission Portal energy disc
+    floaters.js       "+N XP" labels over pickups (DOM, aria-hidden)
   world/
     world.js          loads the arena manifest + district GLBs, sorts nodes
                       by prefix, merges statics, streams the outer ring
@@ -184,6 +194,7 @@ src/
     dynamicProps.js   dyn_ props: sleeping Rapier compounds, instanced
     areas.js          Enter areas: border fill, ENTER hint, hold-to-open
     reveal.js         district reveals + the opening letter drop
+    impacts.js        Rapier contact-force events -> `impact` events (VFX, SFX)
   game/
     index.js          composes the game layer; main.js feeds it world events
     events.js         the event bus VFX/SFX/UI subscribe to
@@ -223,6 +234,7 @@ src/
     touch.js          joystick + hold/one-shot buttons
   debug/
     gui.js            lil-gui panel bound to config.js
+    benchmark.js      GPU timing: post chain (benchmark.run) and VFX (benchmark.vfx)
     feelProbe.js      scripted feel test of the arcade car (#debug button)
     gameTest.js       #debug: earn every badge via the real detection paths
     propStress.js     #debug: drop 300 physics props to check the blob budget
@@ -361,6 +373,30 @@ the browser. Tunables are in `settings.collectibles` and `settings.game`; all
 copy (badge names, toasts, Dash messages) in `content/ui.json`. With `#debug`,
 **Debug → Run badge test** earns every badge through the real detection paths
 and prints a pass/fail table (then use Reset progress).
+
+## Effects
+
+`src/vfx/` implements doc 05 §2. Effects listen to `game.events` (stamps,
+pickups, XP, mini-games, the Dash, easter eggs, the finale) and to the car
+(dust, skids, boost, landings); collisions arrive as `impact` events from
+`src/world/impacts.js`, which turns Rapier contact forces into
+`{ position, sfx, strength }` -- metal sparks, paper flutters, brick and wood
+chip.
+
+- **Pooled.** Two instanced particle pools (matte and emissive), one ribbon
+  ring buffer, GPU fireworks: every buffer is sized at boot, nothing allocates
+  per frame, and the whole lot is about six draw calls.
+- **Selective bloom.** Matcap surfaces can't exceed 1.0, so emissives are drawn
+  in HDR (`settings.vfx.emissive`) and the bloom threshold sits just above
+  1.0 -- only they bloom, with correct occlusion and no second render pass.
+- **Quality.** `?quality=medium` or `?quality=low` picks a `qualityTiers`
+  preset at load (pixel ratio, AA, post on/off, VFX density); `#debug` has it
+  live.
+- **Reduced motion.** With `prefers-reduced-motion` (or
+  `settings.vfx.reducedMotion = true`): no camera kick or shake, no speed
+  lines, less confetti, fireworks without flashes.
+- **Measuring.** `await __proto.benchmark.vfx()` (dev server) times the
+  effects on the GPU and reports `vfx.update`'s CPU cost.
 
 ## Art pipeline
 

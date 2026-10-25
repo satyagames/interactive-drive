@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-import { settings, world as worldConfig } from '../config.js'
+import { rebuild, settings, world as worldConfig } from '../config.js'
 import { colliderDescFromProxy } from './colliders.js'
 
 /**
@@ -24,12 +24,18 @@ import { colliderDescFromProxy } from './colliders.js'
  * `dropIn()` plays a prop in from above as a kinematic tween (no tumbling,
  * so stacks and walls arrive intact) and hands it back to physics asleep --
  * used by the intro and the district reveals (`reveal.js`).
+ *
+ * Every prop collider reports hard contacts (Rapier contact-force events,
+ * thresholded per prop by mass); `src/world/impacts.js` turns them into
+ * `impact` events for the VFX and, in Phase 8, the SFX.
  */
 export function createDynamicProps({ world, RAPIER, blobs }) {
   const props = []
   const batches = []
   const floaters = []
   const dropping = []
+  /** Collider handle -> prop, for the impact events. */
+  const byCollider = new Map()
   /** One fixed body all spring / rope anchors hang from. */
   const anchorBody = world.createRigidBody(RAPIER.RigidBodyDesc.fixed())
   const gravity = Math.abs(world.gravity.y)
@@ -97,6 +103,10 @@ export function createDynamicProps({ world, RAPIER, blobs }) {
       RAPIER.RigidBodyDesc.dynamic()
         .setTranslation(position.x, position.y, position.z)
         .setRotation({ x: quaternion.x, y: quaternion.y, z: quaternion.z, w: quaternion.w })
+        // A stand-in for rolling resistance, which Rapier doesn't model: a
+        // coin or tyre knocked onto its edge would otherwise roll in circles
+        // for minutes and keep its whole district awake.
+        .setAngularDamping(settings.props.angularDamping)
         .setSleeping(true),
     )
 
@@ -105,12 +115,18 @@ export function createDynamicProps({ world, RAPIER, blobs }) {
     const descs = proxies.map((proxy) => colliderDescFromProxy(RAPIER, proxy, local.multiplyMatrices(rootInverse, proxy.matrixWorld)))
     const totalVolume = descs.reduce((sum, d) => sum + d.volume, 0) || 1
     const mass = Number(data.mass) || 1
+    // A contact counts as an impact once its impulse could change this
+    // prop's speed by `minDeltaV` within one step.
+    const impactForce = (mass * settings.impacts.minDeltaV) / rebuild.physics.timestep
+    const colliders = []
     for (const { desc } of descs) {
       desc
         .setDensity(mass / totalVolume)
         .setFriction(Number(data.friction ?? 0.5))
         .setRestitution(Number(data.restitution ?? 0.2))
-      world.createCollider(desc, body)
+        .setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS)
+        .setContactForceEventThreshold(impactForce)
+      colliders.push(world.createCollider(desc, body))
     }
 
     const prop = {
@@ -129,6 +145,7 @@ export function createDynamicProps({ world, RAPIER, blobs }) {
       awake: true, // forces one sync before the first sleep check
       buoyancy: 0,
     }
+    for (const collider of colliders) byCollider.set(collider.handle, prop)
 
     // Spring-hung (Idea Spark bulbs): rest length chosen so the weight
     // stretches the spring to exactly where the prop was authored.
@@ -233,21 +250,29 @@ export function createDynamicProps({ world, RAPIER, blobs }) {
           dirty = true
         }
         prop.awake = !sleeping
-        // Rapier's own sleep can miss bodies held by a joint (they hover just
-        // above its threshold); anything this still for IDLE_SLEEP sleeps.
         if (!sleeping && !prop.body.isKinematic()) {
           prop.idle = isStill(prop.body) ? (prop.idle ?? 0) + dt : 0
-          if (prop.idle >= IDLE_SLEEP) {
-            prop.body.sleep()
-            prop.idle = 0
-          }
-        }
-        if (!sleeping && !prop.body.isKinematic()) {
           if (!awakeByDistrict.has(prop.district)) awakeByDistrict.set(prop.district, [])
           awakeByDistrict.get(prop.district).push(prop)
         }
       }
       if (dirty) batch.mesh.instanceMatrix.needsUpdate = true
+    }
+
+    // Rapier's own sleep misses bodies held by a joint (bulbs, balloons hover
+    // just above its threshold) and coins balanced on edge. Once *every*
+    // awake prop in a district has been still for IDLE_SLEEP they all sleep
+    // together. Never one at a time: force-sleeping one body of a stack while
+    // the rest of its island is awake leaves it integrating under gravity
+    // with its contacts frozen, and it sinks through the floor (the Toolkit
+    // brick wall and the PACE tyres did, found in Phase 7).
+    for (const list of awakeByDistrict.values()) {
+      if (!list.every((prop) => prop.idle >= IDLE_SLEEP)) continue
+      for (const prop of list) {
+        prop.body.sleep()
+        prop.idle = 0
+      }
+      list.length = 0
     }
 
     const budget = settings.props.awakeBudget
@@ -269,6 +294,8 @@ export function createDynamicProps({ world, RAPIER, blobs }) {
     hideDistrict,
     fixedUpdate,
     update,
+    /** The prop a collider belongs to, or undefined (static, car, ...). */
+    propForCollider: (handle) => byCollider.get(handle),
     get dropping() {
       return dropping.length
     },

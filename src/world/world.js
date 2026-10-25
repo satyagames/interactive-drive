@@ -52,6 +52,7 @@ export async function createWorld({ scene, world, RAPIER, renderAssets, blobs })
   const districts = []
   /** anim_ meshes: { object, axis, spin } -- turned every frame by `animate()`. */
   const animated = []
+  const landmarks = new Map()
   const loadListeners = new Set()
   let ground = null
 
@@ -122,7 +123,15 @@ export async function createWorld({ scene, world, RAPIER, renderAssets, blobs })
         animated.push({ object: mesh, axis: AXES[node.userData.axis] ?? AXES.y, spin: Number(node.userData.spin) || 0 })
         return
       }
-      if (node.isMesh) statics.push(node)
+      if (node.isMesh) {
+        statics.push(node)
+        // Named landmarks keep a world-space centre after the merge (the VFX
+        // find the tower beacon this way).
+        if (name.startsWith('landmark_')) {
+          node.geometry.computeBoundingBox()
+          landmarks.set(name, node.geometry.boundingBox.getCenter(new THREE.Vector3()).applyMatrix4(node.matrixWorld))
+        }
+      }
       for (const child of node.children) visit(child)
     }
     for (const child of root.children) visit(child)
@@ -183,6 +192,10 @@ export async function createWorld({ scene, world, RAPIER, renderAssets, blobs })
     emitters,
     props,
     districts,
+    /** `landmark_*` mesh name -> world-space centre. */
+    landmarks,
+    /** The `anim_` mesh with this name, once its district has loaded. */
+    animated: (name) => animated.find((item) => item.object.name === name)?.object ?? null,
     /** Called with each district's info as it finishes loading (streamed ones included). */
     onDistrictLoaded(listener) {
       loadListeners.add(listener)

@@ -22,5 +22,19 @@ export function createLoop(update) {
       running = false
       cancelAnimationFrame(handle)
     },
+    /** Resume after `stop()`. */
+    start() {
+      if (running) return
+      running = true
+      last = performance.now()
+      handle = requestAnimationFrame(tick)
+    },
+    /**
+     * Run one frame by hand with a fixed delta (debug: scripted tests in a
+     * hidden or throttled tab, where requestAnimationFrame barely fires).
+     */
+    step(delta) {
+      update(delta)
+    },
   }
 }

@@ -24,19 +24,22 @@ export async function createPhysics() {
 /**
  * Fixed-timestep accumulator. Keeps the simulation deterministic and decoupled
  * from the display refresh rate; `onStep` is where per-step forces belong.
+ * With an `eventQueue`, `afterStep` runs after each `world.step` to drain it
+ * (the queue auto-drains before the next step, so once a frame would miss events).
  */
-export function createStepper(world) {
+export function createStepper(world, eventQueue) {
   const { timestep, maxSubSteps } = rebuild.physics
   let accumulator = 0
 
-  return function step(frameDelta, onStep) {
+  return function step(frameDelta, onStep, afterStep) {
     // Clamp so an alt-tab or a slow first frame cannot queue up 300 steps.
     accumulator = Math.min(accumulator + frameDelta, timestep * maxSubSteps)
 
     let steps = 0
     while (accumulator >= timestep && steps < maxSubSteps) {
       onStep(timestep)
-      world.step()
+      world.step(eventQueue)
+      afterStep?.(timestep)
       accumulator -= timestep
       steps += 1
     }

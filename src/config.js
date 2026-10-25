@@ -262,6 +262,87 @@ export const settings = {
   props: {
     /** Most bodies one district keeps awake; the slowest extra ones are put to sleep. */
     awakeBudget: 60,
+    /** Angular damping on free props (rolling resistance stand-in). Read when a district loads. */
+    angularDamping: 0.3,
+  },
+
+  /**
+   * Collision impacts (`world/impacts.js`): Rapier contact-force events,
+   * shared by the VFX (sparks, paper, chips) and the Phase 8 SFX.
+   * The two thresholds are baked into the colliders when they are created.
+   */
+  impacts: {
+    /** A prop contact counts once it could change the prop's speed by this much in one step, m/s. */
+    minDeltaV: 1.5,
+    /** The same for the car's own body against walls (it's heavier and scrapes more). */
+    carMinDeltaV: 2.5,
+    /** Speed change that counts as a full-strength impact, m/s. */
+    fullDeltaV: 10,
+    /** At most one impact per body this often, ms (doc 05 §3). */
+    perBodyMs: 80,
+  },
+
+  /**
+   * Visual effects (`src/vfx/`, doc 05 §2). Everything is pooled: these caps
+   * are allocated once at boot and never grow.
+   */
+  vfx: {
+    enabled: true,
+    /**
+     * Spawn-count multiplier, set by the quality tier (`qualityTiers`).
+     * Caps and pools stay the same size; fewer particles are asked for.
+     */
+    density: 1,
+    /** 'auto' follows prefers-reduced-motion; true / false force it (testing). */
+    reducedMotion: 'auto',
+    /**
+     * HDR multiplier for emissive effects. Matcap surfaces never exceed 1.0
+     * (see `post.bloom`), so anything drawn above the bloom threshold is,
+     * by construction, an emissive -- that is the bloom "layer".
+     */
+    emissive: 2.6,
+    dust: {
+      /** Puffs per second per sliding rear wheel. */
+      slideRate: 22,
+      /** A landing this fast (downward, m/s) throws a ring of dust. */
+      landingSpeed: 3.5,
+      landingPuffs: 12,
+      color: '#A89C86',
+    },
+    boost: {
+      /** Exhaust flame sprites per second, per pipe. */
+      flameRate: 45,
+      /** Speed-line opacity at full boost speed. */
+      lines: 0.55,
+    },
+    skid: { width: 0.3, opacity: 0.32, fade: 6, color: '#2B2B2B' },
+    /** Paint Trail (doc 02 §3, Studio): green tyre paint inside `radius` m of the Studio. */
+    paint: { width: 0.42, opacity: 0.85, fade: 10, color: '#86BC25', radius: 15, minSpeed: 2 },
+    confetti: { max: 400, burst: 260 },
+    /** Idle twinkles on collectibles within this many metres. */
+    sparkleRange: 26,
+    /** Golden skin: tiny 10s per second while moving (the Konami egg). */
+    tensRate: 14,
+    /**
+     * The Birthdays station (content id) whose opening fires the confetti
+     * cannon when a `feeds.birthdays` date is today.
+     */
+    birthdayStation: 'culture_1',
+    camera: {
+      /** FOV punch when boost starts, degrees (doc 05 §2: ±4°). */
+      boostKick: 4,
+      /** Landings punch inwards. */
+      landingKick: -2.5,
+      maxKick: 4,
+      kickDecay: 3.5,
+      landingShake: 0.45,
+      impactShake: 0.35,
+      stampShake: 0.5,
+      /** Metres of shake at full trauma. */
+      maxShake: 0.35,
+      /** Trauma lost per second. */
+      shakeDecay: 1.6,
+    },
   },
 
   /** Enter areas (`world/areas.js`, doc 05 §4). */
@@ -465,33 +546,36 @@ export const settings = {
       msaaSamples: 4,
     },
     /**
-     * Off by default, and that is a finding rather than an oversight.
+     * Selective bloom for emissive layers only (doc 05 §2), done with HDR
+     * rather than a second render pass.
      *
-     * Bloom needs its bright pixels to be *small*, and in this scene they
-     * never are. Matcaps are 8-bit textures, so nothing a surface can produce
-     * exceeds 1.0, and after the look pass the frame's linear values stack up
-     * as: ground 0.73, sky horizon 0.95, headlamps 0.90. The only genuinely
-     * small bright features are two 26 cm headlamp discs, and there is no
-     * threshold that isolates them -- anything under 0.90 also catches the
-     * entire sky, and anything under 0.73 catches the ground as well and
-     * turns the whole frame to mush. Above 0.95 it does nothing at all, even
-     * at strength 3.
+     * Matcaps are 8-bit textures, so nothing a surface can produce exceeds
+     * 1.0: after the look pass the frame's linear values stack up as ground
+     * 0.73, sky horizon 0.95, headlamps 0.90 (and the Fresnel rim adds at
+     * most a few hundredths). The emissive effects -- the Submission Portal,
+     * sparks, pickup sparkles, the stamp's light pillar, boost exhaust,
+     * fireworks, bulb and beacon halos -- are drawn at
+     * `settings.vfx.emissive` (x2.6) into the half-float target. A threshold
+     * above 1.0 therefore *is* the layer mask: surfaces can never reach it,
+     * emissives always do.
      *
-     * (The numbers moved with the palette -- this used to read "the brightest
-     * highlight lands around 0.6" against the old grey-and-blue scheme -- but
-     * the conclusion did not, and for the same structural reason: a stylised
-     * matcap scene has broad flat colour, not specular pinpoints.)
+     * Why not three's two-pass selective bloom (darken everything else,
+     * render again): it renders the scene twice, doubling the draw calls the
+     * performance budget counts (rule 5), and needs every non-bloom material
+     * swapped per frame. The HDR band costs nothing extra and gets occlusion
+     * right for free (a wall in front of the portal hides its glow).
      *
-     * So it stays wired up and tunable, ready for the first emissive or
-     * genuinely bright material, and costs nothing while disabled -- a
-     * disabled pass is skipped entirely by the composer.
+     * (History: before Phase 7 there were no emissives and no threshold
+     * isolated anything -- under 0.90 caught the sky, under 0.73 the ground.)
      */
     bloom: {
       enabled: true,
-      /** A sheen on the highlights, not a glow, for when there are any. */
-      strength: 0.28,
-      radius: 0.6,
-      threshold: 0.9,
+      strength: 0.85,
+      radius: 0.45,
+      /** Linear luminance; keep it above 1.0 so matcap surfaces never bloom. */
+      threshold: 1.15,
+      /** Ramp width above the threshold (UnrealBloomPass's smoothWidth). */
+      softness: 0.6,
     },
     vignette: {
       enabled: true,
@@ -798,7 +882,7 @@ export const defaultSettings = structuredClone(settings)
  * possible, has somewhere to land instead of starting from nothing.
  */
 export const qualityTiers = {
-  high: { pixelRatioCap: 1.5, aaMode: 'smaa', postEnabled: true },
-  medium: { pixelRatioCap: 1, aaMode: 'fxaa', postEnabled: true },
-  low: { pixelRatioCap: 1, aaMode: 'none', postEnabled: false },
+  high: { pixelRatioCap: 1.5, aaMode: 'smaa', postEnabled: true, vfxDensity: 1 },
+  medium: { pixelRatioCap: 1, aaMode: 'fxaa', postEnabled: true, vfxDensity: 0.6 },
+  low: { pixelRatioCap: 1, aaMode: 'none', postEnabled: false, vfxDensity: 0.35 },
 }

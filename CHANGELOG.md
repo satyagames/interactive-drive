@@ -2,6 +2,100 @@
 
 Pursuit Arena build log. One entry per phase (see `docs/pursuit-arena/06-phased-prompts.md`).
 
+## Phase 7 — VFX
+
+Every effect in doc 05 §2, in `src/vfx/`, driven by `game.events` and the car's state. All pooled: buffers are sized
+once at boot and nothing grows.
+
+- **Systems:**
+  - `particles.js`: one instanced, CPU-simulated pool per draw call (flat `Float32Array`, live particles kept packed),
+    with per-category caps (dust 64, confetti 400, ...)
+  - `atlas.js`: a 4×4 sprite atlas drawn on a canvas at boot (puff, spark, paper, chip, star, confetti, a tiny "10",
+    ring, ink splat, glow). No image files.
+  - `ribbon.js`: skid marks and the paint trail in one ring-buffer mesh, faded by age in the shader
+  - `speedLines.js`: boost streaks built in clip space
+  - `fireworks.js`: GPU shells, written once per launch and flown by the vertex shader
+  - `stamp.js`, `portal.js`, `floaters.js`: DOM "+N XP" labels, `aria-hidden`; copy is `game.xpGain`
+- **Effects:**
+  - tyre dust (sliding rear wheels, hard landings)
+  - boost: green exhaust, speed lines, +4° FOV kick
+  - skid marks (6 s), Studio paint trail (10 s)
+  - impacts by `sfx` class: metal → sparks, paper → fluttering sheets, brick/wood → chips, plastic/rubber → dust; the
+    car shakes the camera on hard hits
+  - pickup sparkle, ring and "+N XP"; idle twinkles on nearby collectibles
+  - stamp slam, ink splash and a 2 s light pillar
+  - confetti: Strike a Win, Dash finish, the finale, and the Birthdays station when a `feeds.birthdays` date is today
+  - Decade Fireworks with "10" and dot shells: finale, Konami
+  - Submission Portal energy (pulses on a Dash finish)
+  - Idea Spark bulbs glow once lit; the HQ beacon blinks "10" in Morse; golden skin trails tiny 10s
+  - landing FOV punch and micro-shake
+- **Impacts** (`src/world/impacts.js`): prop colliders and the car's body raise Rapier contact-force events above a
+  per-mass threshold (`settings.impacts`). The stepper drains them after every step into
+  `impact { position, sfx, strength, withCar, prop }`, at most one per body per 80 ms. Phase 8's SFX gets the same
+  events.
+- **Selective bloom** (`settings.post.bloom`): matcap surfaces can't exceed 1.0, so emissives are drawn in HDR
+  (`settings.vfx.emissive`, ×2.6) and the bloom threshold sits at 1.15. The threshold *is* the layer mask: one scene
+  render, correct occlusion, no material swapping. (Three's two-pass selective bloom would double the draw calls
+  rule 5 counts.)
+- **Quality tiers:** `qualityTiers` gains `vfxDensity` (1 / 0.6 / 0.35). `?quality=medium|low` picks a tier at load;
+  the `#debug` preset still does it live.
+- **Reduced motion:** from `prefers-reduced-motion` (read live) or `settings.vfx.reducedMotion`. It turns off the
+  camera kick and shake and the speed lines, cuts confetti to 30%, stops fireworks flashing and twinkling, and makes
+  the stamp appear instead of fall.
+- **Debug:**
+  - `__proto.benchmark.vfx()` times the VFX on the GPU (same frame offscreen, effects shown vs hidden) and reports
+    the CPU cost of `vfx.update`
+  - `__proto.loop.step(dt)` runs frames by hand for scripted tests in a hidden or throttled tab (`loop.stop()` /
+    `start()` too)
+  - the GPU timer now polls with `setTimeout`, so it also completes in a hidden tab, where rAF stops
+- **Decisions:**
+  - Emissive particles, the portal, the pillar and the fireworks are alpha-blended HDR colour, not additive. Additive
+    green over the white plazas and the cream sky washed out to white.
+  - Fireworks burst about 10 m up, around where the camera is looking, not high over the tower. The iso camera
+    pitches 32° down, so the top of the frame is still 12° below the horizon and a high shell is out of shot from
+    almost everywhere. For the same reason the Morse beacon also flashes at the tower's foot.
+  - Particle sizes were set for the default iso distance; at first, sparks were 3 px.
+
+Bugs found during verification and fixed:
+- **Props sank through the floor** (Phase 5's idle sleeper). Calling `body.sleep()` on one still body while the rest
+  of its island was awake left it integrating under gravity with frozen contacts. Seen in the Toolkit brick wall and
+  the PACE tyre stack (tyres at y = −550 and still falling). Now a district's props are put to sleep together, once
+  *every* awake prop in it has been still for 1 s. Free props get a little angular damping
+  (`settings.props.angularDamping`, a rolling-resistance stand-in): a coin rolling on its edge otherwise kept the Tax
+  district awake.
+- **Fresnel rims and accents never rendered.** `render/materials.js` patched `#include <output_fragment>`, a chunk
+  three r154+ renamed `opaque_fragment`, so the patch matched nothing (flagged in Phase 6). Fixed; the default rim
+  adds at most 0.035, below the bloom threshold.
+- (Caught before commit: a shadowed `lift` parameter made every ribbon vertex NaN.)
+
+Acceptance checks (in-app browser, scripted with `loop.step` because the pane was hidden; this machine is an RTX 4080
+SUPER):
+- [x] **VFX under 1 ms per frame:**
+  - CPU (`vfx.update`) under worst-case stress (400 confetti, ~650 matte and ~200 emissive particles, 10 firework
+    shells, the stamp, all at once): 0.09 ms average, 0.33 ms peak
+  - CPU on the frame that fires the finale, stamp and Konami together: 0.81 ms
+  - GPU, same stress, via `benchmark.vfx()`: within timer noise at 1600×900 (0.453 vs 0.454 ms) and at 4096×3072
+    (±0.1 ms)
+- [x] **No GC spikes over 2 ms in a 5-minute drive:** autopilot laps of the HQ ring, boosting every 12 s and drifting
+  every 20 s, 18,000 frames, 9 respawns.
+  - VFX on: no frame more than 2 ms over the median (median 0.4 ms, p99.9 0.9 ms, max 2.7 ms); VFX update peak 0.10 ms
+  - VFX off, same drive: 12 such frames, so the remaining jitter isn't the effects
+  - VFX per-frame allocations removed (reused update ranges, an allocation-free wheel contact, a hoisted drain
+    callback), after a first run showed them adding ~80 KB/s
+- [x] Reduced motion (forced): no FOV kick (normal 3.8°), no speed lines (normal 0.54), 78 of 260 confetti.
+- [x] `?quality=low`: post off, density 0.35 (91 of 260 confetti), pixel ratio 1.
+- [x] Seen on screen: portal, pickup rings, sparks, paper, chips, landing dust, speed lines, exhaust, paint trail,
+  stamp with ink and pillar, confetti, fireworks, beacon flash. No runtime errors.
+- [x] After visiting every district and driving through the Tax coins, no prop is below the floor, and every prop is
+  asleep within 3 s.
+- [x] `npm run build` passes.
+- [ ] Not measured on the target 2020 integrated-GPU laptop; the GPU numbers above only show the effects are cheap on
+  fast hardware.
+- [ ] Skid marks share the paint-trail code path, which was verified, but they weren't seen in a real drift: the
+  scripted drifts mostly ended in walls.
+- [ ] Stack tops still settle a few cm, and the odd top block falls, when a district's props hand back to physics
+  after a reveal. Pre-existing; the old sleeper was hiding it by freezing them.
+
 ## Dev tooling — reliable reloads on Windows (between Phases 6 and 7)
 
 - `vite.config.js`: the dev server watches by **polling** on Windows (`usePolling`, 100 ms), and waits for a file to

@@ -130,6 +130,7 @@ export function createPostProcessing({ renderer, scene, camera, canvas }) {
     bloomPass.strength = bloom.strength
     bloomPass.radius = bloom.radius
     bloomPass.threshold = bloom.threshold
+    bloomPass.highPassUniforms.smoothWidth.value = bloom.softness
 
     vignettePass.enabled = vignette.enabled
     vignettePass.uniforms.offset.value = vignette.offset
