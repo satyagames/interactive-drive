@@ -283,6 +283,45 @@ export const settings = {
   },
 
   /**
+   * Sound (`src/audio/`, doc 05 §3). Nothing plays -- no AudioContext even
+   * exists -- until the first click, tap or key press. Every sound is
+   * synthesised (oscillators and noise) until the real files listed in
+   * public/audio/MANIFEST.md arrive.
+   */
+  audio: {
+    /** Bus levels, 0..1. The visitor's own choice (the Sound panel) is saved and wins over these. */
+    volumes: { master: 0.8, music: 0.45, sfx: 0.8, ambience: 0.6 },
+    muted: false,
+    /** Most one-shot sounds playing at once (doc 05 §3); more are dropped. */
+    maxVoices: 12,
+    /** Music level under an open station panel or the Passport. */
+    duck: 0.3,
+    /** Impacts and one-shots further than this from the car are not played, m. */
+    hearing: 60,
+    engine: {
+      /** Pitch multiplier at rest and at top speed (doc 05 §3: 0.8 -> 1.8). */
+      pitchMin: 0.8,
+      pitchMax: 1.8,
+      /** Engine level coasting, and added at full throttle. */
+      idleGain: 0.22,
+      throttleGain: 0.3,
+      /** Sideways speed (m/s) where the skid starts, and where it is at full level. */
+      skidFrom: 2,
+      skidFull: 7,
+      /** A landing this fast (downward, m/s) thuds; full level 8 m/s above it. */
+      landingSpeed: 3.5,
+    },
+    music: {
+      bpm: 108,
+      /**
+       * Adaptive music (doc 05 §3): each stem joins once this many passport
+       * stamps are earned; the Decade Finale brings in everything.
+       */
+      unlock: { keys: 0, bass: 2, drums: 5, lead: 8 },
+    },
+  },
+
+  /**
    * Visual effects (`src/vfx/`, doc 05 §2). Everything is pooled: these caps
    * are allocated once at boot and never grow.
    */

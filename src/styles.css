@@ -465,6 +465,60 @@ html, body {
 }
 #passport-open[aria-expanded="true"] { border-color: var(--brand); }
 
+/* Sound button + panel (src/ui/soundPanel.js); shares the passport button's look. */
+#sound-open {
+  position: fixed;
+  top: calc(max(12px, env(safe-area-inset-top)) + 180px);
+  left: 12px;
+  z-index: 12;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--ui-border);
+  background: var(--panel-bg);
+  color: var(--ui-fg);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+#sound-open kbd, .sound-panel kbd {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--ui-border);
+  opacity: 0.8;
+}
+#sound-open[aria-expanded="true"] { border-color: var(--brand); }
+.sound-panel {
+  position: fixed;
+  top: calc(max(12px, env(safe-area-inset-top)) + 224px);
+  left: 12px;
+  z-index: 17;
+  width: min(320px, calc(100vw - 24px));
+  padding: 0 16px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--ui-border);
+  background: var(--panel-bg);
+  color: var(--ui-fg);
+}
+.sound-panel[hidden] { display: none; }
+.sound-panel header { position: relative; padding: 14px 44px 8px 0; }
+.sound-panel header h2 { margin: 0; font-size: 18px; }
+.sound-panel header h2:focus { outline: none; }
+.sound-panel header h2:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.sound-panel header .passport__close { top: 10px; right: 0; }
+.sound-panel__mute { display: flex; align-items: center; gap: 8px; margin: 4px 0 10px; font-size: 14px; }
+.sound-panel__row { display: grid; grid-template-columns: 80px 1fr 44px; align-items: center; gap: 8px; margin: 6px 0; font-size: 14px; }
+.sound-panel__row input { width: 100%; accent-color: var(--brand); min-height: 24px; }
+.sound-panel__row output { text-align: right; font-variant-numeric: tabular-nums; }
+.sound-panel__mute input { accent-color: var(--brand); width: 18px; height: 18px; }
+.sound-panel__note { margin: 10px 0 0; font-size: 12px; opacity: 0.8; }
+
 #game-hud {
   position: fixed;
   top: max(12px, env(safe-area-inset-top));

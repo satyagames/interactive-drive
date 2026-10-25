@@ -2,6 +2,7 @@ import './styles.css'
 
 import arena from '../content/arena.seed.json'
 
+import { createAudio } from './audio/index.js'
 import { createCameraRig } from './camera/cameraRig.js'
 import { qualityTiers, rebuild, rendering, settings, world as worldConfig } from './config.js'
 import { createExploreMenu } from './content/explore.js'
@@ -29,6 +30,7 @@ import { createGame } from './game/index.js'
 import { createGameHud } from './ui/gameHud.js'
 import { createPassportScreen } from './ui/passportScreen.js'
 import { createScreenFade } from './ui/screenFade.js'
+import { createSoundPanel } from './ui/soundPanel.js'
 import { createVehicle, vehiclePresets } from './vehicle/vehicle.js'
 import { createVfx } from './vfx/index.js'
 import { createLighting } from './world/lighting.js'
@@ -247,6 +249,21 @@ async function bootstrap() {
     floaterRoot: document.getElementById('vfx-floaters'),
   })
 
+  // Sound (doc 05 §3): silent until the first click, tap or key press. Music
+  // ducks under the station panel and the Passport.
+  const audio = createAudio({
+    vehicle, camera, game, gameWorld, seed: arena,
+    isDucked: () => stationPanel.isOpen || passport.isOpen,
+  })
+  const soundPanel = createSoundPanel({
+    root: document.getElementById('sound'),
+    launcher: document.getElementById('sound-open'),
+    audio,
+    announce(text) {
+      announcer.textContent = text
+    },
+  })
+
   /** R: fade out, drop back in at the nearest `spawn_`, fade in. */
   const respawnVehicle = () => {
     screenFade.run(() => {
@@ -284,7 +301,7 @@ async function bootstrap() {
     window.__proto = {
       vehicle, world, scene, camera, settings, input, stationPanel, explore, content, progress, gameWorld,
       renderer, renderAssets, post, shadowBlob, sky, fps, cameraRig, floor, blobs, propStress, areas, reveal,
-      game, passport, vfx, impacts,
+      game, passport, vfx, impacts, audio, soundPanel,
       benchmark: {
         run: (options) => runPostBenchmark({ renderer, scene, camera }, options),
         vfx: (options) => runVfxBenchmark({ renderer, scene, camera, vfx }, options),
@@ -309,17 +326,19 @@ async function bootstrap() {
     const inputState = input.update({ camera, vehicle })
 
     if (input.consume('respawn')) respawnVehicle()
-    // Audio (Phase 8) will hang the horn sound off this too.
     if (input.consume('horn')) {
       vehicle.horn()
       game.horn()
+      audio.horn()
     }
+    if (input.consume('mute')) audio.toggleMute()
     if (input.consume('camera')) cameraRig.toggle()
     if (input.consume('passport')) passport.toggle()
-    // Esc peels back one layer at a time: station panel, passport, Explore,
-    // then opens Explore (the Phase 9 menu will take over that last step).
+    // Esc peels back one layer at a time: station panel, Sound, passport,
+    // Explore, then opens Explore (the Phase 9 menu will take over that last step).
     if (input.consume('menu')) {
       if (stationPanel.isOpen) stationPanel.hide()
+      else if (soundPanel.isOpen) soundPanel.hide()
       else if (passport.isOpen) passport.hide()
       else explore.toggle()
     }
@@ -328,8 +347,8 @@ async function bootstrap() {
     if (cameraRig.focused && (inputState.throttle !== 0 || inputState.steer !== 0)) {
       cameraRig.clearFocus()
     }
-    // Enter areas consume `interact`; mute has no consumer until Phase 8, and
-    // unconsumed presses are dropped at the next update.
+    // Enter areas consume `interact`; unconsumed presses are dropped at the
+    // next update.
     const { hold } = areas.update(delta, { vehicle, interact: () => input.consume('interact') })
     // Just opened a station: a soft brake holds the car unless you accelerate.
     if (hold && inputState.throttle === 0) inputState.brake = true
@@ -358,6 +377,7 @@ async function bootstrap() {
     gameWorld.props.update(delta)
     dashHold = game.update(delta).hold
     vfx.update(delta)
+    audio.update(delta, inputState)
     gameHud.update(vehicle.position)
     propStress?.update()
     blobs.update()

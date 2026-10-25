@@ -2,6 +2,79 @@
 
 Pursuit Arena build log. One entry per phase (see `docs/pursuit-arena/06-phased-prompts.md`).
 
+## Phase 8 — SFX and music
+
+All of doc 05 §3 in `src/audio/` (Web Audio). Every sound is a procedural placeholder until real files arrive, as
+doc 06 asks.
+
+- **Unlock:** no AudioContext is created until the first `pointerdown`, `keydown` or `touchend`. The context is
+  suspended while the tab is hidden.
+- **Mixer** (`mixer.js`): Music (plus a separate duck stage), SFX and Ambience feed Master, then a limiter
+  (-6 dB, 20:1, 1 ms) and a meter. Levels and mute are the visitor's, saved in `localStorage`
+  (`pursuit-arena/audio`, try/catch).
+- **Engine** (`engine.js`):
+  - three saw+square layers crossfaded by speed, pitch 0.8 → 1.8
+  - level and filter brightness rise with throttle
+  - boost adds a turbo whine and hiss
+  - road rumble, a skid from sideways slip, a landing thud scaled by fall speed
+- **One-shots** (`sounds.js`), from `game.events`:
+  - impacts by `sfx` class (metal, wood, paper, plastic, brick, rubber), level and pitch from strength, faded and
+    panned by distance from the car
+  - dot chimes climbing the C-major pentatonic with the combo; a golden-dot chord; a shuriken "shing"
+  - stamp thunk and crowd cheer; badge and rank arpeggios; station-open blip
+  - Dash countdown, go, checkpoint, penalty and the "submitted" fanfare
+  - mini-game cues; the Konami run-up; the beacon's Morse "10", timed by `src/game/morse.js`, shared with the light
+  - the two-tone "dot-dot" horn; the finale fanfare
+- **Voice limit:** each one-shot is one voice; at most `settings.audio.maxVoices` (12) at once, the rest dropped.
+- **Ambience** (`ambience.js`): one PannerNode per `sfx_` empty, active only while the car is within 1.6× its radius:
+  - HQ office hum; Studio pencil scratches and keys; PACE distant engines and passing cars
+  - R&R crowd and applause; Culture birds and soft music; Innovation pad; L&D page turns; arena wind
+- **Music** (`music.js`): an original 8-bar placeholder theme (C–Am–F–G–C–Em–F–G, 108 bpm), sequenced on the audio
+  clock with look-ahead. Keys, bass, drums and lead join at 0 / 2 / 5 / 8 stamps; the finale brings in all four. It
+  ducks to 30% under the station panel and the Passport.
+- **Sound panel** (`ui/soundPanel.js`, HUD "Sound" button):
+  - mute checkbox and four labelled range sliders
+  - keyboard-operable, and arrow keys don't drive while it has focus; Esc closes it and returns focus
+  - shows that the sounds are placeholders
+  - `M` mutes from anywhere, announced through the `aria-live` announcer
+  - all copy in `content/ui.json → sound` (schema extended)
+- **Docs:** `public/audio/MANIFEST.md` lists every file wanted, with format, budget and licence source (CC0 or
+  commissioned; the theme commissioned). `CREDITS.md` is new: libraries and their licences (checked against
+  `node_modules`), the reimplementation note, and an empty audio log.
+- **Decisions:**
+  - Gateways, Decade Drive, Audit, Tax, Consulting, Catalyst and Toolkit have no ambience. Doc 05 doesn't say what
+    they should sound like, so they're left for the team's sound design rather than invented.
+  - Music stems use their own gain stages and don't count against the 12 one-shot voices. Doc 05's limit is for
+    impacts and effects.
+
+Acceptance checks (in-app browser, real clicks and key presses):
+- [x] **No audio before the first gesture:** after load, `audio.context` is `null` and stats read `locked`. One click
+  on the canvas (or on the Sound button) → `running`.
+- [x] **The engine responds to speed and throttle**, measured as output peak and spectral centroid, with music and
+  ambience at 0:
+
+  | State | Centroid | Peak |
+  |---|---|---|
+  | rest | 82 Hz | 0.14 |
+  | coasting at 15 m/s | 222 Hz | 0.27 |
+  | full throttle at 16 m/s | 281 Hz | 0.45 |
+  | boost at 31 m/s | 821 Hz (whine) | 0.54 |
+
+- [x] **No clipping with 12 voices:** every bus at 100%, engine at full throttle with boost, all four music stems,
+  then three bursts of 20 full-strength impacts plus a golden chord and a fanfare. Voices capped at 12 (the rest
+  dropped); output peak 0.905; limiter reduction up to 10.6 dB.
+- [x] **Voices free up:** 0 live voices a second after the bursts.
+- [x] **Mute:** `M` takes the output to 0, announces "Sound muted", relabels the button "Sound off", and persists.
+  `M` again restores it ("Sound on").
+- [x] **Ducking:** music peak 0.79 → 0.35 with the Passport open, back after it closes.
+- [x] **Ambiences:** each named emitter starts in its own district (HQ, Studio, PACE, R&R, Culture, Innovation, L&D)
+  and stops on leaving; arena wind plays everywhere.
+- [x] `audio.update`: 0.011 ms average, 0.1 ms worst, per frame.
+- [x] `npm run build` and `content:check` pass; no runtime errors from the audio code.
+- [ ] Listened to by a person: not yet. The placeholders were checked only by meter. Their musical and tonal quality
+  is for the team to judge, and they're meant to be replaced.
+- [ ] Safari / iOS (the `webkitAudioContext` and `setPosition` fallbacks) untested.
+
 ## Phase 7 — VFX
 
 Every effect in doc 05 §2, in `src/vfx/`, driven by `game.events` and the car's state. All pooled: buffers are sized

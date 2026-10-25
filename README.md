@@ -110,7 +110,7 @@ Two platform notes worth passing on if a recipient hits them:
 | Zoom | mouse wheel | — | pinch |
 | Mute · Passport · Menu | `M` · `P` · `Esc` | — · D-pad up · Menu | — |
 
-Mute has nothing to act on until Phase 8 (audio); Esc closes the topmost
+`M` mutes everything (and the **Sound** button opens the level sliders); Esc closes the topmost
 panel, then opens Explore (the Phase 9 menu takes over later). In the `sim` preset (`?vehicle=sim`) `Space` keeps
 its old handbrake role.
 
@@ -176,6 +176,14 @@ src/
     blobShadows.js    instanced floor blobs for props (sun offset, height fade)
     floorGradient.js  world-space 4-corner floor colour + fade into the fog
     post.js           EffectComposer chain (bloom, vignette, output)
+  audio/
+    index.js          sound: the AudioContext (first gesture only), levels, mute, prefs
+    mixer.js          Music / SFX / Ambience -> Master -> limiter -> meter
+    synth.js          placeholder synthesis helpers + the 12-voice limiter
+    engine.js         engine layers, turbo, road, skid, landing thud
+    sounds.js         event one-shots: impacts by sfx class, chimes, stamp, Dash, horn
+    ambience.js       positional ambiences on the sfx_ empties
+    music.js          the theme's four stems, unlocked by passport stamps
   vfx/
     index.js          every doc 05 §2 effect, wired to game.events and the car
     particles.js      pooled instanced particles (one draw call per pool)
@@ -204,6 +212,7 @@ src/
     dash.js           Deadline Dash: chain, countdown, penalties, medals
     minigames.js      the 8 district mini-games
     achievements.js   driving badges + easter eggs
+    morse.js          the beacon's Morse "10", shared by its light and its beeps
     triggers.js       enter/exit watcher for area_ and trigger_ volumes
     lighting.js       a single fallback ambient; matcaps need no lights
   content/
@@ -223,6 +232,7 @@ src/
     screenFade.js     full-screen fade that hides respawn teleports
     gameHud.js        rank/XP/passport ring, counters, dash panel, toasts
     passportScreen.js the Passport (P): stamps, badges, records, skins, Reset
+    soundPanel.js     Sound: mute + Master/Music/Effects/Ambience sliders
   camera/
     cameraRig.js      owns both cameras, routes to settings.cameraMode (C)
     isoFollowCamera.js  default: the reference's fixed-angle follow + zoom + intro
@@ -397,6 +407,32 @@ chip.
   lines, less confetti, fireworks without flashes.
 - **Measuring.** `await __proto.benchmark.vfx()` (dev server) times the
   effects on the GPU and reports `vfx.update`'s CPU cost.
+
+## Sound
+
+`src/audio/` implements doc 05 §3 with Web Audio. **Nothing plays, and no
+AudioContext exists, until the first click, tap or key press.**
+
+- **Placeholder, all of it.** Every sound is synthesised (oscillators and
+  filtered noise) until real files arrive. `public/audio/MANIFEST.md` lists
+  each file needed, its format and where its licence should come from;
+  `CREDITS.md` logs what is actually shipped. The Sound panel says so too.
+- **Engine.** Three layers crossfaded by speed, pitch 0.8 → 1.8, louder and
+  brighter with throttle, a turbo whine on boost, a skid from sideways slip,
+  and a landing thud.
+- **Events.** Impacts by `sfx` class (the same `impact` events the VFX use),
+  pentatonic pickup chimes that climb with the combo, the stamp thunk and
+  cheer, Dash beeps and the "submitted" fanfare, the two-tone horn, the
+  beacon's Morse "10". At most 12 one-shots play at once; a limiter keeps
+  the mix out of clipping.
+- **Ambience.** Each `sfx_` empty doc 05 names (HQ, Studio, PACE, R&R,
+  Culture, Innovation, L&D, plus arena wind) plays through a PannerNode
+  when the car is in range.
+- **Music.** An 8-bar placeholder theme in four stems. Keys, bass, drums and
+  lead join at 0 / 2 / 5 / 8 stamps (`settings.audio.music.unlock`); it
+  ducks under the station panel and the Passport.
+- **Mixer.** `M` or the Sound button: mute, plus Master / Music / Effects /
+  Ambience. The visitor's levels are kept in `localStorage`.
 
 ## Art pipeline
 

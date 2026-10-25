@@ -122,6 +122,21 @@
     "deadline_hero": { "title": "Deadline Hero", "description": "Win gold in the Deadline Dash." },
     "pursuit_legend": { "title": "Pursuit Legend", "description": "Fill the whole Pursuit Passport." }
   },
+  "sound": {
+    "open": "Sound",
+    "openMuted": "Sound off",
+    "title": "Sound",
+    "close": "Close sound settings",
+    "mute": "Mute all sound",
+    "muteHint": "M",
+    "master": "Master",
+    "music": "Music",
+    "sfx": "Effects",
+    "ambience": "Ambience",
+    "muted": "Sound muted",
+    "unmuted": "Sound on",
+    "placeholder": "Placeholder sounds: synthesised until the final audio is supplied."
+  },
   "skins": {
     "default": "Original",
     "ninja": "Ninja",

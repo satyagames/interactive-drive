@@ -2,6 +2,7 @@ import * as THREE from 'three'
 
 import { rebuild, settings } from '../config.js'
 import { t } from '../content/ui.js'
+import { morseTimeline } from '../game/morse.js'
 import { CELL, createAtlasTexture } from './atlas.js'
 import { createFireworks } from './fireworks.js'
 import { createFloaters } from './floaters.js'
@@ -57,17 +58,6 @@ const P = {
   ten: { cat: 'ten', cell: CELL.ten, life: [0.9, 1.3], size: [0.5, 0.7], grow: 0.8, gravity: -0.7, drag: 1.2, rotation: 0, fadeStart: 0.4 },
   ink: { cat: 'debris', cell: CELL.dot, life: [0.5, 0.8], size: [0.22, 0.38], gravity: 18, drag: 0.4, bounce: 0, fadeStart: 0.6 },
   glow: { cat: 'glow', cell: CELL.glow, life: 1e-4, size: 1, alpha: 1 },
-}
-
-/** Morse "10": .---- -----, as [on, off] seconds. */
-const DOT = 0.18
-const DASH = 0.54
-function morseTimeline() {
-  const steps = []
-  for (const letter of ['.----', '-----']) {
-    for (let i = 0; i < letter.length; i++) steps.push([letter[i] === '.' ? DOT : DASH, i === letter.length - 1 ? DASH * 1.6 : DOT])
-  }
-  return steps
 }
 
 export function createVfx({ scene, camera, cameraRig, renderer, renderAssets, vehicle, game, gameWorld, seed, floaterRoot }) {

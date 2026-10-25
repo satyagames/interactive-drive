@@ -16,6 +16,7 @@
     "game",
     "dash",
     "passport",
+    "sound",
     "badges",
     "skins"
   ],
@@ -97,6 +98,24 @@
     },
     "passport": {
       "$ref": "#/$defs/strings"
+    },
+    "sound": {
+      "$ref": "#/$defs/strings",
+      "required": [
+        "open",
+        "openMuted",
+        "title",
+        "close",
+        "mute",
+        "muteHint",
+        "master",
+        "music",
+        "sfx",
+        "ambience",
+        "muted",
+        "unmuted",
+        "placeholder"
+      ]
     },
     "skins": {
       "$ref": "#/$defs/strings",

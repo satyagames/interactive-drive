@@ -40,6 +40,11 @@
       <span data-ui="passport.open"></span> <kbd data-ui="passport.openHint"></kbd>
     </button>
     <div id="passport" hidden></div>
+    <!-- Sound: mute + bus levels (src/ui/soundPanel.js); M mutes from anywhere. -->
+    <button id="sound-open" type="button" aria-expanded="false" aria-controls="sound">
+      <span data-sound-state></span> <kbd data-ui="sound.muteHint"></kbd>
+    </button>
+    <section id="sound" hidden></section>
     <div id="vfx-floaters" aria-hidden="true"></div>
     <div id="game-hud"></div>
     <div id="dash-hud" hidden></div>
