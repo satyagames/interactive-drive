@@ -37,17 +37,19 @@
     </section>
 
     <!-- Touch controls. Hidden by default; shown on coarse-pointer devices
-         or when forced from the debug panel. -->
+         or when forced from the debug panel. The joystick points where you
+         want to drive (src/input/touch.js). Labels move to content JSON in
+         Phase 3. -->
     <div id="touch" hidden>
-      <div class="touch-cluster touch-left">
-        <button class="touch-btn" data-action="steerLeft" aria-label="Steer left">&#9664;</button>
-        <button class="touch-btn" data-action="steerRight" aria-label="Steer right">&#9654;</button>
+      <div class="touch-joystick" data-joystick role="group" aria-label="Drive: point the stick where you want to go">
+        <div class="touch-joystick-knob"></div>
       </div>
       <div class="touch-cluster touch-right">
-        <button class="touch-btn" data-action="throttle" aria-label="Accelerate">&#9650;</button>
-        <button class="touch-btn" data-action="reverse" aria-label="Brake / reverse">&#9660;</button>
+        <button class="touch-btn" data-action="boost" aria-label="Boost">&#187;</button>
+        <button class="touch-btn" data-action="brake" aria-label="Brake">&#9632;</button>
+        <button class="touch-btn" data-action="reverse" aria-label="Reverse">&#9660;</button>
       </div>
-      <button class="touch-btn touch-aux" data-action="brake" aria-label="Brake">&#9632;</button>
+      <button class="touch-btn touch-aux touch-interact" data-action="interact" aria-label="Interact">&#8629;</button>
       <button class="touch-btn touch-aux touch-respawn" data-action="respawn" aria-label="Respawn">&#10227;</button>
     </div>
 

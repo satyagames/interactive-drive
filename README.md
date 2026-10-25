@@ -88,21 +88,33 @@ Two platform notes worth passing on if a recipient hits them:
 
 ## Controls
 
-| | Keyboard | Touch |
-|---|---|---|
-| Accelerate | `W` / `↑` | ▲ (bottom right) |
-| Reverse | `S` / `↓` | ▼ |
-| Steer | `A` `D` / `←` `→` | ◀ ▶ (bottom left) |
-| Brake | `Space` / `Ctrl` | ■ |
-| Boost | `Shift` | — (Phase 2) |
-| Handbrake drift | `Q` | — |
-| Horn (the car hops) | `H` | — |
-| Respawn at the nearest spawn | `R` | ⟲ |
+| | Keyboard | Gamepad (standard layout) | Touch |
+|---|---|---|---|
+| Accelerate | `W` / `↑` | RT / R2 | push the joystick where you want to go |
+| Steer | `A` `D` / `←` `→` | left stick | (the joystick steers towards its direction) |
+| Reverse | `S` / `↓` | LT / L2 | ▼ |
+| Brake | `Space` / `Ctrl` | B / ○ | ■ |
+| Boost | `Shift` | X / □ (hold) | » |
+| Handbrake drift | `Q` | RB / R1 | — |
+| Horn (the car hops) | `H` | LB / L1 | — |
+| Interact | `Enter` / `E` | A / ✕ | ↵ |
+| Switch camera (iso / chase) | `C` | Y / △ | — |
+| Respawn at the nearest spawn | `R` | View / Share | ⟲ |
+| Zoom | mouse wheel | — | pinch |
+| Mute · Passport · Menu | `M` · `P` · `Esc` | — · D-pad up · Menu | — |
 
-In the `sim` preset (`?vehicle=sim`) `Space` keeps its old handbrake role.
+Interact, mute, passport and menu are wired as input actions but have nothing
+to act on until Phases 5–9. In the `sim` preset (`?vehicle=sim`) `Space` keeps
+its old handbrake role.
 
-The touch pad appears automatically on coarse-pointer devices, and can be
-forced on for desktop testing from **Debug → force touch pad**.
+The touch joystick works like the 2019 reference: point it in a screen
+direction and the car turns and drives that way, whatever the camera. The touch
+pad appears automatically on coarse-pointer devices, and can be forced on for
+desktop testing from **Debug → force touch pad**.
+
+The default **iso** camera is the reference's: fixed south-east view, 32° down,
+40° FOV, easing after the car without ever rotating; it opens with a short
+dolly-out while the car drops in (skipped under reduced motion).
 
 ## Layout
 
@@ -149,6 +161,8 @@ src/
     materials.js      matcap material library + the baked-AO shader patch
     sky.js            vertical-gradient sky dome + the scene's distance fog
     shadowBlob.js     raycast contact shadow under the car
+    blobShadows.js    instanced floor blobs for props (sun offset, height fade)
+    floorGradient.js  world-space 4-corner floor colour + fade into the fog
     post.js           EffectComposer chain (bloom, vignette, output)
   world/
     world.js          loads world.glb, builds colliders from `collision_`
@@ -167,14 +181,18 @@ src/
   ui/
     screenFade.js     full-screen fade that hides respawn teleports
   camera/
-    chaseCamera.js    smoothed follow camera
+    cameraRig.js      owns both cameras, routes to settings.cameraMode (C)
+    isoFollowCamera.js  default: the reference's fixed-angle follow + zoom + intro
+    chaseCamera.js    alternative: smoothed follow behind the car
   input/
-    index.js          merges keyboard + touch into one axis set
+    index.js          merges keyboard, gamepad and touch; per-frame actions
     keyboard.js
-    touch.js
+    gamepad.js        Gamepad API, standard mapping
+    touch.js          joystick + hold/one-shot buttons
   debug/
     gui.js            lil-gui panel bound to config.js
     feelProbe.js      scripted feel test of the arcade car (#debug button)
+    propStress.js     #debug: drop 300 physics props to check the blob budget
     physicsDebug.js   collider wireframe overlay
     fps.js            frame-rate readout in the HUD
 ```
@@ -185,7 +203,9 @@ src/
 
 - **`settings`** — read live every step, so every value is safe to change from
   the lil-gui panel while driving. Grouped into `vehicle`, `arcade`,
-  `suspension`, `body`, `camera`, `shadow`, `post`, `render`, `debug`.
+  `suspension`, `body`, `camera` (chase), `cameraMode`, `isoCamera`, `floor`,
+  `blobShadows`, `touch`, `gamepad`, `shadow` (car blob), `post`, `render`,
+  `debug`.
 - **`rebuild`** — structural values (chassis size, wheel positions, mass,
   spawn point, gravity, timestep). Changing these needs a respawn or a reload.
 - **`rendering`** — which matcap and which AO bake each object gets, matched

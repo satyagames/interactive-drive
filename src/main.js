@@ -2,8 +2,8 @@ import './styles.css'
 
 import projects from '../content/projects.json'
 
-import { createChaseCamera } from './camera/chaseCamera.js'
-import { rebuild, settings, world as worldConfig } from './config.js'
+import { createCameraRig } from './camera/cameraRig.js'
+import { rebuild, rendering, settings, world as worldConfig } from './config.js'
 import { createExhibitPanel } from './content/panel.js'
 import { runPostBenchmark } from './debug/benchmark.js'
 import { createProgressTracker } from './content/progress.js'
@@ -13,7 +13,10 @@ import { createRenderer } from './core/renderer.js'
 import { createDebugGui } from './debug/gui.js'
 import { createFpsMeter } from './debug/fps.js'
 import { createPhysicsDebug } from './debug/physicsDebug.js'
+import { createPropStress } from './debug/propStress.js'
 import { createInput } from './input/index.js'
+import { createBlobShadows } from './render/blobShadows.js'
+import { createFloorGradient } from './render/floorGradient.js'
 import { loadRenderAssets, syncRenderSettings, syncShaderEffects } from './render/materials.js'
 import { createPostProcessing } from './render/post.js'
 import { createShadowBlob } from './render/shadowBlob.js'
@@ -72,6 +75,16 @@ async function bootstrap() {
 
   const gameWorld = await createWorld({ scene, world, RAPIER, renderAssets })
 
+  // The authored ground keeps its AO bake; its colour becomes the world-space
+  // gradient, and an outer plane carries that gradient out into the fog.
+  let groundMesh = null
+  gameWorld.group.traverse((node) => {
+    if (!groundMesh && node.isMesh && node.name.startsWith('ground')) groundMesh = node
+  })
+  const floor = createFloorGradient({ scene, ground: groundMesh, fogColor: rendering.sky.fog })
+  const blobs = createBlobShadows({ scene })
+  const propStress = debugMode ? createPropStress({ scene, world, RAPIER, renderAssets, blobs }) : null
+
   // The world's `spawn_` empty (if any) overrides the fallback in config.js;
   // `createVehicle` reads `rebuild.chassis.spawn*` when it spawns the body.
   const spawnPoint = Object.values(gameWorld.spawns)[0]
@@ -117,7 +130,7 @@ async function bootstrap() {
     },
   })
 
-  const chaseCamera = createChaseCamera(camera)
+  const cameraRig = createCameraRig(camera, canvas)
   const physicsDebug = createPhysicsDebug({ scene, world })
   const input = createInput()
   const fps = createFpsMeter(hudFpsEl)
@@ -129,16 +142,20 @@ async function bootstrap() {
   const respawnVehicle = () => {
     screenFade.run(() => {
       vehicle.respawn(nearestSpawn(gameWorld.spawns, vehicle.position))
-      chaseCamera.reset()
+      cameraRig.reset()
     })
   }
 
-  createDebugGui({ vehicle, camera: chaseCamera, hud: hudEl, resize, respawn: respawnVehicle, RAPIER, debugMode })
+  createDebugGui({
+    vehicle, camera: cameraRig, hud: hudEl, resize, respawn: respawnVehicle, RAPIER, debugMode, propStress,
+  })
   hudEl.hidden = !settings.debug.showHud
 
   vehicle.sync()
   shadowBlob.update()
-  chaseCamera.update(1 / 60, vehicle)
+  cameraRig.update(1 / 60, vehicle)
+  // Opening shot: start close and ease out while the car drops in.
+  cameraRig.playIntro()
   sky.update(camera)
 
   loaderEl.classList.add('hidden')
@@ -150,7 +167,7 @@ async function bootstrap() {
   if (import.meta.env.DEV) {
     window.__proto = {
       vehicle, world, scene, camera, settings, input, exhibitPanel, progress, gameWorld,
-      renderer, renderAssets, post, shadowBlob, sky, fps,
+      renderer, renderAssets, post, shadowBlob, sky, fps, cameraRig, floor, blobs, propStress,
       benchmark: { run: (options) => runPostBenchmark({ renderer, scene, camera }, options) },
     }
   }
@@ -162,11 +179,15 @@ async function bootstrap() {
 
   createLoop((delta) => {
     elapsed += delta
-    const inputState = input.update()
+    const inputState = input.update({ camera, vehicle })
 
-    if (input.consumeRespawn()) respawnVehicle()
+    if (input.consume('respawn')) respawnVehicle()
     // Audio (Phase 8) will hang the horn sound off this too.
-    if (input.consumeHorn()) vehicle.horn()
+    if (input.consume('horn')) vehicle.horn()
+    if (input.consume('camera')) cameraRig.toggle()
+    // interact / mute / passport / menu have no consumers until Phases 5-9;
+    // unconsumed presses are dropped at the next update. (Esc already closes
+    // the exhibit panel through its own listener.)
 
     // Vehicle forces must be applied inside the fixed step, not per frame,
     // or the feel changes with the display refresh rate.
@@ -175,9 +196,12 @@ async function bootstrap() {
     vehicle.sync()
     triggerWatcher(vehicle.position)
     interaction += (interactionTarget - interaction) * (1 - Math.exp(-8 * delta))
-    chaseCamera.update(delta, vehicle)
+    cameraRig.update(delta, vehicle)
     sky.update(camera)
     shadowBlob.update()
+    propStress?.update()
+    blobs.update()
+    floor.update()
     physicsDebug.update()
     syncRenderSettings()
     syncShaderEffects({

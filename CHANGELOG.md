@@ -2,6 +2,48 @@
 
 Pursuit Arena build log. One entry per phase (see `docs/pursuit-arena/06-phased-prompts.md`).
 
+## Phase 2 — Camera, floor, shadows, input
+
+- **Iso camera** (`src/camera/isoFollowCamera.js`, now the default):
+  - fixed south-east view, 32° pitch, 38.05° azimuth, 40° FOV
+  - frame-rate-independent follow (9.75 /s) that tracks only the car's X/Z
+  - wheel and pinch zoom between 22.4 and 46.4 m (34.4 m default)
+  - optional look-ahead (off, as in the reference)
+  - an intro dolly-out while the car drops in (skipped under reduced motion)
+  - pulls back only on portrait screens
+- **Camera rig:** `cameraRig.js` owns both cameras; C or gamepad Y toggles iso and chase.
+- **Floor** (`src/render/floorGradient.js`): world-space four-corner gradient from doc 02 (NW green, NE teal, SE sand,
+  SW grey). It fades into the fog past the 135 m boundary. The authored ground keeps its AO bake under the gradient, and
+  an outer 4 km plane carries the colour to the horizon. All values are live in `settings.floor`.
+- **Prop shadows** (`src/render/blobShadows.js`): one instanced draw for any number of blobs. They are offset along the
+  reference's sun direction by height and faded by height and tilt, with no raycasts. The car keeps its raycast blob.
+- **Input:**
+  - one-shot actions are now per frame and consumed through `input.consume(action)`
+  - new keys: Enter/E interact, C camera, M mute, P passport, Esc menu
+  - typing in a field, or Space/Enter on a focused button, no longer drives the car
+- **Gamepad** (`src/input/gamepad.js`): standard layout with analog throttle, reverse and steer.
+- **Touch pad:** rebuilt as a reference-style joystick (point where you want to go, and it drives there relative to the
+  camera), plus boost, brake, reverse, interact and respawn buttons. Pinch zooms.
+- **Debug (`#debug`):** "Drop 300 test props" (`src/debug/propStress.js`) plus panel folders for the iso camera, floor
+  colours and prop blobs.
+
+Acceptance checks (in-app browser, scripted input):
+- [x] Camera framing vs doc 07 §2: pitch 32.00°, azimuth 38.05°, FOV 40°, distance 34.40 m (min 22.4, max 46.4) at 4:3.
+- [x] C toggles to chase and back without a jump.
+- [x] 300 blobs cost 0.0375 ms per frame (300 `set` + `update`, CPU), well under the 0.3 ms budget. The full
+  300-prop sync (bodies, instance matrices and blobs) averages 0.085 ms, peaking at 0.6 ms while all 300 fall. Blobs are
+  1 draw call. All 300 bodies were asleep about 5 s after landing.
+- [x] Touch at 375×812 (emulated mobile): the joystick drives the car along screen up, right, down and left with
+  alignment 1.000 at full speed. Reverse reaches −15.7 m/s, boost and brake register, and pinch zooms.
+- [x] Feel probe still all within tolerance; `npm run build` passes.
+- [ ] Touch on a real phone (emulated only).
+- [ ] Gamepad with real hardware (no pad available).
+- [ ] Frame rate: the browser pane was throttled to ~21 fps in the background with or without the 300 props, so
+  no fps figure is claimed. Re-measure in a foreground browser on the target laptop.
+
+Noticed, not changed: `render/materials.js` patches `#include <output_fragment>`, which three r154+ renamed to
+`opaque_fragment`. Its fresnel rim and accent emission have silently been no-ops on r186.
+
 ## Phase 1 — Vehicle parity, `arcade2019` preset
 
 - New default vehicle preset `arcade2019` (`src/vehicle/arcadePhysics.js` + `arcadeVehicle.js`): Rapier's

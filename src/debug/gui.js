@@ -1,6 +1,7 @@
 import GUI from 'lil-gui'
 
 import { defaultSettings, qualityTiers, rebuild, settings } from '../config.js'
+import { cameraModes } from '../camera/cameraRig.js'
 import { runFeelProbe } from './feelProbe.js'
 
 const STORAGE_KEY = 'driving-prototype/tuning'
@@ -13,7 +14,7 @@ const PRESETS = ['arcade2019', 'sim']
  * Tuned values can be stashed in localStorage so a good feel survives a
  * refresh, and dumped as JSON to paste back into `src/config.js`.
  */
-export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, debugMode }) {
+export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, debugMode, propStress }) {
   const gui = new GUI({ title: 'Tuning', width: Math.min(300, window.innerWidth - 30) })
   // On a phone the panel would cover most of the screen, so start it shut.
   if (window.matchMedia?.('(pointer: coarse)').matches) gui.close()
@@ -103,7 +104,23 @@ export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, 
   if (!isSim) for (const folder of [vehicleFolder, suspFolder, bodyFolder]) folder.hide()
 
   // ---- camera -------------------------------------------------------------
-  const cameraFolder = gui.addFolder('Camera')
+  gui.add(settings, 'cameraMode', cameraModes).name('camera (C)').listen()
+
+  // Reference camera; distances in reference units x worldScale (doc 07 §2).
+  const isoFolder = gui.addFolder('Iso camera')
+  const iso = settings.isoCamera
+  isoFolder.add(iso, 'fov', 15, 80, 0.5).name('fov')
+  isoFolder.add(iso, 'pitch', 10, 89, 0.1).name('pitch (deg down)')
+  isoFolder.add(iso, 'azimuth', -180, 180, 0.5).name('azimuth (deg E of S)')
+  isoFolder.add(iso, 'minDistance', 2, 40, 0.5).name('min distance (u)')
+  isoFolder.add(iso, 'zoomRange', 0, 40, 0.5).name('zoom range (u)')
+  isoFolder.add(iso, 'followRate', 0.5, 30, 0.05).name('follow rate (1/s)')
+  isoFolder.add(iso, 'zoomRate', 0.5, 30, 0.05).name('zoom rate (1/s)')
+  isoFolder.add(iso, 'lookAhead', 0, 1, 0.01).name('look-ahead (s)')
+  isoFolder.add(iso, 'portraitFraming').name('portrait framing fix')
+  isoFolder.add({ intro: () => camera.playIntro() }, 'intro').name('Replay intro dolly')
+
+  const cameraFolder = gui.addFolder('Chase camera').close()
   const c = settings.camera
   cameraFolder.add(c, 'distance', 2, 30, 0.1).name('follow distance')
   cameraFolder.add(c, 'height', 0.5, 20, 0.1).name('height')
@@ -143,7 +160,27 @@ export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, 
     .name('pixel ratio cap')
     .onChange(() => resize())
 
-  const shadowFolder = renderFolder.addFolder('Shadow blob').close()
+  const floorFolder = renderFolder.addFolder('Floor gradient').close()
+  const fl = settings.floor
+  floorFolder.addColor(fl, 'northWest').name('NW')
+  floorFolder.addColor(fl, 'northEast').name('NE')
+  floorFolder.addColor(fl, 'southEast').name('SE')
+  floorFolder.addColor(fl, 'southWest').name('SW')
+  floorFolder.add(fl, 'halfExtent', 20, 400, 1).name('half extent (m)')
+  floorFolder.add(fl, 'boundaryRadius', 20, 400, 1).name('boundary radius (m)')
+  floorFolder.add(fl, 'fadeWidth', 1, 200, 1).name('fade width (m)')
+
+  const blobFolder = renderFolder.addFolder('Prop blob shadows').close()
+  const bl = settings.blobShadows
+  blobFolder.add(bl, 'enabled').name('enabled')
+  blobFolder.add(bl, 'opacity', 0, 1, 0.01).name('opacity')
+  blobFolder.addColor(bl, 'tint').name('tint')
+  blobFolder.add(bl, 'sunOffsetX', -2, 2, 0.01).name('sun offset x / m height')
+  blobFolder.add(bl, 'sunOffsetZ', -2, 2, 0.01).name('sun offset z / m height')
+  blobFolder.add(bl, 'fadeHeight', 0.5, 20, 0.1).name('fade height (m)')
+  blobFolder.add(bl, 'fadePower', 0.5, 4, 0.1).name('fade power')
+
+  const shadowFolder = renderFolder.addFolder('Car shadow blob').close()
   const sh = settings.shadow
   shadowFolder.add(sh, 'enabled').name('enabled')
   shadowFolder.add(sh, 'maxOpacity', 0, 1, 0.01).name('opacity (grounded)')
@@ -181,6 +218,17 @@ export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, 
     hud.hidden = !value
   })
   debugFolder.add(settings.debug, 'showFps').name('frame rate')
+  if (propStress) {
+    // Phase 2 budget check: 300 blob shadows under 0.3 ms (see stats in the console).
+    const stress = {
+      spawn300: () => propStress.spawn(300, vehicle.position),
+      clear: () => propStress.clear(),
+      stats: () => console.table(propStress.stats()),
+    }
+    debugFolder.add(stress, 'spawn300').name('Drop 300 test props')
+    debugFolder.add(stress, 'stats').name('Prop + blob cost (console)')
+    debugFolder.add(stress, 'clear').name('Clear test props')
+  }
 
   // ---- actions ------------------------------------------------------------
   const actions = {

@@ -181,6 +181,95 @@ export const settings = {
     portraitFraming: true,
   },
 
+  /** Which camera drives the view: 'iso' (default, the reference's) or 'chase'. C toggles. */
+  cameraMode: 'iso',
+
+  /**
+   * The reference's camera (docs/pursuit-arena/07 §2): fixed world yaw and
+   * pitch, narrow FOV, never rotates with the car. Distances are reference
+   * units, scaled by `rebuild.worldScale` like the arcade car.
+   */
+  isoCamera: {
+    fov: 40,
+    /** Degrees below horizontal (C2: atan(1.15 / hypot(1.135, 1.45))). */
+    pitch: 32.0,
+    /** Camera position seen from the car, degrees east of due south (C3). */
+    azimuth: 38.05,
+    /** distance = minDistance + zoomRange * zoom, zoom in 0..1 (C4). */
+    minDistance: 14,
+    zoomRange: 15,
+    defaultZoom: 0.5,
+    /** Exponential follow / zoom rates, 1/s (C5, C6: 0.15 and 0.1 per 60 Hz frame). */
+    followRate: 9.75,
+    zoomRate: 6.32,
+    /** Zoom change per wheel deltaY pixel (C6). */
+    wheelSensitivity: 0.001,
+    /**
+     * Seconds of velocity added to the aim point. 0 = the reference (no
+     * look-ahead); a small value (~0.15) leads the car slightly at speed.
+     */
+    lookAhead: 0,
+    /**
+     * Opening shot: start at this zoom (negative = closer than minDistance)
+     * and ease out to `defaultZoom` over `introDuration` seconds while the car
+     * drops in. Skipped under prefers-reduced-motion.
+     */
+    introZoom: -0.45,
+    introDuration: 2.6,
+    /** Same idea as the chase camera's: pull back on tall (portrait) viewports. */
+    portraitFraming: true,
+  },
+
+  /**
+   * World-space floor gradient (`render/floorGradient.js`). Corner colours
+   * from docs/pursuit-arena/02 §2; the colour tells you roughly where on the
+   * map you are -- a deliberate change from the reference's screen-space one.
+   */
+  floor: {
+    northWest: 0x0b3d2e,
+    northEast: 0x0d5b5f,
+    southEast: 0xe9e2d0,
+    southWest: 0xdadfe3,
+    /** The gradient spans -halfExtent..+halfExtent on X and Z, m. */
+    halfExtent: 135,
+    /** Beyond this radius the floor dissolves into the fog colour... */
+    boundaryRadius: 135,
+    /** ...over this many metres. */
+    fadeWidth: 45,
+  },
+
+  /**
+   * Instanced floor blobs for props (`render/blobShadows.js`), modelled on the
+   * reference's: no raycasts, offset along a fixed sun direction by height,
+   * faded by height and by tilt. The car keeps its own raycast blob below.
+   */
+  blobShadows: {
+    enabled: true,
+    tint: 0x2b1d14,
+    /** Overall opacity (reference: 0.5 after the intro fade-in). */
+    opacity: 0.5,
+    /** Horizontal shift per metre of height; reference sun (-2.5, -2.65, 3.75) -> (0.667, 0.707) in its Z-up frame. */
+    sunOffsetX: 0.667,
+    sunOffsetZ: -0.707,
+    /** Fully faded at this height above the floor, m (3 reference units x 1.6). */
+    fadeHeight: 4.8,
+    fadePower: 2,
+  },
+
+  /** On-screen touch pad (`input/touch.js`). */
+  touch: {
+    /** Joystick travel radius, CSS px. */
+    joystickRadius: 52,
+    /** Fraction of the radius ignored around the centre. */
+    deadZone: 0.18,
+  },
+
+  /** Gamepad (`input/gamepad.js`), standard mapping. */
+  gamepad: {
+    stickDeadZone: 0.15,
+    triggerDeadZone: 0.05,
+  },
+
   /**
    * Fake contact shadow under the car. Not a shadow map -- a single faded
    * quad placed by a downward raycast, which is all a stylised scene needs

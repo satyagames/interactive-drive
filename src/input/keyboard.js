@@ -1,9 +1,10 @@
 /**
- * Raw keyboard state. Produces the same axis shape as the touch pad so the two
- * can simply be summed.
+ * Raw keyboard state: held driving keys plus one-shot action presses.
  *
- * Bindings follow the 2019 reference (docs/pursuit-arena/01 §2.2): Space or
- * Ctrl brakes, Shift boosts, H honks. Q (handbrake drift) is our addition.
+ * Bindings follow the 2019 reference (docs/pursuit-arena/01 §2.2) and doc 05
+ * §4: Space or Ctrl brakes, Shift boosts, H honks, Enter/E interacts, C
+ * switches camera, M mutes, P opens the passport, Esc the menu. Q (handbrake
+ * drift) is our addition.
  */
 
 const KEY_MAP = {
@@ -16,10 +17,31 @@ const KEY_MAP = {
   KeyQ: 'handbrake',
   KeyR: 'respawn',
   KeyH: 'horn',
+  Enter: 'interact', NumpadEnter: 'interact', KeyE: 'interact',
+  KeyC: 'camera',
+  KeyM: 'mute',
+  KeyP: 'passport',
+  Escape: 'menu',
 }
 
 /** Actions that fire once per press rather than being held. */
-const EDGE_ACTIONS = new Set(['respawn', 'horn'])
+export const EDGE_ACTIONS = new Set(['respawn', 'horn', 'interact', 'camera', 'mute', 'passport', 'menu'])
+
+/** Keys that activate a focused button or link. */
+const ACTIVATION_KEYS = new Set(['Space', 'Enter', 'NumpadEnter'])
+
+/**
+ * Keys typed into a text field belong to it, and Space/Enter on a focused
+ * button or link activate that control rather than braking or interacting.
+ * Everything else still drives, so clicking a debug slider doesn't strand
+ * the car.
+ */
+function ownedByFocusedControl(event) {
+  const el = event.target
+  if (!(el instanceof Element)) return false
+  if (el.closest('input, textarea, select, [contenteditable]')) return true
+  return ACTIVATION_KEYS.has(event.code) && Boolean(el.closest('button, a[href], [role="button"]'))
+}
 
 export function createKeyboard(target = window) {
   const held = new Set()
@@ -31,6 +53,9 @@ export function createKeyboard(target = window) {
     // Leave browser shortcuts alone (Ctrl+R reload etc.) -- Ctrl itself
     // still brakes, matching the reference.
     if ((event.ctrlKey || event.metaKey || event.altKey) && action !== 'brake') return
+    // Esc always reaches the game (it closes things); everything else yields
+    // to whatever control has focus.
+    if (action !== 'menu' && ownedByFocusedControl(event)) return
     // Stop space/arrows from scrolling the page.
     event.preventDefault()
     if (event.repeat) return
@@ -41,7 +66,6 @@ export function createKeyboard(target = window) {
   const onKeyUp = (event) => {
     const action = KEY_MAP[event.code]
     if (!action) return
-    event.preventDefault()
     held.delete(action)
   }
 
@@ -51,13 +75,6 @@ export function createKeyboard(target = window) {
   target.addEventListener('keydown', onKeyDown)
   target.addEventListener('keyup', onKeyUp)
   window.addEventListener('blur', onBlur)
-
-  /** Edge-triggered: returns true once per press. */
-  const consume = (action) => {
-    const value = pressed.has(action)
-    pressed.delete(action)
-    return value
-  }
 
   return {
     get state() {
@@ -69,8 +86,11 @@ export function createKeyboard(target = window) {
         handbrake: held.has('handbrake'),
       }
     },
-    consumeRespawn: () => consume('respawn'),
-    consumeHorn: () => consume('horn'),
+    /** Moves this frame's one-shot presses into `into` and forgets them. */
+    drainEdges(into) {
+      for (const action of pressed) into.add(action)
+      pressed.clear()
+    },
     dispose() {
       target.removeEventListener('keydown', onKeyDown)
       target.removeEventListener('keyup', onKeyUp)
