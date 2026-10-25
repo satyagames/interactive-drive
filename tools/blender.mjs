@@ -2,9 +2,11 @@
  * Runs the arena art pipeline headless (docs/pursuit-arena/04 §1):
  *
  *   npm run art:gen        kit + base + every district  -> blender/{kit,districts}/*.blend
+ *   npm run art:polish     bevel, LOD1 twins, AO bakes  -> the same .blend files + public/textures/bake/district_*.jpg
  *   npm run art:validate   validate.py on each .blend   -> blender/reports/*.json (+ cross-file checks)
  *   npm run art:export     export_arena.py on each      -> public/models/{kit,district_*}.glb + arena.manifest.json
- *   npm run art:build      all three, in that order
+ *   npm run art:cart       gen_cart.py                  -> blender/vehicle/cart.blend, public/models/cart.glb, cart AO
+ *   npm run art:build      gen, polish, validate, export, cart, in that order
  *
  *   node tools/blender.mjs gen --only audit      one district
  *
@@ -22,6 +24,7 @@ const districtsDir = join(root, 'blender', 'districts')
 const kitBlend = join(root, 'blender', 'kit', 'arena_kit.blend')
 const reportsDir = join(root, 'blender', 'reports')
 const modelsDir = join(root, 'public', 'models')
+const bakeDir = join(root, 'public', 'textures', 'bake')
 
 const DISTRICTS = [
   'hq', 'rfp_gate', 'decade_drive',
@@ -56,7 +59,7 @@ function run(script, { blend = null, extra = [] } = {}) {
   const result = spawnSync(blender, argv, { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
   const lines = `${result.stdout ?? ''}${result.stderr ?? ''}`.split(/\r?\n/)
   for (const line of lines) {
-    if (/^\[(gen|validate|export)/.test(line) || /Error|Traceback|^\s+File /.test(line)) console.log(line)
+    if (/^\[(gen|polish|validate|export|cart)/.test(line) || /Error|Traceback|^\s+File /.test(line)) console.log(line)
   }
   if (result.status !== 0) {
     console.error(`\n${script} failed (exit ${result.status})${blend ? ` on ${blend}` : ''}`)
@@ -72,6 +75,23 @@ function gen(only) {
   if (!only || only === 'base') run('gen_base.py', { extra: ['--out', blendFor('base')] })
   for (const id of DISTRICTS) {
     if (!only || only === id) run('gen_district.py', { extra: ['--id', id, '--out', blendFor(id)] })
+  }
+}
+
+/**
+ * The art pass (blender/scripts/polish.py). Districts first: the base's
+ * ground bake links every district in as an occluder, so they must be final.
+ */
+function polish(only) {
+  if (!only || only === 'kit') run('polish.py', { blend: kitBlend, extra: ['--kit'] })
+  for (const id of DISTRICTS) {
+    if (!only || only === id) run('polish.py', { blend: blendFor(id), extra: ['--id', id, '--bake', join(bakeDir, `district_${id}.jpg`)] })
+  }
+  if (!only || only === 'base') {
+    run('polish.py', {
+      blend: blendFor('base'),
+      extra: ['--id', 'base', '--bake', join(bakeDir, 'district_base.jpg'), '--occluders', DISTRICTS.map(blendFor).join(',')],
+    })
   }
 }
 
@@ -120,7 +140,13 @@ function exportAll() {
   const manifest = {
     version: 1,
     kit: 'models/kit.glb',
-    districts: files.map(([id]) => ({ id, url: `models/district_${id}.glb`, stage: core.has(id) ? 'core' : 'stream' })),
+    // `bake`: the district's AO atlas (art:polish), sampled on UV channel 1.
+    districts: files.map(([id]) => ({
+      id,
+      url: `models/district_${id}.glb`,
+      stage: core.has(id) ? 'core' : 'stream',
+      ...(existsSync(join(bakeDir, `district_${id}.jpg`)) ? { bake: `district_${id}.jpg` } : {}),
+    })),
   }
   writeFileSync(join(modelsDir, 'arena.manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
   console.log(`[export] wrote ${files.length + 1} GLBs and models/arena.manifest.json`)
@@ -130,13 +156,17 @@ const [command, flag, value] = process.argv.slice(2)
 const only = flag === '--only' ? value : null
 console.log(`Using Blender: ${blender}`)
 if (command === 'gen') gen(only)
+else if (command === 'polish') polish(only)
 else if (command === 'validate') validate()
 else if (command === 'export') exportAll()
+else if (command === 'cart') run('gen_cart.py')
 else if (command === 'build') {
   gen(only)
+  polish(only)
   validate()
   exportAll()
+  run('gen_cart.py')
 } else {
-  console.error('usage: node tools/blender.mjs <gen|validate|export|build> [--only <id|kit|base>]')
+  console.error('usage: node tools/blender.mjs <gen|polish|validate|export|cart|build> [--only <id|kit|base>]')
   process.exit(2)
 }

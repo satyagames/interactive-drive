@@ -135,9 +135,10 @@ content/
   ui.json             all interface copy
   *.schema.json       rules for both (npm run content:check)
 blender/
-  scripts/              arena generators + validate/export (npm run art:*)
+  scripts/              arena + cart generators, polish (bevel/LOD/AO), validate, export (npm run art:*)
   kit/, districts/      generated arena .blend files (edit the generators)
-  scene.blend           the car ("Vehicle"); "World" is the retired prototype lot
+  vehicle/cart.blend    the generated anniversary cart (npm run art:cart)
+  scene.blend           the prototype car (?vehicle=sim); "World" is the retired prototype lot
   vehicle_details.py    adds the car's lamps + tail lip (idempotent)
   bevel.py              rounds every visible edge, destructively (idempotent)
   bake_ao.py            headless Cycles bake -> public/textures/bake/*.png
@@ -155,9 +156,10 @@ scripts/
 docs/
   blender-conventions.md   naming convention, axis notes, export settings
 public/
-  models/             vehicle.glb, kit.glb, district_*.glb, arena.manifest.json
+  models/             cart.glb, kit.glb, district_*.glb, arena.manifest.json (vehicle.glb: sim preset)
   textures/
     matcaps/          generated matcap spheres (tools/generate-matcaps.mjs)
+    bake/             AO bakes: district_*.jpg (art:polish), cart-ao.jpg (art:cart)
   draco/              Draco decoder, copied from three's examples/jsm/libs
   content/
     placeholder.svg   stand-in image for every content entry still marked placeholder
@@ -482,12 +484,15 @@ AudioContext exists, until the first click, tap or key press.**
 loaded per district by `src/world/world.js`:
 
 ```bash
-npm run art:build      # generate -> validate -> export (or art:gen / art:validate / art:export)
+npm run art:build      # generate -> polish -> validate -> export -> cart (each also on its own: art:gen, ...)
 ```
 
 That writes `blender/{kit,districts}/*.blend`, `public/models/kit.glb`, one
-`public/models/district_<id>.glb` per district (base + 14) and
-`public/models/arena.manifest.json`. Validation fails the build on naming
+`public/models/district_<id>.glb` per district (base + 14),
+`public/models/arena.manifest.json`, and an AO bake per district in
+`public/textures/bake/`. The **polish** pass (Phase 10) rounds every edge,
+gives each landmark a cheaper `_LOD1` twin, and bakes ambient occlusion,
+plus a soft sun shadow on the ground, so buildings sit on the floor. Validation fails the build on naming
 errors, budget overruns, a content id without exactly one `area_`, or a
 dynamic prop that would start inside static geometry. Set `BLENDER_BIN` (in
 the environment or `.env.local`) if Blender isn't in the default install
@@ -498,8 +503,19 @@ lamps, collectibles) and dynamic props are instanced, and every `dyn_` prop is
 a sleeping Rapier compound body with a blob shadow. The core districts load
 before the first frame; the outer ring streams in right after.
 
-**The car** still comes from `blender/scene.blend` (Vehicle collection).
-Rebuilding it is four headless passes, in this order:
+**The car** is the anniversary cart, generated like the arena:
+
+```bash
+npm run art:cart       # blender/scripts/gen_cart.py -> public/models/cart.glb + its AO
+```
+
+It is a toy-like open-top buggy in Deloitte green with a white roll bar and
+a "10" pennant on the spring antenna. It is modelled in the physics body's
+own space and size, and the runtime reads its wheels, antenna and lamps by
+node name (see `docs/blender-conventions.md`, "The anniversary cart").
+
+**The prototype car** (the `?vehicle=sim` preset only) still comes from
+`blender/scene.blend` (Vehicle collection), in four headless passes, in this order:
 
 ```bash
 blender --background blender/scene.blend --python blender/vehicle_details.py
@@ -516,10 +532,9 @@ it twice -- read its docstring before changing the widths.
 - Axis convention is three.js-native: local **-Z forward, +X right, +Y up**.
 - The glTF spec says assets face **+Z**, so the vehicle model gets a 180° yaw
   on load (`rebuild.model.yawOffset = Math.PI`, applied in both vehicle presets).
-- `arcadeVehicle.js` / `simVehicle.js` load `vehicle.glb` straight into the
-  `chassis-visual` child group; nothing else about the physics, camera or input
-  paths looks inside it. The arcade preset scales the placeholder body to its
-  shorter chassis until the Phase 10 cart replaces it.
+- `arcadeVehicle.js` loads `cart.glb` (`rebuild.cart`) and `simVehicle.js`
+  loads `vehicle.glb` into the `chassis-visual` child group; nothing else
+  about the physics, camera or input paths looks inside them.
 - `world.js` loads the arena GLBs and classifies every node by name prefix
   (`collision_`, `dyn_`, `inst_`, `area_`, `trigger_`, `collect_`, `spawn_`,
   `sfx_`, or plain-visual) rather than a hardcoded layout table. See **`docs/blender-conventions.md`** for the full
@@ -553,6 +568,13 @@ eye uses to read a solid object.
 | Cobalt | `#2F6FB5` | vehicle hull |
 | Espresso | `#332B29` | tyres, cabin glass |
 | Ivory | `#F3E6CC` | headlamps, wheel hubs, sky horizon |
+
+The arena adds five of its own (Phase 10, doc 04 §3): **brand-green**
+`#86BC25` (the cart, the HQ beacon, the portal, the 10 monument), **gold**
+`#E3B505` (coins, trophies, golden dots), **glass** `#A9CFDC` (the HQ tower,
+the Innovation dome), **paper** `#F4F2EC` (the RFP Gate) and **red-tape**
+`#C8102E` (the Toolkit). Confirm the brand values with the Deloitte guidelines
+before release (doc 05 §1).
 
 Nothing is fully saturated and nothing is neutral grey, which is what lets
 eight hues read as one set. Cobalt is the only strong cool blue in the scene,

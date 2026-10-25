@@ -173,8 +173,9 @@ below); editing the content JSON does not.
 ## Rebuilding the arena
 
 ```bash
-npm run art:build      # = art:gen, art:validate, art:export
-node tools/blender.mjs gen --only audit   # one district (or kit / base)
+npm run art:build      # = art:gen, art:polish, art:validate, art:export, art:cart
+node tools/blender.mjs gen --only audit      # one district (or kit / base)
+node tools/blender.mjs polish --only audit   # its art pass (base last: it needs every district)
 ```
 
 `tools/blender.mjs` runs Blender 5.x headless (`BLENDER_BIN` from the
@@ -190,23 +191,66 @@ environment or `.env.local`, else the default install path):
    seed's coordinates: plaza, gateway + `trigger_stamp_<id>`, landmark, one
    pod + `area_` per station, the themed playground, trees, spawn, ambience.
    Shared helpers live in `_common.py`; the arena's radii in `arena_layout.py`.
-4. **`validate.py`** per file → `blender/reports/<file>.json` (git-ignored),
+4. **`polish.py`** per file (the Phase 10 art pass, shared code in
+   `polish_lib.py`):
+   - **LOD1**: each `landmark_*` visual gets a twin `<name>_LOD1`, copied
+     *before* the bevel (the plain blockout, roughly a third of the bevelled
+     triangles). The runtime merges LOD0 and LOD1 landmarks into two sets and
+     shows one by camera distance (`settings.lod.distance`, set by the
+     quality tier).
+   - **Bevel**: every static visual (2 segments, 5–6 cm), dynamic-prop visual
+     and kit piece (1 segment, 3 cm) gets a rounded, smooth-shaded edge,
+     written into the mesh with bmesh. Props of one look share a mesh, and
+     that sharing is what the runtime batches them by, so the bevel goes on
+     the shared mesh, once. Floors, roads, plazas, decals and kit trees are
+     left alone.
+   - **AO**: the district's static visuals share one atlas on the `bake` UV
+     layer (TEXCOORD_1), 1024² (HQ 2048²), baked against each other and a
+     temporary ground plane. Downward faces and LOD1 twins sample the
+     atlas's reserved white corner. Collision proxies and dynamic props are
+     hidden from the bake: proxies would occlude their own visuals, and props
+     would leave a shadow where they started.
+   - **Ground (base)**: the ground alone is baked, AO times a soft sun shadow
+     at 2048², through a planar top-down projection, with every district's
+     statics linked in as occluders. Roads and kerbs share the projection but
+     are hidden during the bake, so they inherit the ground's shadows instead
+     of baking the floor beneath them into their own texels.
+   - Bakes are written as greyscale JPEG to `public/textures/bake/district_<id>.jpg`.
+     Save them with the Standard view transform: Blender 5's default AgX maps
+     1.0 to about 0.77.
+5. **`validate.py`** per file → `blender/reports/<file>.json` (git-ignored),
    then cross-file checks: naming, applied scale, budgets (district 25k tris,
    landmark 6k, pod 1.2k, prop 300, letter 400, tree 250), every content id
    with exactly one `area_`, and **no dynamic prop starting inside static
    geometry** (it would be shot out on the first physics step). Any error
-   fails the build.
-5. **`export_arena.py`** per file → `public/models/kit.glb`,
+   fails the build. `_LOD1` twins are counted apart (`lod1Triangles`), not
+   in the district total, since they never draw alongside LOD0.
+6. **`export_arena.py`** per file → `public/models/kit.glb`,
    `public/models/district_<id>.glb`, and `public/models/arena.manifest.json`
-   (core districts load before the first frame; the outer ring streams).
+   (core districts load before the first frame; the outer ring streams). A
+   district with a bake gets `"bake": "district_<id>.jpg"` in the manifest.
 
 All generators work in game space (metres, -Z north) and convert to Blender
 on object creation, so their numbers read like docs/pursuit-arena/02.
-No AO bake yet: per-district bakes arrive with the Phase 10 art pass.
 
-## Rebuilding the art (the car)
+## The anniversary cart
 
-Four headless passes, in this order:
+`npm run art:cart` runs `blender/scripts/gen_cart.py`, which builds the cart
+(docs/pursuit-arena/04 §5), bevels it, bakes its AO and exports it in one
+pass: `blender/vehicle/cart.blend`, `public/models/cart.glb` (≤ 4k tris; about
+3.1k) and `public/textures/bake/cart-ao.jpg`. It is authored in the physics
+body's own space and size (the arcade preset at worldScale 1.6), nose towards
+Blender −Y, so the runtime only turns it π (`rebuild.cart.yawOffset`). Node
+names are the contract with `src/vehicle/arcadeVehicle.js`: `cart_*` body
+parts (`cart_body` takes skins), `wheel_FL/FR/BL/BR` (origin at the hub;
+wheel_FL's look is cloned for all four), `antenna` (an empty at the spring's
+pivot) and `light_brake_L/R`, `light_reverse_L/R`. After changing it, drive it:
+the nose must lead.
+
+## Rebuilding the art (the prototype car, `?vehicle=sim` only)
+
+The `sim` preset still uses the prototype's `blender/scene.blend` car. Four
+headless passes, in this order:
 
 ```bash
 blender --background blender/scene.blend --python blender/vehicle_details.py

@@ -81,6 +81,7 @@ def main():
     areas = []
     total_tris = 0
     landmark_tris = 0
+    lod1_tris = 0
     pod_tris = {}
 
     objects = list(bpy.data.objects)
@@ -88,6 +89,10 @@ def main():
         counts['objects'] += 1
         name = obj.name
         tris = triangles(obj)
+        # LOD1 twins (polish.py) never draw alongside their LOD0: counted apart.
+        if name.endswith('_LOD1'):
+            lod1_tris += tris
+            continue
         if not name.startswith('collision_'):
             total_tris += tris
 
@@ -189,7 +194,7 @@ def main():
                 break
 
     report = dict(
-        file=file_label, triangles=total_tris, budget=budget, landmarkTriangles=landmark_tris,
+        file=file_label, triangles=total_tris, budget=budget, landmarkTriangles=landmark_tris, lod1Triangles=lod1_tris,
         areas=sorted(areas), errors=errors, warnings=warnings, **counts,
     )
     os.makedirs(reports_dir, exist_ok=True)

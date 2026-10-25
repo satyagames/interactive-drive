@@ -31,7 +31,7 @@
     "low": "Low",
     "medium": "Medium",
     "high": "High",
-    "lowNote": "No post-processing, fewer effects",
+    "lowNote": "No bloom, lighter effects, simpler distant buildings",
     "mediumNote": "Lighter anti-aliasing and effects",
     "highNote": "Everything on",
     "resetIntro": "This wipes your stamps, badges, XP, collectibles and records on this device. It cannot be undone.",

@@ -11,8 +11,10 @@
     "probe:feel": "node tools/feel-probe.mjs",
     "content:check": "node tools/content-check.mjs",
     "art:gen": "node tools/blender.mjs gen",
+    "art:polish": "node tools/blender.mjs polish",
     "art:validate": "node tools/blender.mjs validate",
     "art:export": "node tools/blender.mjs export",
+    "art:cart": "node tools/blender.mjs cart",
     "art:build": "node tools/blender.mjs build"
   },
   "type": "module",

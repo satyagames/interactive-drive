@@ -141,7 +141,7 @@ export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, 
   renderFolder.add(settings.render, 'bakedAo', 0, 1, 0.01).name('baked AO strength')
 
   // A preset that just assigns `render.pixelRatioCap` / `post.aa.mode` /
-  // `post.enabled` / `vfx.density` and resizes -- picking one and then hand-tuning a field
+  // `post.enabled` / bloom / `vfx.density` / `lod.distance` and resizes -- picking one and then hand-tuning a field
   // below it is completely fine, see `qualityTiers` in config.js.
   renderFolder
     .add(settings, 'quality', Object.keys(qualityTiers))
@@ -151,7 +151,9 @@ export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, 
       settings.render.pixelRatioCap = tier.pixelRatioCap
       settings.post.aa.mode = tier.aaMode
       settings.post.enabled = tier.postEnabled
+      settings.post.bloom.enabled = tier.bloom
       settings.vfx.density = tier.vfxDensity
+      settings.lod.distance = tier.lodDistance
       resize()
       refresh()
     })

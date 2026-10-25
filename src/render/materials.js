@@ -66,21 +66,7 @@ export async function loadRenderAssets() {
         return [name, texture]
       }),
     ),
-    Promise.all(
-      [...bakeFiles].map(async (file) => {
-        const texture = await loader.loadAsync(`${rendering.bakePath}${file}`)
-        texture.channel = rendering.bakeChannel
-        texture.flipY = false
-        // Cycles wrote linear occlusion into an sRGB-encoded PNG, so decoding
-        // it as sRGB is what hands the shader the original linear multiplier.
-        texture.colorSpace = THREE.SRGBColorSpace
-        // The bake fills the whole 0..1 square; clamping stops the ground's
-        // outermost texel row wrapping to the opposite edge.
-        texture.wrapS = THREE.ClampToEdgeWrapping
-        texture.wrapT = THREE.ClampToEdgeWrapping
-        return [file, texture]
-      }),
-    ),
+    Promise.all([...bakeFiles].map(async (file) => [file, await loadBakeTexture(loader, file)])),
   ])
 
   return {
@@ -91,13 +77,33 @@ export async function loadRenderAssets() {
   }
 }
 
+async function loadBakeTexture(loader, file) {
+  const texture = await loader.loadAsync(`${rendering.bakePath}${file}`)
+  texture.channel = rendering.bakeChannel
+  texture.flipY = false
+  // Cycles wrote linear occlusion into an sRGB-encoded image, so decoding
+  // it as sRGB is what hands the shader the original linear multiplier.
+  texture.colorSpace = THREE.SRGBColorSpace
+  // The bake fills the whole 0..1 square; clamping stops the ground's
+  // outermost texel row wrapping to the opposite edge.
+  texture.wrapS = THREE.ClampToEdgeWrapping
+  texture.wrapT = THREE.ClampToEdgeWrapping
+  return texture
+}
+
+/** Load an AO bake on demand (a district's, as it streams in) into `assets.bakes`. */
+export async function loadBake(assets, file) {
+  if (!assets.bakes.has(file)) assets.bakes.set(file, await loadBakeTexture(new THREE.TextureLoader(), file))
+  return assets.bakes.get(file)
+}
+
 /**
  * Replaces the material on every mesh under `root` with its matcap equivalent.
  *
  * Matching is on the object's own name, falling back to its ancestors', so a
  * glTF node that got wrapped in a group on import still resolves.
  */
-export function applyMatcapMaterials(root, assets) {
+export function applyMatcapMaterials(root, assets, { bakeFor = null } = {}) {
   // Two meshes can share one glTF material, so collect first and dispose
   // once -- every mesh under `root` is being re-materialled anyway, so
   // nothing can still be using them afterwards.
@@ -107,7 +113,8 @@ export function applyMatcapMaterials(root, assets) {
     if (!object.isMesh) return
 
     const name = resolveName(object)
-    const bakeFile = matchRule(rendering.bakeRules, name)?.file ?? null
+    // A caller's own bake (a district's atlas) first, then the name rules.
+    const bakeFile = bakeFor?.(object) ?? matchRule(rendering.bakeRules, name)?.file ?? null
     // An explicit `mc_<matcap>[__<RRGGBB>]` material name (the arena
     // generators) wins; otherwise the object-name prefix rules decide.
     const named = parseMatcapMaterialName(object.material?.name)

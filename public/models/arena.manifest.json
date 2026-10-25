@@ -5,77 +5,92 @@
     {
       "id": "base",
       "url": "models/district_base.glb",
-      "stage": "core"
+      "stage": "core",
+      "bake": "district_base.jpg"
     },
     {
       "id": "hq",
       "url": "models/district_hq.glb",
-      "stage": "core"
+      "stage": "core",
+      "bake": "district_hq.jpg"
     },
     {
       "id": "rfp_gate",
       "url": "models/district_rfp_gate.glb",
-      "stage": "core"
+      "stage": "core",
+      "bake": "district_rfp_gate.jpg"
     },
     {
       "id": "decade_drive",
       "url": "models/district_decade_drive.glb",
-      "stage": "core"
+      "stage": "core",
+      "bake": "district_decade_drive.jpg"
     },
     {
       "id": "audit",
       "url": "models/district_audit.glb",
-      "stage": "core"
+      "stage": "core",
+      "bake": "district_audit.jpg"
     },
     {
       "id": "tax",
       "url": "models/district_tax.glb",
-      "stage": "core"
+      "stage": "core",
+      "bake": "district_tax.jpg"
     },
     {
       "id": "consulting",
       "url": "models/district_consulting.glb",
-      "stage": "core"
+      "stage": "core",
+      "bake": "district_consulting.jpg"
     },
     {
       "id": "pace",
       "url": "models/district_pace.glb",
-      "stage": "core"
+      "stage": "core",
+      "bake": "district_pace.jpg"
     },
     {
       "id": "studio",
       "url": "models/district_studio.glb",
-      "stage": "core"
+      "stage": "core",
+      "bake": "district_studio.jpg"
     },
     {
       "id": "catalyst",
       "url": "models/district_catalyst.glb",
-      "stage": "core"
+      "stage": "core",
+      "bake": "district_catalyst.jpg"
     },
     {
       "id": "innovation",
       "url": "models/district_innovation.glb",
-      "stage": "stream"
+      "stage": "stream",
+      "bake": "district_innovation.jpg"
     },
     {
       "id": "rnr",
       "url": "models/district_rnr.glb",
-      "stage": "stream"
+      "stage": "stream",
+      "bake": "district_rnr.jpg"
     },
     {
       "id": "lnd",
       "url": "models/district_lnd.glb",
-      "stage": "stream"
+      "stage": "stream",
+      "bake": "district_lnd.jpg"
     },
     {
       "id": "toolkit",
       "url": "models/district_toolkit.glb",
-      "stage": "stream"
+      "stage": "stream",
+      "bake": "district_toolkit.jpg"
     },
     {
       "id": "culture",
       "url": "models/district_culture.glb",
-      "stage": "stream"
+      "stage": "stream",
+      "bake": "district_culture.jpg"
     }
   ]
 }

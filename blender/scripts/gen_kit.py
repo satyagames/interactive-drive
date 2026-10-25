@@ -29,8 +29,8 @@ def build(coll):
     bark = material('stone', '#7A5C44')
     metal = material('dark')
     lamp_head = material('ivory')
-    gold = material('ivory', '#E3B505')
-    green = material('ivory', BRAND)
+    gold = material('gold')
+    green = material('brand-green')
     steel = material('ivory', '#C9CED4')
 
     x = 0

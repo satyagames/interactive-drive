@@ -426,6 +426,7 @@ async function bootstrap() {
     triggerWatcher(vehicle.position)
     reveal.update(delta, vehicle.position)
     gameWorld.animate(delta)
+    gameWorld.updateLod(camera.position)
     interactionTarget = areas.active ? 1 : 0
     interaction += (interactionTarget - interaction) * (1 - Math.exp(-8 * delta))
     cameraRig.update(delta, vehicle)
@@ -488,7 +489,9 @@ function applyQualityTier(name) {
   settings.render.pixelRatioCap = tier.pixelRatioCap
   settings.post.aa.mode = tier.aaMode
   settings.post.enabled = tier.postEnabled
+  settings.post.bloom.enabled = tier.bloom
   settings.vfx.density = tier.vfxDensity
+  settings.lod.distance = tier.lodDistance
 }
 
 /**

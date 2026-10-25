@@ -1,9 +1,9 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
-import { world as worldConfig } from '../config.js'
+import { settings, world as worldConfig } from '../config.js'
 import { loadGLTF } from '../core/gltf.js'
-import { applyMatcapMaterials } from '../render/materials.js'
+import { applyMatcapMaterials, loadBake } from '../render/materials.js'
 import { colliderDescFromProxy } from './colliders.js'
 import { createDynamicProps } from './dynamicProps.js'
 import { loadKit, placeKitInstances } from './kitInstances.js'
@@ -28,6 +28,12 @@ import { loadKit, placeKitInstances } from './kitInstances.js'
  *   anim_*           kinematic visual, spun about its own axis (props spin, axis)
  *   anything else    static visual; merged per material per district so a
  *                    whole district costs a handful of draw calls
+ *   landmark_*[_LOD1] a static visual with a level of detail: LOD0 (bevelled)
+ *                    and LOD1 (the plain blockout, art:polish) merge into two
+ *                    separate sets, and `updateLod()` shows one by distance
+ *
+ * A district with a `bake` in the manifest gets its AO atlas (art:polish) on
+ * every static visual that carries the bake UVs (TEXCOORD_1).
  *
  * The returned lists (`spawns`, `triggers`, `areas`, ...) grow as streamed
  * districts arrive, so consumers holding them see the new entries.
@@ -56,11 +62,15 @@ export async function createWorld({ scene, world, RAPIER, renderAssets, blobs })
   const loadListeners = new Set()
   let ground = null
 
-  async function loadDistrict({ id, url }) {
-    const gltf = await loadGLTF(url)
+  async function loadDistrict({ id, url, bake }) {
+    const [gltf] = await Promise.all([loadGLTF(url), bake ? loadBake(renderAssets, bake) : null])
     const root = gltf.scene
     root.updateMatrixWorld(true)
-    applyMatcapMaterials(root, renderAssets)
+    // Only meshes exported with the bake UVs take the atlas (dynamic props,
+    // anim_ pieces and collision proxies don't have them).
+    applyMatcapMaterials(root, renderAssets, {
+      bakeFor: (object) => (bake && object.geometry?.attributes.uv1 ? bake : null),
+    })
 
     const districtGroup = new THREE.Group()
     districtGroup.name = `district:${id}`
@@ -137,16 +147,37 @@ export async function createWorld({ scene, world, RAPIER, renderAssets, blobs })
     for (const child of root.children) visit(child)
 
     // Static visuals: the ground stays its own mesh (floorGradient.js
-    // repaints it); everything else merges per material.
-    const merged = mergeStatics(statics.filter((mesh) => {
+    // repaints it); everything else merges per material -- landmarks in two
+    // sets of their own, one per level of detail.
+    const lod1 = []
+    const lod0 = []
+    const rest = []
+    for (const mesh of statics) {
       if (mesh.name === 'ground') {
         ground = toWorldMesh(mesh)
         districtGroup.add(ground)
-        return false
+      } else if (mesh.name.endsWith('_LOD1') || mesh.parent?.name.endsWith('_LOD1')) {
+        lod1.push(mesh)
+      } else if (mesh.name.startsWith('landmark_') || mesh.parent?.name.startsWith('landmark_')) {
+        lod0.push(mesh)
+      } else {
+        rest.push(mesh)
       }
-      return true
-    }), id)
-    for (const mesh of merged) staticGroup.add(mesh)
+    }
+    for (const mesh of mergeStatics(rest, id)) staticGroup.add(mesh)
+    let lod = null
+    if (lod1.length) {
+      lod = { near: new THREE.Group(), far: new THREE.Group(), centre: new THREE.Vector3(), isFar: false }
+      lod.near.name = `district:${id}:lod0`
+      lod.far.name = `district:${id}:lod1`
+      for (const mesh of mergeStatics(lod0, `${id}:lod0`)) lod.near.add(mesh)
+      for (const mesh of mergeStatics(lod1, `${id}:lod1`)) lod.far.add(mesh)
+      new THREE.Box3().setFromObject(lod.near).getCenter(lod.centre)
+      lod.far.visible = false
+      staticGroup.add(lod.near, lod.far)
+    } else {
+      for (const mesh of mergeStatics(lod0, id)) staticGroup.add(mesh)
+    }
 
     placeKitInstances({ kit, placements, group: staticGroup, world, RAPIER, name: id })
     // Collectibles get their own batches so each knows its instance (to bob,
@@ -171,6 +202,7 @@ export async function createWorld({ scene, world, RAPIER, renderAssets, blobs })
       colliders,
       statics: statics.length,
       drawCalls: staticGroup.children.length + propMeshes.length,
+      lod,
       props: dynRoots.length,
     }
     districts.push(info)
@@ -200,6 +232,23 @@ export async function createWorld({ scene, world, RAPIER, renderAssets, blobs })
     onDistrictLoaded(listener) {
       loadListeners.add(listener)
     },
+    /**
+     * Landmark level of detail: past `settings.lod.distance` from the camera
+     * (with a few metres of hysteresis) a district shows its LOD1 set.
+     */
+    updateLod(cameraPosition) {
+      const d = settings.lod.distance
+      for (const info of districts) {
+        const lod = info.lod
+        if (!lod) continue
+        const distance = cameraPosition.distanceTo(lod.centre)
+        const far = lod.isFar ? distance > d - 5 : distance > d + 5
+        if (far === lod.isFar) continue
+        lod.isFar = far
+        lod.near.visible = !far
+        lod.far.visible = far
+      }
+    },
     /** Turn the anim_ pieces (portal rings, dome rings). Call once per frame. */
     animate(dt) {
       for (const item of animated) item.object.rotateOnAxis(item.axis, item.spin * dt)
@@ -228,8 +277,9 @@ function mergeStatics(meshes, id) {
   for (const [material, members] of byMaterial) {
     const geometries = members.map((mesh) => {
       const g = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry.clone()
+      // Keep the bake UVs (uv1): a baked material samples them.
       for (const name of Object.keys(g.attributes)) {
-        if (name !== 'position' && name !== 'normal') g.deleteAttribute(name)
+        if (name !== 'position' && name !== 'normal' && name !== 'uv1') g.deleteAttribute(name)
       }
       g.applyMatrix4(mesh.matrixWorld)
       return g

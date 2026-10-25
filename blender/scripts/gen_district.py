@@ -257,7 +257,7 @@ def landmark(coll, ident, frame, tint, radius):
     accent = material('ivory', lighten(tint, 0.45))
     white = material('ivory', WHITE)
     dark = material('dark')
-    gold = material('ivory', '#E3B505')
+    gold = material('gold')
 
     def at(dx, dz):
         return frame.to_world(lx + dx, lz + dz)
@@ -296,9 +296,15 @@ def landmark(coll, ident, frame, tint, radius):
         visual('landmark_pace_tower_cab', coll, accent, lambda mb: mb.box((0, 11.8, 0), (4.0, 1.6, 4.0)), location=(tx, 0, tz), yaw=yaw)
     elif ident == 'studio':   # pencil obelisk + swatch fan wall + easel
         px, pz = at(-3.0, 1.0)
-        visual('landmark_studio_pencil', coll, main, lambda mb: (mb.cylinder((0, 6.0, 0), 1.3, 12.0, 6),
-                                                                   mb.cylinder((0, 13.2, 0), 1.3, 2.4, 6, top_radius=0.05)),
-               location=(px, 0, pz))
+        visual('landmark_studio_pencil', coll, main, lambda mb: mb.cylinder((0, 6.8, 0), 1.3, 10.8, 6), location=(px, 0, pz))
+        visual('landmark_studio_pencil_eraser', coll, material('ivory', '#E86A5C'),
+               lambda mb: mb.cylinder((0, 0.35, 0), 1.25, 0.7, 12), location=(px, 0, pz))
+        visual('landmark_studio_pencil_ferrule', coll, material('stone', '#C9CED6'),
+               lambda mb: mb.cylinder((0, 1.05, 0), 1.36, 0.7, 12), location=(px, 0, pz))
+        visual('landmark_studio_pencil_wood', coll, material('ivory', '#E8C99A'),
+               lambda mb: mb.cylinder((0, 13.2, 0), 1.3, 2.0, 6, top_radius=0.32), location=(px, 0, pz))
+        visual('landmark_studio_pencil_lead', coll, material('dark'),
+               lambda mb: mb.cylinder((0, 14.55, 0), 0.32, 0.7, 6, top_radius=0.03), location=(px, 0, pz))
         collider_cylinder('landmark_studio_pencil', coll, (px, 6.0, pz), 1.3, 12.0)
         sx, sz = at(4.0, 2.5)
         swatches = ('#E86A5C', '#E3B505', '#86BC25', '#00A3E0', '#7F5BA6')
@@ -323,7 +329,7 @@ def landmark(coll, ident, frame, tint, radius):
                    location=(cx, 0, cz), yaw=yaw)
     elif ident == 'innovation':   # glass dome with orbiting rings
         px, pz = at(0, 0)
-        visual('landmark_innovation_dome', coll, material('accent-cool', lighten(tint, 0.3)),
+        visual('landmark_innovation_dome', coll, material('glass'),
                lambda mb: mb.sphere((0, 0, 0), 7.0, 18, 10), location=(px, 0, pz))
         collider_cylinder('landmark_innovation_dome', coll, (px, 2.5, pz), 6.3, 5.0)
         for i in range(2):
@@ -367,8 +373,8 @@ def landmark(coll, ident, frame, tint, radius):
                location=(cx, 0, cz), yaw=yaw)
     elif ident == 'toolkit':   # giant toolbox building, lid open
         px, pz = at(0, 1.0)
-        solid_box('landmark_toolkit_box', coll, material('ivory', '#C8102E'), (px, 0, pz), (12.0, 5.0, 6.0), yaw=yaw)
-        visual('landmark_toolkit_lid', coll, material('ivory', '#A50D25'),
+        solid_box('landmark_toolkit_box', coll, material('red-tape'), (px, 0, pz), (12.0, 5.0, 6.0), yaw=yaw)
+        visual('landmark_toolkit_lid', coll, material('red-tape', '#C9C9C9'),
                lambda mb: mb.box((0, 5.0 + 2.6 * math.sin(1.0), 3.0 + 2.6 * math.cos(1.0)), (12.0, 0.4, 5.6), pitch=1.0),
                location=(px, 0, pz), yaw=yaw)
         visual('landmark_toolkit_handle', coll, material('dark'), lambda mb: mb.box((0, 5.8, 0), (4.0, 0.4, 0.4)),
@@ -446,6 +452,8 @@ PROP_COLOURS = {
     'pin': WHITE, 'bowlingball': '#26890D', 'globe': '#00A3E0', 'beachball': '#E86A5C', 'balloon': '#E3B505',
     'cone': '#ED8B00', 'jenga': '#D9B88A', 'soccer': WHITE, 'paintcan': '#62B5E5',
 }
+# Props with a matcap of their own (Phase 10 palette) rather than a tinted ivory.
+PROP_MATCAPS = {'coin': 'gold', 'brick': 'red-tape'}
 
 SHURIKEN = {
     'consulting': ('bridge', (0.0, 0.0)),   # on the flowchart bridge deck
@@ -466,6 +474,8 @@ def build_district(coll, ident, info, seed):
     pods(coll, ident, frame, info['stations'], radius, tint)
 
     def mat_for(kind):
+        if kind in PROP_MATCAPS:
+            return material(PROP_MATCAPS[kind])
         colour = PROP_COLOURS.get(kind) or lighten(tint, 0.2)
         return material('ivory', colour)
 
@@ -581,20 +591,30 @@ def build_hq(coll, info):
     tint = info['color']
     frame = Frame(0.0, 0.0, 0.0)   # local -Z = north
     white = material('ivory', WHITE)
-    glass = material('accent-cool', '#9FD3E0')
-    green = material('ivory', BRAND)
+    glass = material('glass')
+    green = material('brand-green')
     visual('plaza_hq', coll, material('ivory', '#E9ECEF'), lambda mb: mb.cylinder((0, 0.02, 0), L.HQ_PLAZA, 0.04, 48))
 
     # Command Tower: stepped, rounded, about 28 m, with the green "dot" beacon.
+    # Phase 10 art pass: glass stages, white floor bands, eight white fins
+    # round the base storey, a white crown and the beacon on a short mast.
     visual('landmark_hq_tower', coll, glass, lambda mb: (
-        mb.cylinder((0, 5.0, 0), 6.0, 10.0, 20),
-        mb.cylinder((0, 14.5, 0), 4.6, 9.0, 20),
-        mb.cylinder((0, 22.5, 0), 3.2, 7.0, 20),
+        mb.cylinder((0, 5.0, 0), 6.0, 10.0, 24),
+        mb.cylinder((0, 14.5, 0), 4.6, 9.0, 24),
+        mb.cylinder((0, 22.5, 0), 3.2, 7.0, 24),
     ), location=(0, 0, -4.0))
-    visual('landmark_hq_tower_bands', coll, white, lambda mb: (
-        mb.cylinder((0, 10.1, 0), 6.3, 0.4, 20), mb.cylinder((0, 19.1, 0), 4.9, 0.4, 20), mb.cylinder((0, 26.1, 0), 3.5, 0.4, 20),
-    ), location=(0, 0, -4.0))
-    visual('landmark_hq_beacon', coll, green, lambda mb: mb.sphere((0, 27.6, 0), 1.3, 14, 8), location=(0, 0, -4.0))
+
+    def tower_white(mb):
+        mb.cylinder((0, 0.3, 0), 6.6, 0.6, 24)
+        mb.cylinder((0, 10.1, 0), 6.3, 0.4, 24)
+        mb.cylinder((0, 19.1, 0), 4.9, 0.4, 24)
+        mb.cylinder((0, 26.3, 0), 3.5, 0.8, 24, top_radius=2.4)
+        mb.cylinder((0, 27.4, 0), 0.3, 1.6, 8)
+        for k in range(8):
+            a = (k + 0.5) / 8 * math.tau
+            mb.box((6.05 * math.cos(a), 5.2, 6.05 * math.sin(a)), (0.35, 9.4, 0.7), yaw=-a)
+    visual('landmark_hq_tower_bands', coll, white, tower_white, location=(0, 0, -4.0))
+    visual('landmark_hq_beacon', coll, green, lambda mb: mb.sphere((0, 28.6, 0), 1.3, 18, 10), location=(0, 0, -4.0))
     collider_cylinder('landmark_hq_tower_base', coll, (0, 5.0, -4.0), 6.0, 10.0)
     collider_cylinder('landmark_hq_tower_mid', coll, (0, 14.5, -4.0), 4.6, 9.0)
 
@@ -619,7 +639,13 @@ def build_hq(coll, info):
     # The "10" monument: a "1" and a "0" arch you drive through (ring with
     # its bottom left open). Doc 02 §3.2; a full loop-the-loop is a Phase 10
     # art + feel job.
-    solid_box('landmark_hq_one', coll, green, (-14.0, 0, 6.0), (1.6, 7.0, 1.6), yaw=math.radians(38))
+    visual('landmark_hq_one', coll, green, lambda mb: (
+        mb.box((0, 3.75, 0), (1.6, 6.5, 1.6)),
+        mb.box((-0.95, 6.35, 0), (1.9, 0.9, 1.6)),
+    ), location=(-14.0, 0, 6.0), yaw=math.radians(38))
+    visual('landmark_hq_one_plinth', coll, white, lambda mb: mb.box((0, 0.25, 0), (3.4, 0.5, 2.4)),
+           location=(-14.0, 0, 6.0), yaw=math.radians(38))
+    collider_box('landmark_hq_one', coll, (-14.0, 3.5, 6.0), (1.6, 7.0, 1.6), yaw=math.radians(38))
     zero_segments = 16
     zero_r = 3.4
     open_bottom = {11, 12}   # segment i sits at (i + 0.5) / 16 of a turn from +X; 11 and 12 are lowest
@@ -670,9 +696,9 @@ def build_gate(coll, info):
     """
     frame = Frame.facing_centre(info['x'], info['z'])
     white = material('ivory', WHITE)
-    paper = material('ivory', '#FBF8F0')
-    green = material('ivory', BRAND)
-    gold = material('ivory', '#E3B505')
+    paper = material('paper')
+    green = material('brand-green')
+    gold = material('gold')
     plaza(coll, 'rfp_gate', frame, L.PILLAR_RADIUS, BRAND)
 
     ax, az = frame.to_world(0, -12.0)
@@ -681,6 +707,11 @@ def build_gate(coll, info):
         mb.box((5.2, 3.5, 0), (0.6, 7.0, 3.0)),
         mb.ring((0, 7.0, 0), 5.2, 0.6, segments=12, thickness=3.0, skip=set(range(6, 12))),
     ), location=(ax, 0, az), yaw=frame.yaw())
+    # "Printed" lines on the RFP's pages: thin dark strips on both faces of each leg.
+    visual('landmark_rfp_gate_lines', coll, material('dark'), lambda mb: [
+        mb.box((side * 5.2, 1.2 + k * 0.75, face * 1.52), (0.42 if k % 3 else 0.3, 0.12, 0.04))
+        for side in (-1, 1) for face in (-1, 1) for k in range(7)
+    ], location=(ax, 0, az), yaw=frame.yaw())
     for k, dx in enumerate((-5.2, 5.2)):
         x, z = frame.to_world(dx, -12.0)
         collider_box(f'landmark_rfp_gate_leg_{k}', coll, (x, 3.5, z), (0.6, 7.0, 3.0), yaw=frame.yaw())
@@ -719,8 +750,8 @@ def build_gate(coll, info):
 
 def build_decade_drive(coll, seed):
     white = material('ivory', WHITE)
-    gold = material('ivory', '#E3B505')
-    green = material('ivory', BRAND)
+    gold = material('gold')
+    green = material('brand-green')
     for i, (z, milestone) in enumerate(zip(L.DECADE_ARCHES_Z, seed['timeline'])):
         for side in (-1, 1):
             solid_box(f'landmark_decade_arch_{i}_{"lr"[side > 0]}', coll, white, (side * 5.4, 0, z), (0.8, 5.2, 0.8))

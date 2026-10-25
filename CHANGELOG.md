@@ -2,6 +2,90 @@
 
 Pursuit Arena build log. One entry per phase (see `docs/pursuit-arena/06-phased-prompts.md`).
 
+## Phase 10 — Art pass, the cart, and performance
+
+- **The anniversary cart** (`blender/scripts/gen_cart.py`, `npm run art:cart`): an original, toy-like open-top buggy,
+  generated, bevelled, AO-baked and exported in one pass.
+  - The look: Deloitte-green tub with rounded fenders over chunky wheels, dark seats and trim, a white roll bar, and
+    a "10" pennant (shapes, no font) on the spring antenna.
+  - Size: 3,140 triangles (budget 4k), a 49 KB GLB, and a 1024² AO atlas.
+  - Space: authored in the physics body's own space and size, so the runtime only turns it π.
+  - Runtime (`arcadeVehicle.js`):
+    - wheel_FL's look is cloned for all four physics wheels
+    - the model's `antenna` hangs off a pivot in the car's frame
+    - the `light_brake_*` / `light_reverse_*` meshes are driven as before
+    - skins repaint `cart_body`
+  - The procedural wheels, antenna and lamps it replaces are gone. The prototype car stays for `?vehicle=sim`.
+  - **Nose-first verified:** driving forward, the headlamps' world bounding-box centre leads along the velocity and
+    the tail lamps trail.
+- **Matcaps:** `brand-green`, `gold`, `glass`, `paper` and `red-tape` added to `tools/generate-matcaps.mjs`. All five
+  hit their hex at the centre texel; red-tape needed a low specular and green-poor fill to reach #C8102E.
+- **Landmarks:**
+  - HQ tower: glass storeys, white bands, eight fins, a crown and a beacon mast
+  - the "1" of the monument: a flag and a plinth
+  - RFP Gate: a paper arch with printed lines
+  - Studio pencil: eraser, ferrule, sharpened wood and lead
+  - materials: the toolbox and Red Tape bricks in red-tape, coins, trophy and golden dots in gold, and every
+    tinted-ivory brand green replaced with the brand-green matcap
+- **Art pass** (`blender/scripts/polish.py` + `polish_lib.py`, `npm run art:polish`, now part of `art:build`):
+  - Bevels: on every static visual (2 segments), and on every dynamic prop and kit piece (1 segment, on the shared
+    mesh so prop batching survives). Trees are skipped (budget).
+  - `landmark_*_LOD1` twins: the pre-bevel blockout.
+  - Per-district AO atlases: 1024², HQ 2048².
+  - The base's ground bake: AO × soft sun shadow, with every district linked in as an occluder.
+  - Bakes ship as greyscale JPEG: 2.3 MB for all 17, against 8.6 MB as RGB PNG.
+  - Validation counts LOD1 twins apart. Authored total 86k triangles (was ~23k); every district, landmark, pod,
+    prop and tree budget passes.
+- **Runtime:**
+  - `world.js` loads each district's bake from the manifest and applies it to meshes carrying the bake UVs;
+    `mergeStatics` keeps `uv1`.
+  - Landmarks merge into separate LOD0 and LOD1 sets; `updateLod()` swaps them by camera distance, with 5 m of
+    hysteresis.
+  - `materials.js` gains `loadBake()` and a `bakeFor` option.
+- **Quality tiers:**
+
+  | Tier | AA | Bloom | VFX | Pixel ratio | LOD at |
+  |---|---|---|---|---|---|
+  | high | SMAA | on | full | 1.5 | 95 m |
+  | medium | FXAA | on | 60% | 1 | 70 m |
+  | low | FXAA | off | 35% | 1 | 45 m |
+
+  - Low now keeps post-processing on (FXAA, no bloom), where before it turned it off.
+  - Applied identically by the menu, `?quality=` and `#debug`.
+  - Doc 06's "half-res blobs" has no equivalent here: our blob shadows are analytic quads with no texture to halve.
+- **Decisions:**
+  - **KTX2 not done.** `toktx` isn't installed on this machine, and doc 04 allows the PNG fallback. The bakes went to
+    greyscale JPEG, which already fits the budget. KTX2 needs `toktx`, a `KTX2Loader` with the Basis transcoder,
+    and a manifest flag.
+  - **Landmark LOD = the unbevelled blockout**, not a decimated mesh: same silhouette, roughly a third of the
+    triangles, and no decimation artefacts.
+
+Bugs found while building it, and fixed:
+- **`save_render` darkened every bake by ~23%** through Blender 5's default AgX view transform. Saves now use
+  Standard.
+- **Ground bake conflicts:**
+  - raised base meshes (ramps) and roads shared the ground's planar texels and baked black slabs onto the ring road
+  - the sun pass needed normalising (open ground read 0.77)
+- **Atlas packing:**
+  - plaza undersides took a quarter of HQ's atlas; downward faces are now left out
+  - repacking without collapsing those faces first shrank every island to dots
+
+Acceptance checks:
+- [x] **First load under 10 MB:** 7.79 MB raw / 5.28 MB gzipped (production build). That covers index, the JS
+  bundle, the Draco decoder, 13 matcaps, kit, cart, the 10 core districts and their bakes. The outer ring streams
+  1.21 MB more afterwards. The whole `dist/` is 9.74 MB.
+- [x] **Under 150 draw calls in the busiest view:** 101 car positions on a 22 m grid over the whole arena, every
+  district revealed:
+  - worst 117 draw calls; median 92
+  - worst 85k triangles (budget 250k)
+- [ ] **60 fps on the target laptop: not measured.** There's no 2020 integrated-GPU laptop here. On this machine
+  (RTX 4080 SUPER, pixel ratio 1): 59.9 fps, p99 16.9 ms over 12 s of driving.
+- [x] Low tier verified: FXAA, bloom off, VFX 0.35, LOD 45 m. Skins repaint the cart.
+- [x] `art:build` (gen → polish → validate → export → cart, about 3 minutes with the GPU) passes; the production
+  build passes.
+- [ ] Not looked at closely: every district at close range after the bevel, and the LOD1 swap distance in motion.
+  The scan only checked that it happens (12 of 14 districts on LOD1 from the far edge).
+
 ## Phase 9 — UI, HUD and accessibility
 
 Doc 05 §5, in `src/ui/`.
