@@ -35,6 +35,15 @@
     </button>
     <div id="explore" hidden></div>
 
+    <!-- Game layer (src/ui/gameHud.js, src/ui/passportScreen.js). -->
+    <button id="passport-open" type="button" aria-expanded="false" aria-controls="passport">
+      <span data-ui="passport.open"></span> <kbd data-ui="passport.openHint"></kbd>
+    </button>
+    <div id="passport" hidden></div>
+    <div id="game-hud"></div>
+    <div id="dash-hud" hidden></div>
+    <div id="toasts" aria-live="polite" aria-atomic="false"></div>
+
     <!-- Station panel (src/content/panel.js): right-hand drawer, bottom sheet
          on narrow screens. Non-modal; driving keeps working while it's open. -->
     <aside id="station-panel" hidden></aside>

@@ -15,6 +15,7 @@ import { createPhysics, createStepper } from './core/physics.js'
 import { createRenderer } from './core/renderer.js'
 import { createDebugGui } from './debug/gui.js'
 import { createFpsMeter } from './debug/fps.js'
+import { runGameTest } from './debug/gameTest.js'
 import { createPhysicsDebug } from './debug/physicsDebug.js'
 import { createPropStress } from './debug/propStress.js'
 import { createInput } from './input/index.js'
@@ -24,6 +25,9 @@ import { loadRenderAssets, syncRenderSettings, syncShaderEffects } from './rende
 import { createPostProcessing } from './render/post.js'
 import { createShadowBlob } from './render/shadowBlob.js'
 import { createSky } from './render/sky.js'
+import { createGame } from './game/index.js'
+import { createGameHud } from './ui/gameHud.js'
+import { createPassportScreen } from './ui/passportScreen.js'
 import { createScreenFade } from './ui/screenFade.js'
 import { createVehicle, vehiclePresets } from './vehicle/vehicle.js'
 import { createLighting } from './world/lighting.js'
@@ -150,9 +154,7 @@ async function bootstrap() {
       announcer.textContent = text
     },
     onOpen(area, node) {
-      if (!node) return
-      stationPanel.show(node)
-      progress.markFound(area.id)
+      if (node) stationPanel.show(node)
     },
     onAutoClose() {
       stationPanel.hide()
@@ -162,10 +164,36 @@ async function bootstrap() {
   areas.add(gameWorld.areas)
   gameWorld.onDistrictLoaded(() => areas.add(gameWorld.areas))
 
-  // `trigger_` volumes are passive: stamps and loop counters for the Phase 6
-  // passport; a trigger whose id is also content still opens it.
+  // The game layer (doc 03): passport, XP, collectibles, Deadline Dash,
+  // mini-games, badges. Every way a station opens (area, Explore, trigger)
+  // goes through the panel, so the panel is where the game hears about it.
+  const game = createGame({ seed: arena, content, gameWorld, vehicle, scene, world, RAPIER, renderAssets })
+  for (const id of Object.keys(game.store.state.opened)) progress.markFound(id)
+  stationPanel.onChange((node) => {
+    if (!node) return
+    progress.markFound(node.id)
+    game.stationOpened(node.id)
+  })
+  const gameHud = createGameHud({
+    root: document.getElementById('game-hud'),
+    dashRoot: document.getElementById('dash-hud'),
+    toastRoot: document.getElementById('toasts'),
+    game,
+    seed: arena,
+    camera,
+  })
+  const passportRoot = document.getElementById('passport')
+  passportRoot.dataset.capturesKeys = ''
+  const passport = createPassportScreen({ root: passportRoot, launcher: document.getElementById('passport-open'), game })
+  // Stamps, badges and dash results are announced through the toasts' own
+  // aria-live region; the area announcer stays for "you're in an area".
+
+  // `trigger_` volumes are passive: passport gateways (`trigger_stamp_<id>`)
+  // and the "0" loop counter feed the game; a trigger whose id is also
+  // content still opens it.
   const triggerWatcher = createTriggerWatcher(gameWorld.triggers, {
     onEnter(trigger) {
+      game.trigger(trigger.name)
       const node = content.get(contentIdForTrigger(trigger))
       if (node) stationPanel.show(node)
     },
@@ -216,6 +244,7 @@ async function bootstrap() {
   if (debugMode) {
     createDebugGui({
       vehicle, camera: cameraRig, hud: hudEl, resize, respawn: respawnVehicle, RAPIER, debugMode, propStress,
+      gameTest: () => runGameTest({ game, gameWorld, vehicle, reveal, stationPanel, content, seed: arena }),
     })
   }
   hudEl.hidden = !settings.debug.showHud
@@ -239,6 +268,7 @@ async function bootstrap() {
     window.__proto = {
       vehicle, world, scene, camera, settings, input, stationPanel, explore, content, progress, gameWorld,
       renderer, renderAssets, post, shadowBlob, sky, fps, cameraRig, floor, blobs, propStress, areas, reveal,
+      game, passport,
       benchmark: { run: (options) => runPostBenchmark({ renderer, scene, camera }, options) },
     }
   }
@@ -249,6 +279,7 @@ async function bootstrap() {
   let interactionTarget = 0
 
   let streamed = false
+  let dashHold = false
   createLoop((delta) => {
     elapsed += delta
     // The outer-ring districts load once the first frame is on screen.
@@ -260,12 +291,17 @@ async function bootstrap() {
 
     if (input.consume('respawn')) respawnVehicle()
     // Audio (Phase 8) will hang the horn sound off this too.
-    if (input.consume('horn')) vehicle.horn()
+    if (input.consume('horn')) {
+      vehicle.horn()
+      game.horn()
+    }
     if (input.consume('camera')) cameraRig.toggle()
-    // Esc peels back one layer at a time: station panel, then Explore, then
-    // opens Explore (the Phase 9 menu will take over that last step).
+    if (input.consume('passport')) passport.toggle()
+    // Esc peels back one layer at a time: station panel, passport, Explore,
+    // then opens Explore (the Phase 9 menu will take over that last step).
     if (input.consume('menu')) {
       if (stationPanel.isOpen) stationPanel.hide()
+      else if (passport.isOpen) passport.hide()
       else explore.toggle()
     }
     // Explore's camera hold ends as soon as you drive off (driving keys only
@@ -273,11 +309,16 @@ async function bootstrap() {
     if (cameraRig.focused && (inputState.throttle !== 0 || inputState.steer !== 0)) {
       cameraRig.clearFocus()
     }
-    // Enter areas consume `interact`; mute / passport have no consumers until
-    // Phases 6-8, and unconsumed presses are dropped at the next update.
+    // Enter areas consume `interact`; mute has no consumer until Phase 8, and
+    // unconsumed presses are dropped at the next update.
     const { hold } = areas.update(delta, { vehicle, interact: () => input.consume('interact') })
     // Just opened a station: a soft brake holds the car unless you accelerate.
     if (hold && inputState.throttle === 0) inputState.brake = true
+    // The Deadline Dash countdown holds the car outright.
+    if (dashHold) {
+      inputState.brake = true
+      inputState.throttle = 0
+    }
 
     // Vehicle and prop forces must be applied inside the fixed step, not per
     // frame, or the feel changes with the display refresh rate.
@@ -296,6 +337,8 @@ async function bootstrap() {
     sky.update(camera)
     shadowBlob.update()
     gameWorld.props.update(delta)
+    dashHold = game.update(delta).hold
+    gameHud.update(vehicle.position)
     propStress?.update()
     blobs.update()
     floor.update()

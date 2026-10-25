@@ -2,6 +2,70 @@
 
 Pursuit Arena build log. One entry per phase (see `docs/pursuit-arena/06-phased-prompts.md`).
 
+## Phase 6 — Gamification
+
+The whole of doc 03, in `src/game/`, around one event bus (`events.js`; VFX, SFX and UI subscribe instead of being
+called).
+
+- **Persistence** (`store.js`): one versioned `localStorage` blob, every access try/catch-wrapped, writes debounced, no
+  network. Reset is two-step from the Passport screen.
+- **Progression** (`progression.js`):
+  - XP and ranks from the seed's `gamification`
+  - the 11-stamp Pursuit Passport: gateway trigger *and* one opened station, in either order
+  - 17 badges and 4 skins
+  - the Decade Finale (event, Pursuit Legend badge and rank, golden skin)
+  - "open every station" badges for Culture, L&D and Toolkit
+- **Collectibles** (`collectibles.js`):
+  - 100 / 10 / 8, bobbing and spinning
+  - a 2 m magnet fly-in, dot combos, and golden / shuriken completion badges plus the ninja skin
+  - collected ones stay gone across reloads, and counts come from the saved record, so streamed districts don't skew them
+- **Deadline Dash** (`dash.js`):
+  - started by the RFP Gate start pad; 3-2-1 with the car held
+  - a random Qualify → Write → Review → Submit chain located from the world's triggers and areas
+  - compass and distance, +2 s scope-creep penalties on sudden speed loss
+  - seed medals, a saved personal best, and the Deadline Hero badge for gold
+- **Mini-games** (`minigames.js`): Chart Stack, Coin Run, Idea Spark, Pace Lap (with a ghost of the best lap), Paint
+  Trail (skin), Bridge Run, Strike a Win and Red Tape Wall, all watching the real props and car. Props still on a
+  reveal's drop path are ignored.
+- **Achievements and easter eggs** (`achievements.js`):
+  - First Drive (real distance only), Airtime (real launches only), Loop the 0
+  - Konami code → golden skin
+  - 10 honks at HQ → beacon Morse event
+  - 10 passes through the "0" → a physics trophy drops
+- **UI:**
+  - `ui/gameHud.js`: rank, XP, an 11-segment passport ring in district colours, counters, the Dash panel, and toasts in
+    an `aria-live` region
+  - `ui/passportScreen.js` (P): stamps, badges with how-to text, collectibles, records, skin choice, Reset
+  - All copy is in `content/ui.json` (schema extended); tunables in `settings.collectibles` and `settings.game`
+- **Car skins:** `arcadeVehicle.setTint()` repaints the hull.
+- **Decisions:**
+  - Airtime is 1 s, not doc 03's 2 s: doc 07 V15 shows 2 s is unreachable on the arena's ramps.
+  - Coin Run scores the Tax playground's 12 coins (knock all within 20 s; on a miss they reset), not "25 coins in a
+    lane".
+  - Paint Trail awards its skin, not a badge; doc 03's badge list has no Paint Trail badge.
+
+Bugs found during verification and fixed:
+- Revealing a district counted its dropping-in props as knocked over, awarding Variance Found and Coin Collector on
+  their own.
+- The boot drop awarded Airtime.
+- Collectible counters read 7/8 shuriken before the outer ring had streamed in.
+
+Acceptance checks (in-app browser):
+- [x] **The scripted test (`#debug` → Run badge test) awards every badge.** From a clean store: 17/17 through the real
+  detection paths. All 11 stamps; rank Pursuit Legend. No badge is awarded by simply loading or revealing every district.
+- [x] **Progress survives a reload:**
+  - 17 badges, 11 stamps, rank and XP (5,195)
+  - collectibles 10/10 golden and 8/8 shuriken, hidden in the world
+  - 21 visited, and the Dash personal best
+- [x] **Reset works:** the first click only asks to confirm; the second wipes the store and reloads to 0 XP, no badges,
+  no stamps, 0 collected.
+- [x] **Deadline Dash, real start path:** stopping on the pad opens it and starts the countdown. The car is held
+  (0.13 m/s with throttle down), then the chain starts ("Qualify: Tax: Tax Terrace", 151 m) with the compass and timer.
+- [x] `content:check`, `probe:feel` and `build` pass; no runtime errors after a drive, a horn and opening the Passport.
+- [ ] Dot pickup by real driving around a full loop wasn't measured (the pane was throttled during the attempt). Pickup
+  itself is covered by the badge test's drive-over of every golden dot and shuriken.
+- [ ] Layout: at narrow desktop widths the station drawer overlaps the Dash panel (Phase 9 HUD work).
+
 ## Phase 5 — Dynamic props and interactions
 
 - **Enter areas** (`src/world/areas.js`, doc 05 §4), replacing open-on-touch:

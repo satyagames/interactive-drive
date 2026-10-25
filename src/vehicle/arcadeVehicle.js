@@ -49,6 +49,12 @@ export async function createArcadeVehicle({ scene, world, RAPIER, renderAssets }
   const vehicleGltf = await loadGLTF(rebuild.model.url)
   vehicleGltf.scene.rotation.y = rebuild.model.yawOffset
   applyMatcapMaterials(vehicleGltf.scene, renderAssets)
+  // The hull is what a skin repaints (`setTint`).
+  const hullMeshes = []
+  vehicleGltf.scene.traverse((node) => {
+    const named = node.name.startsWith('vehicle_hull') || node.parent?.name.startsWith('vehicle_hull')
+    if (node.isMesh && named) hullMeshes.push({ mesh: node, original: node.material })
+  })
   bodyGroup.add(vehicleGltf.scene)
 
   const wheelRadius = spec.wheels.radius * s
@@ -184,6 +190,17 @@ export async function createArcadeVehicle({ scene, world, RAPIER, renderAssets }
     horn: () => physics.hop(),
     /** What the shadow blob needs to fit this car rather than the sim one. */
     shadow: { groundClearance: physics.restHeight, scale: modelScale },
+    /**
+     * Skins (doc 03 §2.8): repaint the hull, or `null` for the original.
+     * A tinted ivory matcap keeps the shading while taking the skin colour.
+     */
+    setTint(tint) {
+      for (const { mesh, original } of hullMeshes) {
+        mesh.material = tint
+          ? new THREE.MeshMatcapMaterial({ matcap: renderAssets.matcaps.get('ivory'), color: tint, fog: true })
+          : original
+      }
+    },
     get topSpeed() {
       return physics.topSpeed
     },

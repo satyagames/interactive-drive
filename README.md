@@ -104,8 +104,8 @@ Two platform notes worth passing on if a recipient hits them:
 | Zoom | mouse wheel | — | pinch |
 | Mute · Passport · Menu | `M` · `P` · `Esc` | — · D-pad up · Menu | — |
 
-Interact, mute, passport and menu are wired as input actions but have nothing
-to act on until Phases 5–9. In the `sim` preset (`?vehicle=sim`) `Space` keeps
+Mute has nothing to act on until Phase 8 (audio); Esc closes the topmost
+panel, then opens Explore (the Phase 9 menu takes over later). In the `sim` preset (`?vehicle=sim`) `Space` keeps
 its old handbrake role.
 
 The touch joystick works like the 2019 reference: point it in a screen
@@ -178,6 +178,15 @@ src/
     dynamicProps.js   dyn_ props: sleeping Rapier compounds, instanced
     areas.js          Enter areas: border fill, ENTER hint, hold-to-open
     reveal.js         district reveals + the opening letter drop
+  game/
+    index.js          composes the game layer; main.js feeds it world events
+    events.js         the event bus VFX/SFX/UI subscribe to
+    store.js          localStorage progress (versioned, try/catch, Reset)
+    progression.js    XP, ranks, the 11-stamp passport, badges, skins
+    collectibles.js   dots / golden dots / shuriken: bob, magnet, combo
+    dash.js           Deadline Dash: chain, countdown, penalties, medals
+    minigames.js      the 8 district mini-games
+    achievements.js   driving badges + easter eggs
     triggers.js       enter/exit watcher for area_ and trigger_ volumes
     lighting.js       a single fallback ambient; matcaps need no lights
   content/
@@ -195,6 +204,8 @@ src/
     simVehicle.js     'sim': the original force-based raycast vehicle
   ui/
     screenFade.js     full-screen fade that hides respawn teleports
+    gameHud.js        rank/XP/passport ring, counters, dash panel, toasts
+    passportScreen.js the Passport (P): stamps, badges, records, skins, Reset
   camera/
     cameraRig.js      owns both cameras, routes to settings.cameraMode (C)
     isoFollowCamera.js  default: the reference's fixed-angle follow + zoom + intro
@@ -207,6 +218,7 @@ src/
   debug/
     gui.js            lil-gui panel bound to config.js
     feelProbe.js      scripted feel test of the arcade car (#debug button)
+    gameTest.js       #debug: earn every badge via the real detection paths
     propStress.js     #debug: drop 300 physics props to check the blob budget
     physicsDebug.js   collider wireframe overlay
     fps.js            frame-rate readout in the HUD
@@ -312,8 +324,37 @@ hidden or animated under `prefers-reduced-motion`. Portal and dome rings turn
 float on tethers; every prop sleeps when idle and each district keeps at most
 60 awake (`settings.props.awakeBudget`).
 
-The HUD counter ("N / 43 visited") counts distinct stations opened, until
-the Phase 6 Passport replaces it.
+The HUD counter ("N / 43 visited") counts distinct stations opened.
+
+## The game layer
+
+`src/game/` implements doc 03, around one event bus (`game.events`) that
+VFX, SFX and UI subscribe to:
+
+- **Pursuit Passport** — one stamp per team territory and pillar (11): drive
+  through the district's gateway *and* open one of its stations, in either
+  order. All 11 fires the Decade Finale and the **Pursuit Legend** rank.
+- **XP and ranks** — from `arena.seed.json → gamification` (stamp 100, first
+  open 20, dot 5, golden 50, shuriken 75, badge 150); ranks Bid Rookie →
+  Pursuit Legend.
+- **Collectibles** — 100 dots, 10 golden Decade Dots, 8 hidden shuriken; they
+  bob and spin, fly to the car within 2 m, and dots chain into combos.
+- **Deadline Dash** — stop on the RFP Gate's start pad: 3-2-1 (car held),
+  then a random Qualify → Write → Review → Submit chain with a compass and
+  distance, +2 s per heavy collision, medals and a saved personal best.
+- **Mini-games** — Chart Stack, Coin Run, Idea Spark, Pace Lap (with a ghost of
+  your best lap), Paint Trail, Bridge Run, Strike a Win, Red Tape Wall; each
+  watches the real props and car.
+- **17 badges**, **easter eggs** (Konami code, 10 honks at HQ, 10 passes
+  through the "0") and **skins** (Ninja, Golden Decade, Studio Paint-splash).
+- **Passport screen** (`P` or its button) — stamps, badges, collectibles,
+  records, skin choice, and a two-step **Reset progress**.
+
+Progress lives in `localStorage` only (`src/game/store.js`); nothing leaves
+the browser. Tunables are in `settings.collectibles` and `settings.game`; all
+copy (badge names, toasts, Dash messages) in `content/ui.json`. With `#debug`,
+**Debug → Run badge test** earns every badge through the real detection paths
+and prints a pass/fail table (then use Reset progress).
 
 ## Art pipeline
 

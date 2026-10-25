@@ -14,7 +14,7 @@ const PRESETS = ['arcade2019', 'sim']
  * Tuned values can be stashed in localStorage so a good feel survives a
  * refresh, and dumped as JSON to paste back into `src/config.js`.
  */
-export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, debugMode, propStress }) {
+export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, debugMode, propStress, gameTest }) {
   const gui = new GUI({ title: 'Tuning', width: Math.min(300, window.innerWidth - 30) })
   // On a phone the panel would cover most of the screen, so start it shut.
   if (window.matchMedia?.('(pointer: coarse)').matches) gui.close()
@@ -218,6 +218,16 @@ export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, 
     hud.hidden = !value
   })
   debugFolder.add(settings.debug, 'showFps').name('frame rate')
+  if (gameTest) {
+    // Phase 6 acceptance: every badge through the real detection paths.
+    debugFolder.add({
+      async run() {
+        const report = await gameTest()
+        console.table(report.results)
+        console.log(report.passed ? 'Badge test: all badges unlocked.' : 'Badge test: some badges did not unlock.', report)
+      },
+    }, 'run').name('Run badge test (console)')
+  }
   if (propStress) {
     // Phase 2 budget check: 300 blob shadows under 0.3 ms (see stats in the console).
     const stress = {

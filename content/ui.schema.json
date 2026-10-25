@@ -3,37 +3,161 @@
   "title": "Pursuit Arena UI strings",
   "description": "Every piece of interface copy (HUD, panel, Explore menu, touch labels). Placeholders in {braces} are filled at runtime.",
   "type": "object",
-  "required": ["version", "documentTitle", "loader", "loadFailed", "hud", "panel", "explore", "areas", "touch"],
+  "required": [
+    "version",
+    "documentTitle",
+    "loader",
+    "loadFailed",
+    "hud",
+    "panel",
+    "explore",
+    "areas",
+    "touch",
+    "game",
+    "dash",
+    "passport",
+    "badges",
+    "skins"
+  ],
   "properties": {
-    "$schema": { "type": "string" },
-    "version": { "const": 1 },
-    "documentTitle": { "$ref": "#/$defs/text" },
-    "loader": { "$ref": "#/$defs/text" },
-    "loadFailed": { "$ref": "#/$defs/text" },
-    "hud": { "$ref": "#/$defs/strings", "required": ["speedUnit", "found"] },
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "documentTitle": {
+      "$ref": "#/$defs/text"
+    },
+    "loader": {
+      "$ref": "#/$defs/text"
+    },
+    "loadFailed": {
+      "$ref": "#/$defs/text"
+    },
+    "hud": {
+      "$ref": "#/$defs/strings",
+      "required": [
+        "speedUnit",
+        "found"
+      ]
+    },
     "panel": {
       "$ref": "#/$defs/strings",
-      "required": ["regionLabel", "close", "placeholder", "links", "opensInNewTab", "gallery", "imageAlt"]
+      "required": [
+        "regionLabel",
+        "close",
+        "placeholder",
+        "links",
+        "opensInNewTab",
+        "gallery",
+        "imageAlt"
+      ]
     },
     "explore": {
       "$ref": "#/$defs/strings",
-      "required": ["open", "openHint", "title", "intro", "close", "backToCar", "start", "ourTeam", "timeline", "leader", "placeholderTag"]
+      "required": [
+        "open",
+        "openHint",
+        "title",
+        "intro",
+        "close",
+        "backToCar",
+        "start",
+        "ourTeam",
+        "timeline",
+        "leader",
+        "placeholderTag"
+      ]
     },
     "areas": {
       "$ref": "#/$defs/strings",
-      "required": ["enterHint", "tapHint", "ready"]
+      "required": [
+        "enterHint",
+        "tapHint",
+        "ready"
+      ]
     },
     "touch": {
       "$ref": "#/$defs/strings",
-      "required": ["joystick", "boost", "brake", "reverse", "interact", "respawn"]
+      "required": [
+        "joystick",
+        "boost",
+        "brake",
+        "reverse",
+        "interact",
+        "respawn"
+      ]
+    },
+    "game": {
+      "$ref": "#/$defs/strings"
+    },
+    "dash": {
+      "$ref": "#/$defs/strings"
+    },
+    "passport": {
+      "$ref": "#/$defs/strings"
+    },
+    "skins": {
+      "$ref": "#/$defs/strings",
+      "required": [
+        "default",
+        "ninja",
+        "golden",
+        "paint"
+      ]
+    },
+    "badges": {
+      "type": "object",
+      "description": "One entry per badge id in src/game/progression.js BADGES.",
+      "required": [
+        "first_drive",
+        "decade_historian",
+        "variance_found",
+        "coin_collector",
+        "bright_idea",
+        "pole_position",
+        "across_time_zones",
+        "bright_strike",
+        "red_tape_cutter",
+        "proposal_ninja",
+        "social_butterfly",
+        "lifelong_learner",
+        "toolkit_pro",
+        "loop_the_0",
+        "airtime",
+        "deadline_hero",
+        "pursuit_legend"
+      ],
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "title",
+          "description"
+        ],
+        "properties": {
+          "title": {
+            "$ref": "#/$defs/text"
+          },
+          "description": {
+            "$ref": "#/$defs/text"
+          }
+        },
+        "additionalProperties": false
+      }
     }
   },
   "additionalProperties": false,
   "$defs": {
-    "text": { "type": "string", "minLength": 1 },
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
     "strings": {
       "type": "object",
-      "additionalProperties": { "$ref": "#/$defs/text" }
+      "additionalProperties": {
+        "$ref": "#/$defs/text"
+      }
     }
   }
 }

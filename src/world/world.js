@@ -71,6 +71,7 @@ export async function createWorld({ scene, world, RAPIER, renderAssets, blobs })
     const statics = []
     const dynRoots = []
     const placements = []
+    const collectPlacements = []
     const staticBody = world.createRigidBody(RAPIER.RigidBodyDesc.fixed())
     let colliders = 0
 
@@ -93,8 +94,9 @@ export async function createWorld({ scene, world, RAPIER, renderAssets, blobs })
       if (name.startsWith(worldConfig.collectPrefix)) {
         const kind = name.split('_')[1]
         const position = new THREE.Vector3().setFromMatrixPosition(node.matrixWorld)
-        collectibles.push({ id: name, kind, position, district: id })
-        placements.push({ type: kind, matrix: new THREE.Matrix4().makeTranslation(position.x, position.y, position.z) })
+        const entry = { id: name, kind, position, district: id, mesh: null, index: 0 }
+        collectibles.push(entry)
+        collectPlacements.push({ entry, type: kind, matrix: new THREE.Matrix4().makeTranslation(position.x, position.y, position.z) })
         return
       }
       if (name.startsWith(worldConfig.areaPrefix)) {
@@ -138,6 +140,17 @@ export async function createWorld({ scene, world, RAPIER, renderAssets, blobs })
     for (const mesh of merged) staticGroup.add(mesh)
 
     placeKitInstances({ kit, placements, group: staticGroup, world, RAPIER, name: id })
+    // Collectibles get their own batches so each knows its instance (to bob,
+    // spin and hide on pickup -- src/game/collectibles.js).
+    const collectMeshes = placeKitInstances({ kit, placements: collectPlacements, group: staticGroup, world, RAPIER, name: `${id}:collect` })
+    const seen = new Map()
+    for (const { entry, type } of collectPlacements) {
+      const index = seen.get(type) ?? 0
+      seen.set(type, index + 1)
+      entry.mesh = collectMeshes.get(type)?.[0] ?? null
+      entry.index = index
+      if (entry.mesh) entry.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    }
     const propMeshes = props.addDistrict({ roots: dynRoots, group: districtGroup, name: id })
 
     group.add(districtGroup)

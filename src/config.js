@@ -293,6 +293,49 @@ export const settings = {
     introStagger: 0.12,
   },
 
+  /** Collectibles (`game/collectibles.js`, doc 03 §2.3). */
+  collectibles: {
+    /** Pickups within this many metres fly to the car. */
+    magnet: 2.0,
+    flyTime: 0.18,
+    /** Dots within this many seconds of the last one extend the combo. */
+    comboWindow: 2.0,
+    spinSpeed: 2.0,
+    bob: 0.15,
+  },
+
+  /** Gameplay tunables that aren't content (`game/`). */
+  game: {
+    /** "First Drive": metres driven. */
+    firstDriveDistance: 25,
+    /**
+     * "Airtime" badge threshold, s. Doc 03 says 2 s, but doc 07 §1 V15 shows
+     * the arena's 15° ramps give 0.39 s (0.77 s boosted), so 2 s is
+     * unreachable; 1 s needs a boosted ramp jump plus a horn hop. Decided in
+     * Phase 6 (CHANGELOG); change here if a launch pad is ever built.
+     */
+    airtimeSeconds: 1.0,
+    /** Deadline Dash. */
+    dash: {
+      countdown: 3,
+      /** Reaching a checkpoint: within this many metres of it. */
+      checkpointRadius: 7,
+      /** A "heavy collision": speed drops by more than this in one frame (m/s)... */
+      penaltySpeedDrop: 6,
+      /** ...at most once per this many seconds. */
+      penaltyCooldown: 1,
+      /** Give up a run that takes longer than bronze x this. */
+      timeoutFactor: 3,
+    },
+    /** Coin Run: knock every Tax coin within this many seconds of the first. */
+    coinRunSeconds: 20,
+    /** Paint Trail: seconds of driving in the Studio for the paint-splash skin. */
+    paintSeconds: 60,
+    /** Easter eggs. */
+    hornsAtHq: 10,
+    loopsForTrophy: 10,
+  },
+
   /** On-screen touch pad (`input/touch.js`). */
   touch: {
     /** Joystick travel radius, CSS px. */
