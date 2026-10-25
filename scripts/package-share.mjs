@@ -21,7 +21,7 @@
  */
 
 import { execSync } from 'node:child_process'
-import { chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { chmodSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { deflateRawSync } from 'node:zlib'
@@ -70,7 +70,11 @@ rmSync(SHARE_DIR, { recursive: true, force: true })
 mkdirSync(SHARE_DIR, { recursive: true })
 cpSync(DIST_DIR, SHARE_DIR, { recursive: true })
 rmSync(join(SHARE_DIR, '.DS_Store'), { force: true })
-for (const name of [MAC_LAUNCHER, ...SERVERS]) copyFileSync(join(LAUNCHERS_DIR, name), join(SHARE_DIR, name))
+// Unix line endings for the Mac launcher and the servers whatever the checkout
+// did (a CRLF .command won't run on macOS).
+for (const name of [MAC_LAUNCHER, ...SERVERS]) {
+  writeFileSync(join(SHARE_DIR, name), readFileSync(join(LAUNCHERS_DIR, name), 'utf8').replace(/\r\n/g, '\n'))
+}
 // Batch files want CRLF: with bare LF, cmd.exe can mis-read goto labels.
 const bat = readFileSync(join(LAUNCHERS_DIR, WIN_LAUNCHER), 'utf8').replace(/\r?\n/g, '\r\n')
 writeFileSync(join(SHARE_DIR, WIN_LAUNCHER), bat)

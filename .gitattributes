@@ -1,0 +1,6 @@
+# Launchers must keep their native line endings whatever the checkout does:
+# a CRLF .command fails on macOS, and cmd.exe wants CRLF batch files.
+*.command text eol=lf
+*.bat text eol=crlf
+scripts/launchers/serve.py text eol=lf
+scripts/launchers/serve.mjs text eol=lf

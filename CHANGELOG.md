@@ -31,7 +31,9 @@ Pursuit Arena build log. One entry per phase (see `docs/pursuit-arena/06-phased-
     - Python's server on Windows can serve `.js` as `text/plain`, which breaks modules
   - The fix: two bundled, dependency-free servers (`serve.py`, `serve.mjs`) with fixed MIME types, bound to
     127.0.0.1 on a free port, that open the browser. The launchers *try* each runtime rather than just finding it.
-  - The `.bat` is written with CRLF; the zip is now `pursuit-arena-share.zip`.
+  - Line endings are pinned in `.gitattributes` and normalised by the packager: LF for the `.command` and the
+    servers (a CRLF `.command` fails on macOS, and a Windows checkout would produce one), CRLF for the `.bat`. The
+    zip is now `pursuit-arena-share.zip`.
 - An inline SVG favicon (a green disc with "10"; not the logo): the browser no longer requests `/favicon.ico` (the
   only 404 in the offline run).
 - README now leads with Pursuit Arena and has sections on sharing, updating content and what's placeholder;
