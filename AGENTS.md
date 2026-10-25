@@ -34,7 +34,8 @@ Read [`docs/blender-conventions.md`](docs/blender-conventions.md) before editing
 
 - Keep visual meshes separate from `collision_` proxy meshes.
 - Keep metric 1:1 units and apply object scales before export.
-- Run the art pipeline in this order: `vehicle_details.py`, `bevel.py`, `bake_ao.py`, then `export.py`. The bake and export steps must remain a pair.
+- **Arena** (everything the car drives in): generated, not hand-modelled. Run `npm run art:build` (or `art:gen` → `art:validate` → `art:export`), which drives Blender 5.x headless through `blender/scripts/` (`gen_kit.py`, `gen_base.py`, `gen_district.py --id <id>`, `validate.py`, `export_arena.py`) and writes `blender/{kit,districts}/*.blend`, `public/models/{kit,district_*}.glb` and `public/models/arena.manifest.json`. Blender is found via `BLENDER_BIN` (environment or `.env.local`) or the default install path. Change layouts in the generators, not in the `.blend` files, until the Phase 10 art pass. `art:validate` must pass (names, budgets, every content id has exactly one `area_`, no dynamic prop starting inside static geometry).
+- **Car** (`blender/scene.blend`, Vehicle collection): run `vehicle_details.py`, `bevel.py`, `bake_ao.py`, then `export.py` in that order. The bake and export steps must remain a pair. The scene's World collection is the retired prototype lot and is no longer exported.
 - Do not reorder or rename the `bake` UV layer; runtime AO reads it from texture coordinate channel 1.
 - Set asymmetric trigger half-extents using the documented Blender Y/Z swap, and verify them by driving to an edge rather than only checking the trigger center.
 - After vehicle re-exports, visually verify that forward input moves the vehicle nose-first; the model yaw correction is intentional.

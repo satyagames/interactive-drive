@@ -50,6 +50,8 @@ export async function loadRenderAssets() {
     rendering.wheelMatcap,
     rendering.hubMatcap,
     ...rendering.matcapRules.map((rule) => rule.matcap),
+    // Blender-authored arena materials name their matcap directly (mc_*).
+    ...rendering.matcaps,
   ])
   const bakeFiles = new Set(rendering.bakeRules.map((rule) => rule.file))
 
@@ -105,11 +107,14 @@ export function applyMatcapMaterials(root, assets) {
     if (!object.isMesh) return
 
     const name = resolveName(object)
-    const matcapName = matchRule(rendering.matcapRules, name)?.matcap ?? rendering.defaultMatcap
     const bakeFile = matchRule(rendering.bakeRules, name)?.file ?? null
+    // An explicit `mc_<matcap>[__<RRGGBB>]` material name (the arena
+    // generators) wins; otherwise the object-name prefix rules decide.
+    const named = parseMatcapMaterialName(object.material?.name)
+    const matcapName = named?.matcap ?? matchRule(rendering.matcapRules, name)?.matcap ?? rendering.defaultMatcap
 
     if (object.material) replaced.add(object.material)
-    object.material = getMaterial(assets, matcapName, bakeFile, effectProfile(name))
+    object.material = getMaterial(assets, matcapName, bakeFile, effectProfile(name), named?.tint ?? null)
   })
 
   // Skip anything from the shared cache -- calling this twice (world, then
@@ -125,14 +130,27 @@ export function createMatcapMaterial(assets, matcapName) {
   return getMaterial(assets, matcapName, null)
 }
 
-function getMaterial(assets, matcapName, bakeFile, profile = effectProfile(matcapName)) {
-  const key = `${matcapName}|${bakeFile ?? ''}|${profile.name}`
+/**
+ * `mc_ivory__86BC25` -> { matcap: 'ivory', tint: '#86BC25' }; `mc_stone` -> { matcap: 'stone' }.
+ * Unknown matcap names fall back to the default so a typo can't blank a mesh.
+ */
+export function parseMatcapMaterialName(name) {
+  const match = /^mc_([a-z0-9-]+)(?:__([0-9A-Fa-f]{6}))?/.exec(name ?? '')
+  if (!match) return null
+  const matcap = rendering.matcaps.includes(match[1]) ? match[1] : rendering.defaultMatcap
+  return { matcap, tint: match[2] ? `#${match[2].toUpperCase()}` : null }
+}
+
+function getMaterial(assets, matcapName, bakeFile, profile = effectProfile(matcapName), tint = null) {
+  const key = `${matcapName}|${bakeFile ?? ''}|${profile.name}|${tint ?? ''}`
   const cached = assets.cache.get(key)
   if (cached) return cached
 
   const material = new THREE.MeshMatcapMaterial({
     matcap: assets.matcaps.get(matcapName) ?? null,
     map: bakeFile ? assets.bakes.get(bakeFile) ?? null : null,
+    // A tint multiplies the matcap (authored sRGB, like every hex here).
+    color: tint ?? 0xffffff,
     fog: true,
   })
   material.name = `matcap:${key}`

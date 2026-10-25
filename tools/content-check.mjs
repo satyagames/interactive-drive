@@ -28,8 +28,7 @@ for (const [dataPath, schemaPath] of files) {
 
 if (problems === 0) {
   const arena = read('content/arena.seed.json')
-  const projects = read('content/projects.json')
-  const model = buildContentModel(arena, { legacyExhibits: projects })
+  const model = buildContentModel(arena)
   for (const issue of model.issues) console.error(`content/arena.seed.json: ${issue}`)
   problems += model.issues.length
 

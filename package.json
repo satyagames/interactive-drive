@@ -9,7 +9,11 @@
     "serve:dist": "vite preview --port 4173",
     "package:share": "node scripts/package-share.mjs",
     "probe:feel": "node tools/feel-probe.mjs",
-    "content:check": "node tools/content-check.mjs"
+    "content:check": "node tools/content-check.mjs",
+    "art:gen": "node tools/blender.mjs gen",
+    "art:validate": "node tools/blender.mjs validate",
+    "art:export": "node tools/blender.mjs export",
+    "art:build": "node tools/blender.mjs build"
   },
   "type": "module",
   "dependencies": {

@@ -1,7 +1,6 @@
 import './styles.css'
 
 import arena from '../content/arena.seed.json'
-import projects from '../content/projects.json'
 
 import { createCameraRig } from './camera/cameraRig.js'
 import { rebuild, rendering, settings, world as worldConfig } from './config.js'
@@ -63,8 +62,6 @@ async function bootstrap() {
   applyUiStrings()
   document.title = t('documentTitle')
   const content = buildContentModel(arena, {
-    // The prototype world's trigger_exhibit_* volumes, until Phase 4.
-    legacyExhibits: projects,
     labels: {
       start: t('explore.start'),
       ourTeam: t('explore.ourTeam'),
@@ -92,21 +89,20 @@ async function bootstrap() {
   const { RAPIER, world } = await createPhysics()
   const step = createStepper(world)
 
-  const gameWorld = await createWorld({ scene, world, RAPIER, renderAssets })
+  // Prop blob shadows exist before the world: every dyn_ prop gets one.
+  const blobs = createBlobShadows({ scene, capacity: 1024 })
+  // The arena's core districts load now; the outer ring streams in after
+  // the first frame (see the loop below).
+  const gameWorld = await createWorld({ scene, world, RAPIER, renderAssets, blobs })
 
-  // The authored ground keeps its AO bake; its colour becomes the world-space
-  // gradient, and an outer plane carries that gradient out into the fog.
-  let groundMesh = null
-  gameWorld.group.traverse((node) => {
-    if (!groundMesh && node.isMesh && node.name.startsWith('ground')) groundMesh = node
-  })
-  const floor = createFloorGradient({ scene, ground: groundMesh, fogColor: rendering.sky.fog })
-  const blobs = createBlobShadows({ scene })
+  // The ground's colour becomes the world-space gradient, and an outer
+  // plane carries that gradient out into the fog.
+  const floor = createFloorGradient({ scene, ground: gameWorld.ground, fogColor: rendering.sky.fog })
   const propStress = debugMode ? createPropStress({ scene, world, RAPIER, renderAssets, blobs }) : null
 
-  // The world's `spawn_` empty (if any) overrides the fallback in config.js;
-  // `createVehicle` reads `rebuild.chassis.spawn*` when it spawns the body.
-  const spawnPoint = Object.values(gameWorld.spawns)[0]
+  // The boot spawn is the one the content names (the RFP Gate); it overrides
+  // the fallback in config.js, which `createVehicle` reads.
+  const spawnPoint = gameWorld.spawns[arena.rfpGate.spawn] ?? Object.values(gameWorld.spawns)[0]
   if (spawnPoint) {
     const { position, quaternion } = spawnPoint
     rebuild.chassis.spawn = { x: position.x, y: position.y, z: position.z }
@@ -120,25 +116,33 @@ async function bootstrap() {
   const shadowBlob = createShadowBlob({ scene, world, RAPIER, vehicle })
 
   const stationPanel = createStationPanel(document.getElementById('station-panel'))
-  // "N of 4 found" counts the prototype exhibits until the Phase 6 passport.
-  const progress = createProgressTracker(projects.length, {
+  // "N / 43 visited": distinct stations opened, until the Phase 6 passport.
+  const progress = createProgressTracker(content.exploreIds().length, {
     countEl: document.getElementById('progress-count'),
     totalEl: document.getElementById('progress-total'),
   })
 
-  const triggerWatcher = createTriggerWatcher(gameWorld.triggers, {
-    onEnter(trigger) {
+  // Driving into an `area_<id>` opens that station (Phase 5 adds the ring
+  // fill and the Enter key on top). `trigger_` volumes are passive: stamps
+  // and loop counters for the Phase 6 passport; a trigger whose id is also
+  // content still opens it.
+  const areaWatcher = createTriggerWatcher(gameWorld.areas, {
+    onEnter(area) {
       interactionTarget = 1
-      const id = contentIdForTrigger(trigger)
-      const node = content.get(id)
+      const node = content.get(area.id)
       if (!node) return
       stationPanel.show(node)
-      if (node.kind === 'exhibit') progress.markFound(id)
+      progress.markFound(area.id)
     },
-    onExit(trigger) {
+    onExit(area) {
       interactionTarget = 0
-      const id = contentIdForTrigger(trigger)
-      if (stationPanel.currentId === id) stationPanel.hide()
+      if (stationPanel.currentId === area.id) stationPanel.hide()
+    },
+  })
+  const triggerWatcher = createTriggerWatcher(gameWorld.triggers, {
+    onEnter(trigger) {
+      const node = content.get(contentIdForTrigger(trigger))
+      if (node) stationPanel.show(node)
     },
   })
 
@@ -210,8 +214,14 @@ async function bootstrap() {
   let interaction = 0
   let interactionTarget = 0
 
+  let streamed = false
   createLoop((delta) => {
     elapsed += delta
+    // The outer-ring districts load once the first frame is on screen.
+    if (!streamed) {
+      streamed = true
+      gameWorld.streamRest().catch((error) => console.error('[world] streaming failed', error))
+    }
     const inputState = input.update({ camera, vehicle })
 
     if (input.consume('respawn')) respawnVehicle()
@@ -237,11 +247,13 @@ async function bootstrap() {
     step(delta, (fixedDelta) => vehicle.update(fixedDelta, inputState))
 
     vehicle.sync()
+    areaWatcher(vehicle.position)
     triggerWatcher(vehicle.position)
     interaction += (interactionTarget - interaction) * (1 - Math.exp(-8 * delta))
     cameraRig.update(delta, vehicle)
     sky.update(camera)
     shadowBlob.update()
+    gameWorld.props.update()
     propStress?.update()
     blobs.update()
     floor.update()

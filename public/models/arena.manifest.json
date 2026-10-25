@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "kit": "models/kit.glb",
+  "districts": [
+    {
+      "id": "base",
+      "url": "models/district_base.glb",
+      "stage": "core"
+    },
+    {
+      "id": "hq",
+      "url": "models/district_hq.glb",
+      "stage": "core"
+    },
+    {
+      "id": "rfp_gate",
+      "url": "models/district_rfp_gate.glb",
+      "stage": "core"
+    },
+    {
+      "id": "decade_drive",
+      "url": "models/district_decade_drive.glb",
+      "stage": "core"
+    },
+    {
+      "id": "audit",
+      "url": "models/district_audit.glb",
+      "stage": "core"
+    },
+    {
+      "id": "tax",
+      "url": "models/district_tax.glb",
+      "stage": "core"
+    },
+    {
+      "id": "consulting",
+      "url": "models/district_consulting.glb",
+      "stage": "core"
+    },
+    {
+      "id": "pace",
+      "url": "models/district_pace.glb",
+      "stage": "core"
+    },
+    {
+      "id": "studio",
+      "url": "models/district_studio.glb",
+      "stage": "core"
+    },
+    {
+      "id": "catalyst",
+      "url": "models/district_catalyst.glb",
+      "stage": "core"
+    },
+    {
+      "id": "innovation",
+      "url": "models/district_innovation.glb",
+      "stage": "stream"
+    },
+    {
+      "id": "rnr",
+      "url": "models/district_rnr.glb",
+      "stage": "stream"
+    },
+    {
+      "id": "lnd",
+      "url": "models/district_lnd.glb",
+      "stage": "stream"
+    },
+    {
+      "id": "toolkit",
+      "url": "models/district_toolkit.glb",
+      "stage": "stream"
+    },
+    {
+      "id": "culture",
+      "url": "models/district_culture.glb",
+      "stage": "stream"
+    }
+  ]
+}

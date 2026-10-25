@@ -9,9 +9,8 @@
  *   { id, kind, title, kicker, lead, body, images[], links[], roles[],
  *     status, placeholder, group: { id, name, color }, position: [x, y, z] }
  *
- * `legacyExhibits` (content/projects.json) keeps the prototype world's four
- * `trigger_exhibit_*` volumes working until the Phase 4 arena replaces them;
- * they are reachable by trigger only, not listed in Explore.
+ * Every node id has exactly one `area_<id>` in the generated arena
+ * (`npm run art:validate` checks), which is how driving reaches it.
  */
 
 /** Brand green, for groups whose seed entry carries no colour of its own. */
@@ -26,7 +25,7 @@ const DECADE_DRIVE_FOCUS = [0, 0, 62]
 
 const ROMAN = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10 }
 
-export function buildContentModel(arena, { legacyExhibits = [], labels = {} } = {}) {
+export function buildContentModel(arena, { labels = {} } = {}) {
   const nodes = new Map()
   const issues = []
 
@@ -146,26 +145,6 @@ export function buildContentModel(arena, { legacyExhibits = [], labels = {} } = 
     if (district.stampTrigger !== `trigger_stamp_${district.id}`) {
       issues.push(`${district.id}: stampTrigger should be "trigger_stamp_${district.id}"`)
     }
-  }
-
-  // ---- prototype exhibits (trigger-only) ------------------------------------
-  const legacyGroup = { id: 'prototype', name: '', color: DEFAULT_COLOR }
-  for (const exhibit of legacyExhibits) {
-    add({
-      id: exhibit.id,
-      kind: 'exhibit',
-      title: exhibit.title,
-      kicker: null,
-      lead: exhibit.pitch,
-      body: exhibit.description,
-      images: exhibit.image ? [exhibit.image] : [],
-      links: [],
-      roles: [],
-      status: 'placeholder',
-      placeholder: true,
-      group: legacyGroup,
-      position: null,
-    })
   }
 
   return {

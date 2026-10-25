@@ -6,7 +6,7 @@
   "loadFailed": "The arena could not start: {message}",
   "hud": {
     "speedUnit": "km/h",
-    "found": "found"
+    "found": "visited"
   },
   "panel": {
     "regionLabel": "Station details",

@@ -575,14 +575,21 @@ export const rebuild = {
 }
 
 /**
- * World asset + the naming convention `world.js` reads out of it. See
- * `docs/blender-conventions.md` for the authoring side of this contract.
+ * The arena (written by `npm run art:export`) + the naming convention
+ * `world/world.js` reads out of it. See `docs/blender-conventions.md` and
+ * docs/pursuit-arena/04 §2 for the authoring side of this contract.
  */
 export const world = {
-  url: 'models/world.glb',
+  /** Lists kit.glb and every district GLB, each tagged 'core' or 'stream'. */
+  manifestUrl: 'models/arena.manifest.json',
   collisionPrefix: 'collision_',
   spawnPrefix: 'spawn_',
   triggerPrefix: 'trigger_',
+  areaPrefix: 'area_',
+  dynamicPrefix: 'dyn_',
+  instancePrefix: 'inst_',
+  collectPrefix: 'collect_',
+  sfxPrefix: 'sfx_',
 }
 
 /**
@@ -632,15 +639,15 @@ export const rendering = {
   ],
 
   /**
-   * Which AO bake each static object samples. Two atlases rather than one:
-   * the 240 m ground needs a whole texture to itself to have any resolution
-   * left, while the props are small enough to share.
+   * Which AO bake each static object samples, by name prefix. Empty while the
+   * arena is greybox: the per-district bakes arrive with the Phase 10 art
+   * pass (docs/pursuit-arena/04 §4). The prototype world's two bakes went
+   * with it in Phase 4.
    */
-  bakeRules: [
-    { prefix: 'ground', file: 'world-ao-ground.png' },
-    { prefix: 'exhibit_', file: 'world-ao-props.png' },
-    { prefix: 'ramp_', file: 'world-ao-props.png' },
-  ],
+  bakeRules: [],
+
+  /** Every matcap in public/textures/matcaps/, nameable as `mc_<name>` from Blender. */
+  matcaps: ['neutral', 'stone', 'accent-warm', 'accent-cool', 'accent-deep', 'ivory', 'dark', 'vehicle'],
 
   /** Matcaps used by geometry built in code (wheels), not loaded from glTF. */
   wheelMatcap: 'dark',

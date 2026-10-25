@@ -1,15 +1,15 @@
 """
-Headless re-export of scene.blend -> public/models/{world,vehicle}.glb.
+Headless re-export of scene.blend -> public/models/vehicle.glb.
 
 Run from the project root:
 
     blender --background blender/scene.blend --python blender/export.py
 
-Exports the "World" collection and the "Vehicle" collection separately (each
-via `use_selection`, so objects outside those collections -- and any leftover
-default Camera/Light -- never leak into either file). Both use the same
-Draco settings as the interactive export this scene was built with; keep
-them in sync if you change one.
+Exports the "Vehicle" collection (via `use_selection`, so objects outside it
+-- and any leftover default Camera/Light -- never leak into the file). The
+"World" collection in scene.blend is the retired prototype lot; the arena is
+generated and exported by blender/scripts/ (`npm run art:build`). Draco
+settings match blender/scripts/export_arena.py; keep them in sync.
 """
 
 import bpy
@@ -49,8 +49,9 @@ def export_collection(name, filename):
     )
 
 
-export_collection('World', 'world.glb')
+# The prototype's World collection is retired: the arena is generated and
+# exported by blender/scripts/ (npm run art:build). Only the car ships from here.
 export_collection('Vehicle', 'vehicle.glb')
 bpy.ops.object.select_all(action='DESELECT')
 
-print('Exported public/models/world.glb and public/models/vehicle.glb')
+print('Exported public/models/vehicle.glb')
