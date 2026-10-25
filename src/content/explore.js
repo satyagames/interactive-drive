@@ -12,7 +12,7 @@ import { t } from './ui.js'
  * an open station panel first). While focus is inside, driving keys are
  * ignored (`data-captures-keys`, see input/keyboard.js).
  */
-export function createExploreMenu({ root, launcher, model, onPickNode, onPickGroup, onClose }) {
+export function createExploreMenu({ root, launcher, returnFocus, model, onPickNode, onPickGroup, onClose }) {
   root.classList.add('explore')
   root.setAttribute('role', 'dialog')
   root.setAttribute('aria-modal', 'false')
@@ -128,7 +128,8 @@ export function createExploreMenu({ root, launcher, model, onPickNode, onPickGro
     const hadFocus = root.contains(document.activeElement)
     root.hidden = true
     launcher.setAttribute('aria-expanded', 'false')
-    if (hadFocus) launcher.focus()
+    // The launcher may sit in the closed Esc menu: then focus `returnFocus`.
+    if (hadFocus) (launcher.offsetParent ? launcher : returnFocus ?? launcher).focus()
     onClose()
   }
 

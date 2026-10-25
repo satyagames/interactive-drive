@@ -2,11 +2,157 @@
   "$schema": "./ui.schema.json",
   "version": 1,
   "documentTitle": "Pursuit Arena — USI Pursuits COE · 10 Years",
-  "loader": "Loading the arena…",
   "loadFailed": "The arena could not start: {message}",
+  "start": {
+    "tagline": "USI Pursuits COE · 10 Years",
+    "title": "Pursuit Arena",
+    "progressLabel": "Loading the arena",
+    "ready": "Ready",
+    "button": "Start",
+    "keyboard": "Keyboard: W A S D or arrows to drive, Shift to boost, Enter to open a station, Esc for the menu.",
+    "touch": "Touch: point the joystick where you want to go; tap ↵ to open a station.",
+    "sound": "Starting turns the sound on. Press M to mute."
+  },
+  "menu": {
+    "open": "Menu",
+    "openHint": "Esc",
+    "title": "Menu",
+    "paused": "Paused",
+    "resume": "Resume",
+    "explore": "Explore mode",
+    "passport": "Passport & badges",
+    "controls": "Controls",
+    "audio": "Audio",
+    "graphics": "Graphics",
+    "reset": "Reset progress",
+    "credits": "Credits",
+    "back": "Back",
+    "graphicsIntro": "Lower settings run faster on older laptops and phones.",
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "lowNote": "No post-processing, fewer effects",
+    "mediumNote": "Lighter anti-aliasing and effects",
+    "highNote": "Everything on",
+    "resetIntro": "This wipes your stamps, badges, XP, collectibles and records on this device. It cannot be undone.",
+    "resetConfirm": "Yes, reset everything",
+    "resetCancel": "Keep my progress"
+  },
+  "controls": {
+    "title": "Controls",
+    "action": "Action",
+    "keyboard": "Keyboard",
+    "gamepad": "Gamepad",
+    "touch": "Touch",
+    "rows": [
+      {
+        "action": "Drive",
+        "keyboard": "W / ↑",
+        "gamepad": "RT",
+        "touch": "Joystick"
+      },
+      {
+        "action": "Steer",
+        "keyboard": "A D / ← →",
+        "gamepad": "Left stick",
+        "touch": "Joystick"
+      },
+      {
+        "action": "Reverse",
+        "keyboard": "S / ↓",
+        "gamepad": "LT",
+        "touch": "▼"
+      },
+      {
+        "action": "Brake",
+        "keyboard": "Space",
+        "gamepad": "B",
+        "touch": "■"
+      },
+      {
+        "action": "Boost",
+        "keyboard": "Shift",
+        "gamepad": "X",
+        "touch": "»"
+      },
+      {
+        "action": "Drift",
+        "keyboard": "Q",
+        "gamepad": "RB",
+        "touch": "—"
+      },
+      {
+        "action": "Horn",
+        "keyboard": "H",
+        "gamepad": "LB",
+        "touch": "—"
+      },
+      {
+        "action": "Open a station",
+        "keyboard": "Enter",
+        "gamepad": "A",
+        "touch": "↵"
+      },
+      {
+        "action": "Camera",
+        "keyboard": "C",
+        "gamepad": "Y",
+        "touch": "—"
+      },
+      {
+        "action": "Respawn",
+        "keyboard": "R",
+        "gamepad": "View",
+        "touch": "⟲"
+      },
+      {
+        "action": "Zoom",
+        "keyboard": "Mouse wheel",
+        "gamepad": "—",
+        "touch": "Pinch"
+      },
+      {
+        "action": "Mute",
+        "keyboard": "M",
+        "gamepad": "—",
+        "touch": "Menu → Audio"
+      },
+      {
+        "action": "Passport",
+        "keyboard": "P",
+        "gamepad": "D-pad up",
+        "touch": "Menu"
+      },
+      {
+        "action": "Menu",
+        "keyboard": "Esc",
+        "gamepad": "Menu",
+        "touch": "Menu button"
+      }
+    ]
+  },
+  "credits": {
+    "title": "Credits",
+    "intro": "Pursuit Arena celebrates 10 years of the Deloitte USI Pursuits COE.",
+    "team": "Team credits to be supplied by the USI Pursuits COE team.",
+    "software": "Built with three.js (MIT), Rapier physics (Apache-2.0) and Vite (MIT).",
+    "reference": "Driving feel and camera inspired by Bruno Simon's 2019 folio (MIT), reimplemented from scratch.",
+    "audio": "All sounds and music are synthesised placeholders until the final audio is supplied.",
+    "placeholderTag": "coming soon"
+  },
   "hud": {
     "speedUnit": "km/h",
-    "found": "visited"
+    "found": "visited",
+    "hintDrive": "W A S D or arrow keys to drive · Shift boost · Space brake",
+    "hintTouch": "Point the joystick where you want to go",
+    "hintFindStation": "Drive into a glowing square to open a station",
+    "hintEnter": "Enter: open {title}",
+    "hintTap": "Tap ↵: open {title}",
+    "hintPassport": "P: see your Passport",
+    "mapLabel": "Map. {objective}",
+    "objective": "Next stamp: {place}, {m} m",
+    "objectiveDash": "Dash: {place}, {m} m",
+    "objectiveDone": "Every stamp collected"
   },
   "panel": {
     "regionLabel": "Station details",
@@ -104,27 +250,76 @@
     "seconds": "{s} s"
   },
   "badges": {
-    "first_drive": { "title": "First Drive", "description": "Take the cart for a spin." },
-    "decade_historian": { "title": "Decade Historian", "description": "Collect all 10 Golden Decade Dots on the Decade Drive." },
-    "variance_found": { "title": "Variance Found", "description": "Knock over every bar-chart block in the Assurance Citadel." },
-    "coin_collector": { "title": "Coin Collector", "description": "Knock over every coin at the Tax Terrace in 20 seconds." },
-    "bright_idea": { "title": "Bright Idea", "description": "Hit all five hanging bulbs in the Consulting Skyline." },
-    "pole_position": { "title": "Pole Position", "description": "Complete a lap of the PACE Speedway oval." },
-    "across_time_zones": { "title": "Across Time Zones", "description": "Jump the gap on the Catalyst Bridge." },
-    "bright_strike": { "title": "Bright Strike", "description": "Knock down all ten pins at the R&R Arena." },
-    "red_tape_cutter": { "title": "Red Tape Cutter", "description": "Smash through the Red Tape Wall at the Toolkit Depot." },
-    "proposal_ninja": { "title": "Proposal Ninja", "description": "Find all 8 hidden shuriken." },
-    "social_butterfly": { "title": "Social Butterfly", "description": "Open every station in Culture Commons." },
-    "lifelong_learner": { "title": "Lifelong Learner", "description": "Open every station on the L&D Campus." },
-    "toolkit_pro": { "title": "Toolkit Pro", "description": "Open every station at the Toolkit Depot." },
-    "loop_the_0": { "title": "Loop the 0", "description": "Drive through the 0 of the 10 at HQ." },
-    "airtime": { "title": "Airtime", "description": "Stay in the air for a full second." },
-    "deadline_hero": { "title": "Deadline Hero", "description": "Win gold in the Deadline Dash." },
-    "pursuit_legend": { "title": "Pursuit Legend", "description": "Fill the whole Pursuit Passport." }
+    "first_drive": {
+      "title": "First Drive",
+      "description": "Take the cart for a spin."
+    },
+    "decade_historian": {
+      "title": "Decade Historian",
+      "description": "Collect all 10 Golden Decade Dots on the Decade Drive."
+    },
+    "variance_found": {
+      "title": "Variance Found",
+      "description": "Knock over every bar-chart block in the Assurance Citadel."
+    },
+    "coin_collector": {
+      "title": "Coin Collector",
+      "description": "Knock over every coin at the Tax Terrace in 20 seconds."
+    },
+    "bright_idea": {
+      "title": "Bright Idea",
+      "description": "Hit all five hanging bulbs in the Consulting Skyline."
+    },
+    "pole_position": {
+      "title": "Pole Position",
+      "description": "Complete a lap of the PACE Speedway oval."
+    },
+    "across_time_zones": {
+      "title": "Across Time Zones",
+      "description": "Jump the gap on the Catalyst Bridge."
+    },
+    "bright_strike": {
+      "title": "Bright Strike",
+      "description": "Knock down all ten pins at the R&R Arena."
+    },
+    "red_tape_cutter": {
+      "title": "Red Tape Cutter",
+      "description": "Smash through the Red Tape Wall at the Toolkit Depot."
+    },
+    "proposal_ninja": {
+      "title": "Proposal Ninja",
+      "description": "Find all 8 hidden shuriken."
+    },
+    "social_butterfly": {
+      "title": "Social Butterfly",
+      "description": "Open every station in Culture Commons."
+    },
+    "lifelong_learner": {
+      "title": "Lifelong Learner",
+      "description": "Open every station on the L&D Campus."
+    },
+    "toolkit_pro": {
+      "title": "Toolkit Pro",
+      "description": "Open every station at the Toolkit Depot."
+    },
+    "loop_the_0": {
+      "title": "Loop the 0",
+      "description": "Drive through the 0 of the 10 at HQ."
+    },
+    "airtime": {
+      "title": "Airtime",
+      "description": "Stay in the air for a full second."
+    },
+    "deadline_hero": {
+      "title": "Deadline Hero",
+      "description": "Win gold in the Deadline Dash."
+    },
+    "pursuit_legend": {
+      "title": "Pursuit Legend",
+      "description": "Fill the whole Pursuit Passport."
+    }
   },
   "sound": {
-    "open": "Sound",
-    "openMuted": "Sound off",
     "title": "Sound",
     "close": "Close sound settings",
     "mute": "Mute all sound",

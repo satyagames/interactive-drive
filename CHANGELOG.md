@@ -2,6 +2,72 @@
 
 Pursuit Arena build log. One entry per phase (see `docs/pursuit-arena/06-phased-prompts.md`).
 
+## Phase 9 — UI, HUD and accessibility
+
+Doc 05 §5, in `src/ui/`.
+
+- **Loading and Start** (`startScreen.js`):
+  - a black screen with a big "10" (drawn as SVG shapes) that fills Deloitte green as files arrive, driven by
+    three's `DefaultLoadingManager`, plus stages
+  - "Pursuit Arena" and "USI Pursuits COE · 10 Years", a real `role="progressbar"`, keyboard and touch hints
+  - then **Start**, which takes focus. Nothing moves until it's pressed; then the opening (camera dolly, car drop,
+    letters) plays. The click is also the audio unlock.
+- **HUD corners** (`hud.js`, `minimap.js`, `gameHud.js`):
+  - top left: the passport ring and rank
+  - top right: collectibles and stations visited, and a **Menu** button
+  - bottom centre: a contextual hint (drive controls until the first 25 m; "Enter: open {station}" in an area; a
+    nudge to the first station; a Passport pointer after a stamp)
+  - bottom right: a compass / minimap turned to the camera. District markers fill once stamped; HQ, the car, and a
+    pulsing diamond for the next objective (the Dash checkpoint, else the nearest unstamped district). The
+    objective is also written under the map and in its accessible name.
+  - The corners fade after 4 s of driving (`settings.hud.idleHide`). A stop, any game event, the pointer or focus
+    brings them back. Opacity only, so they stay readable by screen readers.
+- **Esc menu** (`menu.js`): a modal dialog (focus moves in, Tab is trapped, Esc backs out of a view then closes,
+  focus returns). The game pauses: no physics, no game clock.
+  - Resume · Explore mode · Passport & badges · Controls (a table from `content/ui.json`) · Audio (the Sound panel)
+  - Graphics: Low / Medium / High radios, applied live and saved in `localStorage` (`pursuit-arena/settings`);
+    `?quality=` still wins for one load
+  - Reset progress (confirm step) · Credits
+  - Explore, Passport and Sound moved into the menu (their `P` / `M` keys are unchanged).
+- **Accessibility:**
+  - the viewport meta no longer blocks zoom (`user-scalable=no`, `maximum-scale=1` removed); pinch on the canvas
+    still zooms the camera
+  - the arena is the page's `<main>`, with a screen-reader heading
+  - closing a screen whose launcher is tucked in the menu returns focus to the game canvas, not to a hidden
+    button. Returning to the Menu button would also let Space (brake) reopen the menu.
+  - the speed / fps readout is now `#debug` only
+- **Copy:** new `start`, `menu`, `controls` (an array of rows, with its own schema) and `credits` sections in
+  `content/ui.json`, and the HUD hint and map strings. Dead strings removed (`loader`, the old Sound launcher
+  labels). Credits invent nothing: team credits read "to be supplied" with a visible "coming soon" tag.
+- **Decision:** the speedometer isn't part of doc 05's HUD, so it stays a `#debug` readout.
+
+Acceptance checks:
+- [x] **Lighthouse accessibility ≥ 95 on the menu screens.** Lighthouse 13.5.0, run as a user flow against the dev
+  server in headless Chrome with a fresh profile. Every step scored **100**, at 1280×800 and at 360×740 (mobile
+  emulation):
+  - the initial navigation and the Start screen
+  - the menu and each of its views (Controls, Graphics, Reset, Credits)
+  - the Passport and Sound
+
+  The first desktop run scored Sound 98 ("no main landmark", since the Start screen was the `<main>`); fixed by
+  making the arena the `<main>`. Lighthouse was installed in a scratch folder only, not added to the project.
+- [x] **Works at 360 px width:** in-app browser at 360×740 with mobile emulation:
+  - Start, the HUD with the touch pad (counts stack under Menu), the menu and its views
+  - no horizontal scroll (`scrollWidth` 360)
+- [x] **Keyboard:**
+  - Enter on the focused Start button starts
+  - Esc opens the menu with Resume focused; Tab, Enter and Esc reach and leave Controls with focus back on its
+    button
+  - Graphics → Medium with the arrow keys applies live (FXAA, pixel ratio 1, VFX density 0.6) and saves
+  - Esc, Esc closes the menu with focus on the canvas
+- [x] **Touch / pointer:** tapping Start and the Menu button at 360 px.
+- [x] **Pause:** menu opened at speed, the car moved 0 m in 1 s.
+- [x] **Auto-hide:** faded after about 4 s of driving, back on stopping. New-visitor hint shows the drive controls.
+- [x] `npm run build` and `content:check` pass.
+- [ ] Screen-reader pass with NVDA / VoiceOver: not done; only Lighthouse / axe-level checks and keyboard paths.
+- [ ] Gamepad can open the menu (Menu button) but can't move focus inside it; it needs a focus-navigation layer.
+- [ ] The station panel still covers the top-right Menu button on desktop while open (Esc closes it first).
+
 ## Phase 8 — SFX and music
 
 All of doc 05 §3 in `src/audio/` (Web Audio). Every sound is a procedural placeholder until real files arrive, as

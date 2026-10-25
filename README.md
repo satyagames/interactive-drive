@@ -108,11 +108,13 @@ Two platform notes worth passing on if a recipient hits them:
 | Switch camera (iso / chase) | `C` | Y / △ | — |
 | Respawn at the nearest spawn | `R` | View / Share | ⟲ |
 | Zoom | mouse wheel | — | pinch |
-| Mute · Passport · Menu | `M` · `P` · `Esc` | — · D-pad up · Menu | — |
+| Mute · Passport · Menu | `M` · `P` · `Esc` | — · D-pad up · Menu | Menu button |
 
-`M` mutes everything (and the **Sound** button opens the level sliders); Esc closes the topmost
-panel, then opens Explore (the Phase 9 menu takes over later). In the `sim` preset (`?vehicle=sim`) `Space` keeps
-its old handbrake role.
+Nothing moves until **Start** (which also turns the sound on). `M` mutes
+everything; Esc closes the topmost panel, and with nothing open it opens the
+**menu** (Resume · Explore mode · Passport & badges · Controls · Audio ·
+Graphics · Reset progress · Credits), which pauses the game. In the `sim`
+preset (`?vehicle=sim`) `Space` keeps its old handbrake role.
 
 The touch joystick works like the 2019 reference: point it in a screen
 direction and the car turns and drives that way, whatever the camera. The touch
@@ -230,9 +232,13 @@ src/
     simVehicle.js     'sim': the original force-based raycast vehicle
   ui/
     screenFade.js     full-screen fade that hides respawn teleports
+    startScreen.js    loading ("10" fills green) + Start (the audio unlock)
+    hud.js            HUD corners: auto-hide after 4 s of driving, contextual hint
+    minimap.js        compass / minimap, the next objective in words
+    menu.js           the Esc menu: modal, pauses; Controls, Graphics, Reset, Credits
     gameHud.js        rank/XP/passport ring, counters, dash panel, toasts
     passportScreen.js the Passport (P): stamps, badges, records, skins, Reset
-    soundPanel.js     Sound: mute + Master/Music/Effects/Ambience sliders
+    soundPanel.js     Sound (Menu → Audio): mute + Master/Music/Effects/Ambience sliders
   camera/
     cameraRig.js      owns both cameras, routes to settings.cameraMode (C)
     isoFollowCamera.js  default: the reference's fixed-angle follow + zoom + intro
@@ -407,6 +413,41 @@ chip.
   lines, less confetti, fireworks without flashes.
 - **Measuring.** `await __proto.benchmark.vfx()` (dev server) times the
   effects on the GPU and reports `vfx.update`'s CPU cost.
+
+## Screens and HUD
+
+`src/ui/` implements doc 05 §5:
+
+- **Loading and Start.** Black, with the big "10" filling Deloitte green as
+  files load, and "USI Pursuits COE · 10 Years" under it. **Start** takes
+  focus; the world holds still until it's pressed, then the opening plays.
+- **HUD corners.**
+  - top left: the passport ring and rank
+  - top right: collectibles and stations visited, and the **Menu** button
+  - bottom centre: a contextual hint (how to drive, how to open the station
+    you're in, a nudge to your first station)
+  - bottom right: a compass / minimap turned to the camera, with district
+    markers and the next objective written underneath
+  After 4 s of driving (`settings.hud.idleHide`) the corners fade. A stop,
+  any game event, the pointer or keyboard focus brings them back, and they
+  stay in the accessibility tree throughout.
+- **Menu (Esc).** A modal dialog that pauses the game:
+  - Resume, Explore mode, Passport & badges
+  - Controls: a table from `content/ui.json`
+  - Audio: the Sound panel
+  - Graphics: Low / Medium / High, applied live and remembered on this device
+    (`?quality=` still overrides for one load)
+  - Reset progress, with a confirm step
+  - Credits: the team credits are marked "coming soon" until supplied
+- **Accessibility.**
+  - Every control is a native button, checkbox, radio or range, with a label
+  - Focus is moved and returned deliberately, and Tab stays inside the menu
+  - Stamps, badges and mute are announced through `aria-live` regions
+  - Panels meet AA contrast
+  - Reduced motion stops the map's pulse
+  - No zoom lock in the viewport meta
+  - Lighthouse accessibility scores 100 on the Start screen, the menu and each
+    of its views, the Passport and Sound, at 1280 px and at 360 px
 
 ## Sound
 

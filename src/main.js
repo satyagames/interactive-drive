@@ -1,5 +1,7 @@
 import './styles.css'
 
+import { DefaultLoadingManager } from 'three'
+
 import arena from '../content/arena.seed.json'
 
 import { createAudio } from './audio/index.js'
@@ -28,9 +30,13 @@ import { createShadowBlob } from './render/shadowBlob.js'
 import { createSky } from './render/sky.js'
 import { createGame } from './game/index.js'
 import { createGameHud } from './ui/gameHud.js'
+import { createHud } from './ui/hud.js'
+import { createMenu } from './ui/menu.js'
+import { createMinimap } from './ui/minimap.js'
 import { createPassportScreen } from './ui/passportScreen.js'
 import { createScreenFade } from './ui/screenFade.js'
 import { createSoundPanel } from './ui/soundPanel.js'
+import { createStartScreen } from './ui/startScreen.js'
 import { createVehicle, vehiclePresets } from './vehicle/vehicle.js'
 import { createVfx } from './vfx/index.js'
 import { createLighting } from './world/lighting.js'
@@ -82,15 +88,20 @@ async function bootstrap() {
   // can't be a live setting -- see `rebuild.vehicle.preset`).
   const presetParam = new URLSearchParams(window.location.search).get('vehicle')
   if (presetParam in vehiclePresets) rebuild.vehicle.preset = presetParam
-  // `?quality=medium|low` picks a quality tier for this load (the debug
-  // panel's preset does the same live).
+  // Graphics tier: `?quality=low|medium|high` for this load, else the
+  // visitor's choice from Menu → Graphics, else the default.
   const qualityParam = new URLSearchParams(window.location.search).get('quality')
-  if (qualityParam in qualityTiers) applyQualityTier(qualityParam)
+  const quality = qualityParam in qualityTiers ? qualityParam : loadSavedQuality()
+  if (quality) applyQualityTier(quality)
   const debugMode = window.location.hash === '#debug'
 
   // Interface copy comes from content/ui.json; the arena tree from the seed.
   applyUiStrings()
   document.title = t('documentTitle')
+  // Loading: the "10" fills as files arrive (matcaps, district GLBs, the car).
+  const start = createStartScreen({ root: document.getElementById('start') })
+  DefaultLoadingManager.onProgress = (url, loaded, total) => start.setProgress(0.08 + 0.85 * (loaded / total))
+  start.setProgress(0.04)
   const content = buildContentModel(arena, {
     labels: {
       start: t('explore.start'),
@@ -102,7 +113,6 @@ async function bootstrap() {
   if (import.meta.env.DEV) validateContentInDev(content)
 
   const canvas = document.getElementById('app')
-  const loaderEl = document.getElementById('loader')
   const hudEl = document.getElementById('hud')
   const hudSpeedEl = document.getElementById('hud-speed')
   const hudFpsEl = document.getElementById('hud-fps')
@@ -142,8 +152,7 @@ async function bootstrap() {
   }
 
   const vehicle = await createVehicle({ scene, world, RAPIER, renderAssets })
-  // The arcade car drops in from above its spawn, as the reference's does.
-  vehicle.respawn()
+  start.setProgress(0.95)
   const screenFade = createScreenFade(document.getElementById('fade'))
   const shadowBlob = createShadowBlob({ scene, world, RAPIER, vehicle })
 
@@ -188,6 +197,7 @@ async function bootstrap() {
   })
   const gameHud = createGameHud({
     root: document.getElementById('game-hud'),
+    countsRoot: document.getElementById('hud-counts'),
     dashRoot: document.getElementById('dash-hud'),
     toastRoot: document.getElementById('toasts'),
     game,
@@ -196,7 +206,11 @@ async function bootstrap() {
   })
   const passportRoot = document.getElementById('passport')
   passportRoot.dataset.capturesKeys = ''
-  const passport = createPassportScreen({ root: passportRoot, launcher: document.getElementById('passport-open'), game })
+  // Explore, Passport and Sound open from the Esc menu (or P / M); when they
+  // close with their launcher tucked away in the menu, focus goes back to the
+  // game canvas so the driving keys keep working.
+  const menuButton = document.getElementById('menu-open')
+  const passport = createPassportScreen({ root: passportRoot, launcher: document.getElementById('passport-open'), returnFocus: canvas, game })
   // Stamps, badges and dash results are announced through the toasts' own
   // aria-live region; the area announcer stays for "you're in an area".
 
@@ -224,6 +238,7 @@ async function bootstrap() {
   const explore = createExploreMenu({
     root: document.getElementById('explore'),
     launcher: document.getElementById('explore-open'),
+    returnFocus: canvas,
     model: content,
     onPickNode(node) {
       if (node.position) cameraRig.focusOn(node.position)
@@ -253,16 +268,41 @@ async function bootstrap() {
   // ducks under the station panel and the Passport.
   const audio = createAudio({
     vehicle, camera, game, gameWorld, seed: arena,
-    isDucked: () => stationPanel.isOpen || passport.isOpen,
+    isDucked: () => stationPanel.isOpen || passport.isOpen || menu.isOpen,
   })
   const soundPanel = createSoundPanel({
     root: document.getElementById('sound'),
     launcher: document.getElementById('sound-open'),
+    returnFocus: canvas,
     audio,
     announce(text) {
       announcer.textContent = text
     },
   })
+
+  // The Esc menu (doc 05 §5). The game pauses while it is open.
+  const menu = createMenu({
+    root: document.getElementById('menu'),
+    launcher: menuButton,
+    gameFocus: canvas,
+    game,
+    getQuality: () => settings.quality,
+    setQuality(name) {
+      applyQualityTier(name)
+      saveQuality(name)
+      resize()
+    },
+  })
+
+  // HUD corners: auto-hide, the contextual hint, the compass / minimap.
+  const hudChrome = document.getElementById('hud-chrome')
+  const hud = createHud({
+    root: hudChrome,
+    hint: document.getElementById('hint'),
+    vehicle, areas, content, game,
+    isTouch: () => document.body.classList.contains('has-touch-pad'),
+  })
+  const minimap = createMinimap({ root: document.getElementById('minimap'), seed: arena, game, camera, vehicle })
 
   /** R: fade out, drop back in at the nearest `spawn_`, fade in. */
   const respawnVehicle = () => {
@@ -280,19 +320,27 @@ async function bootstrap() {
       gameTest: () => runGameTest({ game, gameWorld, vehicle, reveal, stationPanel, content, seed: arena }),
     })
   }
-  hudEl.hidden = !settings.debug.showHud
+  // Speed / fps readout: a development tool, so only with #debug.
+  hudEl.hidden = !(debugMode && settings.debug.showHud)
 
   vehicle.sync()
   shadowBlob.update()
   cameraRig.update(1 / 60, vehicle)
-  // The opening: the camera starts close and eases out while the car drops
-  // in and PURSUIT ARENA + the golden "10" fall onto the RFP Gate.
-  cameraRig.playIntro()
-  reveal.playIntro()
   sky.update(camera)
 
-  loaderEl.classList.add('hidden')
-  setTimeout(() => loaderEl.remove(), 500)
+  // Start (doc 05 §5): nothing moves until it's pressed. Then the opening:
+  // the camera starts close and eases out while the car drops in and
+  // PURSUIT ARENA + the golden "10" fall onto the RFP Gate. The click is
+  // also the first gesture the sound waits for.
+  let started = false
+  start.ready(() => {
+    started = true
+    hudChrome.hidden = false
+    canvas.focus() // the Start button is going away; keys go to the game
+    vehicle.respawn()
+    cameraRig.playIntro()
+    reveal.playIntro()
+  })
 
   // Handy from the devtools console while tuning:
   //   __proto.vehicle.state, __proto.settings.arcade.engineForce = 300
@@ -301,7 +349,7 @@ async function bootstrap() {
     window.__proto = {
       vehicle, world, scene, camera, settings, input, stationPanel, explore, content, progress, gameWorld,
       renderer, renderAssets, post, shadowBlob, sky, fps, cameraRig, floor, blobs, propStress, areas, reveal,
-      game, passport, vfx, impacts, audio, soundPanel,
+      game, passport, vfx, impacts, audio, soundPanel, menu, hud, minimap,
       benchmark: {
         run: (options) => runPostBenchmark({ renderer, scene, camera }, options),
         vfx: (options) => runVfxBenchmark({ renderer, scene, camera, vfx }, options),
@@ -325,6 +373,23 @@ async function bootstrap() {
     }
     const inputState = input.update({ camera, vehicle })
 
+    // Esc peels back one layer at a time: station panel, Sound, Passport,
+    // Explore, a menu sub-view, the menu; with nothing open it opens the menu.
+    if (input.consume('menu') && started) {
+      if (stationPanel.isOpen) stationPanel.hide()
+      else if (soundPanel.isOpen) soundPanel.hide()
+      else if (passport.isOpen) passport.hide()
+      else if (explore.isOpen) explore.hide()
+      else if (menu.isOpen) menu.back()
+      else menu.show()
+    }
+    // Before Start, and while the menu is open, the world holds still: no
+    // physics, no game clock, presses dropped. It still draws.
+    if (!started || menu.isOpen) {
+      post.render(delta)
+      return
+    }
+
     if (input.consume('respawn')) respawnVehicle()
     if (input.consume('horn')) {
       vehicle.horn()
@@ -334,14 +399,6 @@ async function bootstrap() {
     if (input.consume('mute')) audio.toggleMute()
     if (input.consume('camera')) cameraRig.toggle()
     if (input.consume('passport')) passport.toggle()
-    // Esc peels back one layer at a time: station panel, Sound, passport,
-    // Explore, then opens Explore (the Phase 9 menu will take over that last step).
-    if (input.consume('menu')) {
-      if (stationPanel.isOpen) stationPanel.hide()
-      else if (soundPanel.isOpen) soundPanel.hide()
-      else if (passport.isOpen) passport.hide()
-      else explore.toggle()
-    }
     // Explore's camera hold ends as soon as you drive off (driving keys only
     // reach here when focus is outside the Explore list).
     if (cameraRig.focused && (inputState.throttle !== 0 || inputState.steer !== 0)) {
@@ -378,6 +435,8 @@ async function bootstrap() {
     dashHold = game.update(delta).hold
     vfx.update(delta)
     audio.update(delta, inputState)
+    hud.update(delta)
+    minimap.update(delta)
     gameHud.update(vehicle.position)
     propStress?.update()
     blobs.update()
@@ -400,6 +459,26 @@ async function bootstrap() {
     post.render(delta)
   })
   if (import.meta.env.DEV) window.__proto.loop = loop
+}
+
+const SETTINGS_KEY = 'pursuit-arena/settings'
+
+/** The visitor's saved graphics tier, if any (localStorage, try/catch like the progress store). */
+function loadSavedQuality() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null')
+    return saved?.quality in qualityTiers ? saved.quality : null
+  } catch {
+    return null
+  }
+}
+
+function saveQuality(name) {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ quality: name }))
+  } catch {
+    // Not saved; it still applies for this visit.
+  }
 }
 
 /** Apply a `qualityTiers` preset (the same fields the debug panel's preset sets). */
@@ -434,6 +513,6 @@ async function validateContentInDev(content) {
 
 bootstrap().catch((error) => {
   console.error(error)
-  const loaderEl = document.getElementById('loader')
-  if (loaderEl) loaderEl.textContent = t('loadFailed', { message: error.message })
+  const status = document.querySelector('.start__status')
+  if (status) status.textContent = t('loadFailed', { message: error.message })
 })

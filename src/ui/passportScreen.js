@@ -9,7 +9,7 @@ import { t } from '../content/ui.js'
  * -- rather than a blocking browser dialog. Rebuilt from the game state each
  * time it opens.
  */
-export function createPassportScreen({ root, launcher, game, onClose }) {
+export function createPassportScreen({ root, launcher, returnFocus, game, onClose }) {
   root.classList.add('passport')
   root.setAttribute('role', 'dialog')
   root.setAttribute('aria-modal', 'false')
@@ -146,7 +146,8 @@ export function createPassportScreen({ root, launcher, game, onClose }) {
     const hadFocus = root.contains(document.activeElement)
     root.hidden = true
     launcher.setAttribute('aria-expanded', 'false')
-    if (hadFocus) launcher.focus()
+    // The launcher may sit in the closed Esc menu: then focus `returnFocus`.
+    if (hadFocus) (launcher.offsetParent ? launcher : returnFocus ?? launcher).focus()
     onClose?.()
   }
 

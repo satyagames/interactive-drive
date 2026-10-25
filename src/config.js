@@ -384,6 +384,12 @@ export const settings = {
     },
   },
 
+  /** The HUD corners (`ui/hud.js`, doc 05 §5). */
+  hud: {
+    /** Seconds of driving with nothing new before the corners fade. */
+    idleHide: 4,
+  },
+
   /** Enter areas (`world/areas.js`, doc 05 §4). */
   areas: {
     /** Ring fill on entering, s. */

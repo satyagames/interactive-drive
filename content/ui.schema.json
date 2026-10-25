@@ -6,8 +6,11 @@
   "required": [
     "version",
     "documentTitle",
-    "loader",
     "loadFailed",
+    "start",
+    "menu",
+    "controls",
+    "credits",
     "hud",
     "panel",
     "explore",
@@ -30,17 +33,135 @@
     "documentTitle": {
       "$ref": "#/$defs/text"
     },
-    "loader": {
-      "$ref": "#/$defs/text"
-    },
     "loadFailed": {
       "$ref": "#/$defs/text"
+    },
+    "start": {
+      "$ref": "#/$defs/strings",
+      "required": [
+        "tagline",
+        "title",
+        "progressLabel",
+        "ready",
+        "button",
+        "keyboard",
+        "touch",
+        "sound"
+      ]
+    },
+    "menu": {
+      "$ref": "#/$defs/strings",
+      "required": [
+        "open",
+        "openHint",
+        "title",
+        "paused",
+        "resume",
+        "explore",
+        "passport",
+        "controls",
+        "audio",
+        "graphics",
+        "reset",
+        "credits",
+        "back",
+        "graphicsIntro",
+        "low",
+        "medium",
+        "high",
+        "lowNote",
+        "mediumNote",
+        "highNote",
+        "resetIntro",
+        "resetConfirm",
+        "resetCancel"
+      ]
+    },
+    "controls": {
+      "type": "object",
+      "description": "The Controls table in the Esc menu.",
+      "required": [
+        "title",
+        "action",
+        "keyboard",
+        "gamepad",
+        "touch",
+        "rows"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/text"
+        },
+        "action": {
+          "$ref": "#/$defs/text"
+        },
+        "keyboard": {
+          "$ref": "#/$defs/text"
+        },
+        "gamepad": {
+          "$ref": "#/$defs/text"
+        },
+        "touch": {
+          "$ref": "#/$defs/text"
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "action",
+              "keyboard",
+              "gamepad",
+              "touch"
+            ],
+            "properties": {
+              "action": {
+                "$ref": "#/$defs/text"
+              },
+              "keyboard": {
+                "$ref": "#/$defs/text"
+              },
+              "gamepad": {
+                "$ref": "#/$defs/text"
+              },
+              "touch": {
+                "$ref": "#/$defs/text"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "credits": {
+      "$ref": "#/$defs/strings",
+      "required": [
+        "title",
+        "intro",
+        "team",
+        "software",
+        "reference",
+        "audio",
+        "placeholderTag"
+      ]
     },
     "hud": {
       "$ref": "#/$defs/strings",
       "required": [
         "speedUnit",
-        "found"
+        "found",
+        "hintDrive",
+        "hintTouch",
+        "hintFindStation",
+        "hintEnter",
+        "hintTap",
+        "hintPassport",
+        "mapLabel",
+        "objective",
+        "objectiveDash",
+        "objectiveDone"
       ]
     },
     "panel": {
@@ -102,8 +223,6 @@
     "sound": {
       "$ref": "#/$defs/strings",
       "required": [
-        "open",
-        "openMuted",
         "title",
         "close",
         "mute",

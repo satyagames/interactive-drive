@@ -5,20 +5,18 @@ import { t } from '../content/ui.js'
 /**
  * The game's on-screen feedback (doc 05 §5), driven by `game.events`:
  *
- *   - status chip: rank, XP, and an 11-segment passport ring in the
- *     district colours
- *   - collectible counters
+ *   - status chip (top left): rank, XP, and an 11-segment passport ring in
+ *     the district colours
+ *   - collectible counters (top right, `countsRoot`)
  *   - the Deadline Dash panel: step, timer, distance and a compass arrow
  *     pointing at the next checkpoint relative to the camera
  *   - toasts for stamps, badges, ranks, skins, dash and mini-game moments,
  *     in an aria-live region so screen readers hear them too
- *
- * Phase 9 restyles all of this; the structure and announcements stay.
  */
 const TOAST_MS = 3600
 const MAX_TOASTS = 4
 
-export function createGameHud({ root, dashRoot, toastRoot, game, seed, camera }) {
+export function createGameHud({ root, countsRoot, dashRoot, toastRoot, game, seed, camera }) {
   const districts = [...seed.territories, ...seed.pillars]
 
   // ---- status chip ---------------------------------------------------------
@@ -27,13 +25,12 @@ export function createGameHud({ root, dashRoot, toastRoot, game, seed, camera })
     <div class="gh-text">
       <strong class="gh-rank"></strong>
       <span class="gh-xp"></span>
-      <span class="gh-counts"></span>
     </div>
   `
   const ring = root.querySelector('.gh-ring')
   const rankEl = root.querySelector('.gh-rank')
   const xpEl = root.querySelector('.gh-xp')
-  const countsEl = root.querySelector('.gh-counts')
+  const countsEl = countsRoot
 
   const segments = districts.map((d, i) => {
     const a0 = (i / districts.length) * Math.PI * 2 - Math.PI / 2 + 0.06

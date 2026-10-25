@@ -2,14 +2,14 @@ import { t } from '../content/ui.js'
 
 /**
  * The Sound panel (doc 05 §3 "global mixer"): mute plus Master / Music /
- * Effects / Ambience sliders, opened from its HUD button; M mutes from
+ * Effects / Ambience sliders, opened from Menu → Audio; M mutes from
  * anywhere. Native checkbox and range inputs keep it keyboard- and
  * screen-reader-usable for free; mute changes are announced through
- * `announce`. The Phase 9 settings screen can host the same controls.
+ * `announce`, and every `[data-sound-state]` label shows "Sound muted".
  */
 const BUSES = ['master', 'music', 'sfx', 'ambience']
 
-export function createSoundPanel({ root, launcher, audio, announce }) {
+export function createSoundPanel({ root, launcher, returnFocus, audio, announce }) {
   root.dataset.capturesKeys = '' // arrow keys move a slider, not the car
   root.className = 'sound-panel'
 
@@ -73,7 +73,7 @@ export function createSoundPanel({ root, launcher, audio, announce }) {
       sliders[name].output.textContent = `${percent}%`
       sliders[name].input.disabled = prefs.muted && name !== 'master'
     }
-    launcher.querySelector('[data-sound-state]').textContent = prefs.muted ? t('sound.openMuted') : t('sound.open')
+    for (const state of document.querySelectorAll('[data-sound-state]')) state.textContent = prefs.muted ? t('sound.muted') : ''
   }
   sync(audio.prefs)
 
@@ -97,7 +97,8 @@ export function createSoundPanel({ root, launcher, audio, announce }) {
     const hadFocus = root.contains(document.activeElement)
     root.hidden = true
     launcher.setAttribute('aria-expanded', 'false')
-    if (hadFocus) launcher.focus()
+    // The launcher may sit in the closed Esc menu: then focus `returnFocus`.
+    if (hadFocus) (launcher.offsetParent ? launcher : returnFocus ?? launcher).focus()
   }
 
   launcher.addEventListener('click', () => (root.hidden ? show() : hide()))
