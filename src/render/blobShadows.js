@@ -111,6 +111,14 @@ export function createBlobShadows({ scene, capacity = 512 }) {
     dirty = true
   }
 
+  /** Hide blob `slot` until its next `set` (e.g. a prop not revealed yet). */
+  function hide(slot) {
+    if (!blobs[slot]) return
+    mesh.setMatrixAt(slot, zero)
+    alpha.setX(slot, 0)
+    dirty = true
+  }
+
   /** Place blob `slot` for an owner at `position` / `quaternion` (any {x,y,z(,w)}). */
   function set(slot, position, quaternion) {
     const blob = blobs[slot]
@@ -163,6 +171,7 @@ export function createBlobShadows({ scene, capacity = 512 }) {
     mesh,
     add,
     remove,
+    hide,
     set,
     update,
     get count() {

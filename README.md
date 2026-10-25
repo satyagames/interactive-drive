@@ -176,6 +176,8 @@ src/
     colliders.js      collision_ proxy -> Rapier collider (box/_cyl/_sph)
     kitInstances.js   kit.glb pieces as InstancedMesh (+ their colliders)
     dynamicProps.js   dyn_ props: sleeping Rapier compounds, instanced
+    areas.js          Enter areas: border fill, ENTER hint, hold-to-open
+    reveal.js         district reveals + the opening letter drop
     triggers.js       enter/exit watcher for area_ and trigger_ volumes
     lighting.js       a single fallback ambient; matcaps need no lights
   content/
@@ -286,12 +288,29 @@ All copy lives in `content/`, never in code:
   same in the console on start-up. Neither ships in the production build.
 
 `src/content/model.js` turns the seed into one tree, used in three places:
-`trigger_<id>` volumes in the world, the **Explore** menu (`Esc` or the
-Explore button — every district and station as a keyboard-navigable list that
-flies the camera there and opens it), and later the Passport. The station
+the `area_<id>` **Enter areas** in the world, the **Explore** menu (`Esc` or
+the Explore button — every district and station as a keyboard-navigable list
+that flies the camera there and opens it), and later the Passport. The station
 panel (`src/content/panel.js`) is a right-hand drawer, or a bottom sheet on
-narrow screens; it never pauses driving, and closes with its button, by
-driving out of the trigger, or with `Esc`.
+narrow screens; it never pauses driving, and closes with its button, with
+`Esc`, or a second after you drive out of the area that opened it.
+
+**Enter areas** (`src/world/areas.js`): every station has a faint square on
+the floor. Drive in and its border draws itself round in the district colour,
+an **ENTER** hint (**TAP ↵** on touch) rises over it and screen readers hear
+what's there; press `Enter` / `E` / gamepad A / the touch ↵ button, or just
+stop for 1.5 s, and the station opens while a soft brake holds the car for a
+moment. Timings live in `settings.areas`.
+
+**Reveals and the opening** (`src/world/reveal.js`): districts appear as you
+(or the Explore camera) approach — buildings scale in with a little
+overshoot, props drop in as a wave from the centre, on a kinematic path so
+walls and stacks land intact. The game opens with the car dropping in at the
+RFP Gate while PURSUIT ARENA and the golden "10" fall from the sky. Nothing is
+hidden or animated under `prefers-reduced-motion`. Portal and dome rings turn
+(`anim_` pieces); Idea Spark's bulbs hang on springs and the Culture balloons
+float on tethers; every prop sleeps when idle and each district keeps at most
+60 awake (`settings.props.awakeBudget`).
 
 The HUD counter ("N / 43 visited") counts distinct stations opened, until
 the Phase 6 Passport replaces it.

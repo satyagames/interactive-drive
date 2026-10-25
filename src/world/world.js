@@ -25,6 +25,7 @@ import { loadKit, placeKitInstances } from './kitInstances.js'
  *   trigger_*        passive trigger (passport stamps, loop counters)
  *   spawn_*          respawn point
  *   sfx_*            ambient emitter (radius = scale), for Phase 8
+ *   anim_*           kinematic visual, spun about its own axis (props spin, axis)
  *   anything else    static visual; merged per material per district so a
  *                    whole district costs a handful of draw calls
  *
@@ -49,6 +50,9 @@ export async function createWorld({ scene, world, RAPIER, renderAssets, blobs })
   const collectibles = []
   const emitters = []
   const districts = []
+  /** anim_ meshes: { object, axis, spin } -- turned every frame by `animate()`. */
+  const animated = []
+  const loadListeners = new Set()
   let ground = null
 
   async function loadDistrict({ id, url }) {
@@ -59,6 +63,11 @@ export async function createWorld({ scene, world, RAPIER, renderAssets, blobs })
 
     const districtGroup = new THREE.Group()
     districtGroup.name = `district:${id}`
+    // Everything that scales in on a reveal (statics, kit, anim_); dynamic
+    // prop batches sit beside it because they drop in instead.
+    const staticGroup = new THREE.Group()
+    staticGroup.name = `district:${id}:static`
+    districtGroup.add(staticGroup)
     const statics = []
     const dynRoots = []
     const placements = []
@@ -105,6 +114,12 @@ export async function createWorld({ scene, world, RAPIER, renderAssets, blobs })
         emitters.push({ id: name.slice(worldConfig.sfxPrefix.length), position, radius: node.getWorldScale(new THREE.Vector3()).x })
         return
       }
+      if (name.startsWith(worldConfig.animPrefix) && node.isMesh) {
+        const mesh = toWorldMesh(node)
+        staticGroup.add(mesh)
+        animated.push({ object: mesh, axis: AXES[node.userData.axis] ?? AXES.y, spin: Number(node.userData.spin) || 0 })
+        return
+      }
       if (node.isMesh) statics.push(node)
       for (const child of node.children) visit(child)
     }
@@ -120,16 +135,24 @@ export async function createWorld({ scene, world, RAPIER, renderAssets, blobs })
       }
       return true
     }), id)
-    for (const mesh of merged) districtGroup.add(mesh)
+    for (const mesh of merged) staticGroup.add(mesh)
 
-    placeKitInstances({ kit, placements, group: districtGroup, world, RAPIER, name: id })
-    props.addDistrict({ roots: dynRoots, group: districtGroup, name: id })
+    placeKitInstances({ kit, placements, group: staticGroup, world, RAPIER, name: id })
+    const propMeshes = props.addDistrict({ roots: dynRoots, group: districtGroup, name: id })
 
     group.add(districtGroup)
     const info = {
-      id, colliders, statics: statics.length, drawCalls: districtGroup.children.length, props: dynRoots.length,
+      id,
+      group: districtGroup,
+      staticGroup,
+      propMeshes,
+      colliders,
+      statics: statics.length,
+      drawCalls: staticGroup.children.length + propMeshes.length,
+      props: dynRoots.length,
     }
     districts.push(info)
+    for (const listener of loadListeners) listener(info)
     return info
   }
 
@@ -147,6 +170,14 @@ export async function createWorld({ scene, world, RAPIER, renderAssets, blobs })
     emitters,
     props,
     districts,
+    /** Called with each district's info as it finishes loading (streamed ones included). */
+    onDistrictLoaded(listener) {
+      loadListeners.add(listener)
+    },
+    /** Turn the anim_ pieces (portal rings, dome rings). Call once per frame. */
+    animate(dt) {
+      for (const item of animated) item.object.rotateOnAxis(item.axis, item.spin * dt)
+    },
     get ground() {
       return ground
     },
@@ -157,6 +188,8 @@ export async function createWorld({ scene, world, RAPIER, renderAssets, blobs })
     },
   }
 }
+
+const AXES = { x: new THREE.Vector3(1, 0, 0), y: new THREE.Vector3(0, 1, 0), z: new THREE.Vector3(0, 0, 1) }
 
 /** Merge meshes that share a material into one world-space mesh each. */
 function mergeStatics(meshes, id) {

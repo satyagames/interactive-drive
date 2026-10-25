@@ -258,6 +258,41 @@ export const settings = {
     fadePower: 2,
   },
 
+  /** Arena dynamic props (`world/dynamicProps.js`). */
+  props: {
+    /** Most bodies one district keeps awake; the slowest extra ones are put to sleep. */
+    awakeBudget: 60,
+  },
+
+  /** Enter areas (`world/areas.js`, doc 05 §4). */
+  areas: {
+    /** Ring fill on entering, s. */
+    fillTime: 0.4,
+    /** Standing still this long opens the station too, s (0 disables). */
+    dwellTime: 1.5,
+    /** Below this speed counts as standing still, m/s. */
+    dwellSpeed: 0.6,
+    /** After opening, the car is held with a soft brake this long unless you accelerate, s. */
+    holdTime: 0.6,
+    /** Leaving the area closes the panel it opened after this delay, s. */
+    closeDelay: 1.0,
+  },
+
+  /** District reveals and the intro (`world/reveal.js`). */
+  reveal: {
+    /** A district reveals when the car comes within its radius + this, m. */
+    distance: 40,
+    /** Landmark scale-in, s (with overshoot). */
+    scaleTime: 0.9,
+    /** Props drop in from this high, m, over `dropTime` s, staggered by distance from the centre. */
+    dropHeight: 8,
+    dropTime: 0.7,
+    stagger: 0.6,
+    /** The opening: intro letters fall from higher, one after another. */
+    introHeight: 18,
+    introStagger: 0.12,
+  },
+
   /** On-screen touch pad (`input/touch.js`). */
   touch: {
     /** Joystick travel radius, CSS px. */
@@ -590,6 +625,7 @@ export const world = {
   instancePrefix: 'inst_',
   collectPrefix: 'collect_',
   sfxPrefix: 'sfx_',
+  animPrefix: 'anim_',
 }
 
 /**

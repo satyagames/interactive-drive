@@ -66,6 +66,9 @@ export function createCameraRig(camera, canvas) {
     get focused() {
       return modeBeforeFocus !== null
     },
+    get focusPoint() {
+      return modes.iso.focusPoint
+    },
     get mode() {
       return settings.cameraMode
     },

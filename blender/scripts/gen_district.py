@@ -39,12 +39,13 @@ def lighten(hexcode, amount=0.55):
 
 # ---- prop recipes (visual builder, colliders ~10% inside, mass, sfx) ---------------
 
-def prop(coll, kind, index, frame, lx, lz, mat, y=None, yaw=0.0, suffix=''):
+def prop(coll, kind, index, frame, lx, lz, mat, y=None, yaw=0.0, suffix='', extra_props=None):
     spec = PROPS[kind]
     x, z = frame.to_world(lx, lz)
     height = spec['y'] if y is None else y
     return dyn(kind, index, coll, (x, height, z), frame.yaw(yaw), mat, spec['visual'], spec['colliders'],
-               spec['mass'], spec['sfx'], spec.get('friction', 0.5), spec.get('restitution', 0.2), suffix)
+               spec['mass'], spec['sfx'], spec.get('friction', 0.5), spec.get('restitution', 0.2), suffix,
+               extra_props)
 
 
 def _box_prop(w, h, d, mass, sfx_class, **extra):
@@ -71,7 +72,7 @@ PROPS = {
     'coin': _cyl_prop(0.6, 0.25, 0.6, 'metal', 14),
     'percent': _box_prop(0.9, 1.4, 0.3, 0.6, 'plastic'),
     'plane': dict(y=0.3, visual=lambda mb: mb.wedge((0, -0.3, 0), 1.4, 1.0, 0.5), colliders=[('box', (0, -0.05, 0), (0.9, 0.4, 1.2))], mass=0.3, sfx='paper', foot=1.4),
-    'bulb': _ball_prop(0.6, 0.6, 'plastic', restitution=0.5),
+    'bulb': _ball_prop(0.45, 0.6, 'plastic', restitution=0.5),
     'gear': dict(y=0.9, visual=lambda mb: mb.cylinder((0, 0, 0), 0.9, 0.35, 12, pitch=1.5708),
                  colliders=[('cyl', (0, 0, 0), 0.82, 0.3)], mass=1.5, sfx='metal', foot=1.8),
     'sticky': _box_prop(0.8, 0.8, 0.8, 0.4, 'paper'),
@@ -326,9 +327,12 @@ def landmark(coll, ident, frame, tint, radius):
                lambda mb: mb.sphere((0, 0, 0), 7.0, 18, 10), location=(px, 0, pz))
         collider_cylinder('landmark_innovation_dome', coll, (px, 2.5, pz), 6.3, 5.0)
         for i in range(2):
-            visual(f'landmark_innovation_ring_{i}', coll, white,
-                   lambda mb, k=i: mb.ring((0, 7.5 + k * 1.2, 0), 9.0 - k * 1.5, 0.25, segments=24, thickness=0.2, vertical=False),
-                   location=(px, 0, pz))
+            # anim_: kept out of the static merge and spun by the runtime.
+            ring = visual(f'anim_innovation_ring_{i}', coll, white,
+                          lambda mb, k=i: mb.ring((0, 0, 0), 9.0 - k * 1.5, 0.25, segments=24, thickness=0.2, vertical=False),
+                          location=(px, 7.5 + i * 1.2, pz))
+            ring['spin'] = 0.25 if i == 0 else -0.35
+            ring['axis'] = 'y'
     elif ident == 'rnr':   # trophy stadium + giant trophy
         px, pz = at(0, 2.0)
         # Low stadium wall with an entrance on the gateway side (local -Z:
@@ -426,7 +430,7 @@ def bridge(coll, name, frame, local_centre, mat, deck, deck_len, gap=0.0, drop=0
 PLAYGROUNDS = {
     'audit': [('barblock', 9, 'stack'), ('binder', 6, 'row'), ('cone', 4, 'row')],
     'tax': [('coin', 12, 'stack'), ('plane', 5, 'row'), ('percent', 3, 'row')],
-    'consulting': [('bulb', 5, 'row'), ('gear', 3, 'row'), ('sticky', 8, 'grid')],
+    'consulting': [('gear', 3, 'row'), ('sticky', 8, 'grid')],   # + bulbs on the gantry
     'pace': [('tyre', 10, 'stack'), ('flag', 4, 'row'), ('cone', 6, 'row')],
     'studio': [('paintcan', 8, 'grid'), ('crayon', 5, 'row'), ('frame', 4, 'row')],
     'catalyst': [('globe', 1, 'row'), ('luggage', 8, 'grid')],
@@ -434,7 +438,7 @@ PLAYGROUNDS = {
     'rnr': [('pin', 10, 'pins'), ('bowlingball', 1, 'lane')],
     'lnd': [('jenga', 12, 'jenga'), ('soccer', 1, 'row')],
     'toolkit': [('brick', 24, 'wall'), ('toolbox', 4, 'row'), ('spanner', 4, 'row')],
-    'culture': [('beachball', 5, 'row'), ('balloon', 6, 'row'), ('crate', 6, 'grid')],
+    'culture': [('beachball', 5, 'row'), ('crate', 6, 'grid')],   # + tethered balloons
 }
 
 PROP_COLOURS = {
@@ -479,6 +483,13 @@ def build_district(coll, ident, info, seed):
     elif ident == 'toolkit':
         red_tape_wall(coll, frame, (side * radius * 0.5, -1.0), mat_for('brick'))
         playground(coll, ident, frame, items[1:], side, radius, mat_for, z0=1.5)
+    elif ident == 'consulting':
+        # Idea Spark: five bulbs hanging on springs from a gantry, then the rest.
+        bulb_gantry(coll, frame, side, radius, z0 + 1.0, mat_for('bulb'))
+        playground(coll, ident, frame, items, side, radius, mat_for, z0=z0 + 3.4)
+    elif ident == 'culture':
+        tethered_balloons(coll, frame, side, radius, z0 + 1.0, mat_for('balloon'))
+        playground(coll, ident, frame, items, side, radius, mat_for, z0=z0 + 3.0)
     else:
         playground(coll, ident, frame, items, side, radius, mat_for, z0=z0)
 
@@ -498,6 +509,37 @@ def build_district(coll, ident, info, seed):
         else:
             x, z = frame.to_world(0, radius + 2.5)
             collect('shuriken', ident, coll, (x, 0.9, z))
+
+
+def bulb_gantry(coll, frame, side, radius, z, mat):
+    """
+    Idea Spark (doc 02 §3.3): a gantry across the side band with five bulbs
+    hanging on springs low enough for the car to hit. Each bulb records its
+    spring (`hang` metres up to the bar, stiffness, damping); the runtime
+    makes the joint and sets the rest length so it hangs where authored.
+    """
+    inner, outer = radius * 0.45, radius * 0.92
+    bar_y, hang = 3.2, 1.6
+    post = material('ivory', WHITE)
+    for k, lateral in enumerate((inner, outer)):
+        x, zz = frame.to_world(side * lateral, z)
+        solid_box(f'landmark_consulting_gantry_post_{k}', coll, post, (x, 0, zz), (0.35, bar_y + 0.2, 0.35), yaw=frame.yaw())
+    x, zz = frame.to_world(side * (inner + outer) / 2, z)
+    solid_box('landmark_consulting_gantry_bar', coll, post, (x, bar_y, zz), (outer - inner + 0.35, 0.25, 0.25), yaw=frame.yaw())
+    for i in range(5):
+        lateral = inner + (outer - inner) * (i + 1) / 6
+        prop(coll, 'bulb', i, frame, side * lateral, z, mat, y=bar_y - hang, suffix='consulting_',
+             extra_props={'hang': hang, 'springK': 60.0, 'springDamp': 1.5})
+
+
+def tethered_balloons(coll, frame, side, radius, z, mat):
+    """Culture Commons balloons (doc 02 §3.4, "buoyant, K"): float on a short tether, knockable."""
+    tether = 2.2
+    for i in range(6):
+        col, row = i % 3, i // 3
+        lateral = radius * 0.5 + col * 1.6
+        prop(coll, 'balloon', i, frame, side * lateral, z + row * 1.8, mat, y=tether, suffix='culture_',
+             extra_props={'buoyancy': 1.3, 'tether': tether})
 
 
 def bowling(coll, frame, origin, mat_for):
@@ -565,8 +607,11 @@ def build_hq(coll, info):
     area('hq_org', coll, (9.6, 0, 1.0), (2.4, 1.5, 2.2))
 
     # Submission Portal: a green ring on the south approach (the Dash finish).
-    visual('landmark_hq_portal', coll, green, lambda mb: mb.ring((0, 3.6, 0), 3.4, 0.6, segments=16, thickness=0.8),
-           location=(0, 0, 13.0))
+    # anim_: the portal's ring turns slowly about its own axis (doc 02 §3.2).
+    portal = visual('anim_hq_portal', coll, green, lambda mb: mb.ring((0, 0, 0), 3.4, 0.6, segments=16, thickness=0.8),
+                    location=(0, 3.6, 13.0))
+    portal['spin'] = 0.6
+    portal['axis'] = 'z'
     for k, x in enumerate((-3.6, 3.6)):
         collider_box(f'landmark_hq_portal_{k}', coll, (x, 2.0, 13.0), (0.7, 4.0, 0.8))
     area('hq_submission_portal', coll, (0, 0, 13.0), (2.6, 2.0, 1.6))

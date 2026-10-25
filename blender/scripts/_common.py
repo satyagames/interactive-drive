@@ -376,18 +376,22 @@ _prop_meshes = {}
 
 
 def dyn(kind, index, coll, location, yaw, mat, build_visual, colliders, mass, sfx_class,
-        friction=0.5, restitution=0.2, suffix=''):
+        friction=0.5, restitution=0.2, suffix='', extra_props=None):
     """
     A dynamic prop: Empty root at the centre of mass (custom props), one
     visual child, `colliders` = [('box', centre, size) | ('cyl', centre, r, h)
     | ('sph', centre, r)] in the root's local game space. Colliders are kept
     about 10% inside the visual (doc 04 §3) by the caller.
+
+    `extra_props` adds behaviour the runtime reads (src/world/dynamicProps.js):
+      hang, springK, springDamp   hangs from a spring anchored `hang` m above
+      buoyancy, tether            floats (x weight), tied `tether` m to the floor
     """
     assert sfx_class in SFX_CLASSES, sfx_class
     name = f'dyn_{kind}_{suffix}{index}'
     root = empty(name, coll, 'PLAIN_AXES', location, yaw, props={
         'type': kind, 'mass': float(mass), 'friction': float(friction),
-        'restitution': float(restitution), 'sfx': sfx_class,
+        'restitution': float(restitution), 'sfx': sfx_class, **(extra_props or {}),
     })
     key = (kind, mat.name)
     if key not in _prop_meshes:

@@ -170,6 +170,10 @@ export function createIsoFollowCamera(camera, canvas) {
     get focused() {
       return focusPoint !== null
     },
+    /** The Explore focus point, or null while following the car. */
+    get focusPoint() {
+      return focusPoint
+    },
     dispose,
     /** Current 0..1 zoom and the distance it maps to, for debugging. */
     get zoom() {

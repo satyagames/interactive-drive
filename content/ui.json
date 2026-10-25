@@ -30,6 +30,11 @@
     "leader": "Welcome from our COE Lead",
     "placeholderTag": "coming soon"
   },
+  "areas": {
+    "enterHint": "ENTER",
+    "tapHint": "TAP ↵",
+    "ready": "{title}. Press Enter, or wait, to open."
+  },
   "touch": {
     "joystick": "Drive: point the stick where you want to go",
     "boost": "Boost",

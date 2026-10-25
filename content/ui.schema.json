@@ -3,7 +3,7 @@
   "title": "Pursuit Arena UI strings",
   "description": "Every piece of interface copy (HUD, panel, Explore menu, touch labels). Placeholders in {braces} are filled at runtime.",
   "type": "object",
-  "required": ["version", "documentTitle", "loader", "loadFailed", "hud", "panel", "explore", "touch"],
+  "required": ["version", "documentTitle", "loader", "loadFailed", "hud", "panel", "explore", "areas", "touch"],
   "properties": {
     "$schema": { "type": "string" },
     "version": { "const": 1 },
@@ -18,6 +18,10 @@
     "explore": {
       "$ref": "#/$defs/strings",
       "required": ["open", "openHint", "title", "intro", "close", "backToCar", "start", "ourTeam", "timeline", "leader", "placeholderTag"]
+    },
+    "areas": {
+      "$ref": "#/$defs/strings",
+      "required": ["enterHint", "tapHint", "ready"]
     },
     "touch": {
       "$ref": "#/$defs/strings",

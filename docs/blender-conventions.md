@@ -33,6 +33,14 @@ depth, and reads these prefixes (docs/pursuit-arena/04 §2):
 | `spawn_<id>` | Empty | A respawn point (`R` takes the nearest); the car faces the empty's -Z. The boot spawn is the one `arena.seed.json` names (`rfpGate.spawn`). |
 | `sfx_<id>` | Empty (`Sphere`) | An ambient sound emitter for Phase 8; radius = scale. |
 | `decal_<id>` | Mesh (flat plate) | Floor typography / boards. Visual only. |
+| `anim_<id>` | Mesh | A kinematic visual the runtime turns about its own origin: custom props `spin` (rad/s) and `axis` (`x`/`y`/`z`, local). Kept out of the static merge. Put the origin where it should pivot (the portal ring's centre). |
+
+Optional `dyn_` behaviour properties (src/world/dynamicProps.js):
+
+| Properties | Behaviour |
+|---|---|
+| `hang`, `springK`, `springDamp` | Hangs on a spring from a point `hang` m above where it was authored; the rest length is set so its weight stretches the spring to exactly the authored height (the Idea Spark bulbs). |
+| `buoyancy`, `tether` | Floats with `buoyancy` x its weight on a rope `tether` m long to the floor below it (the Culture balloons). Author it at the top of its tether. |
 | anything else | Mesh | Static visual. Merged per material per district at load. The mesh named `ground` stays separate: `render/floorGradient.js` repaints it. |
 
 **Materials** decide shading by name: `mc_<matcap>` or

@@ -27,8 +27,26 @@ import { createSky } from './render/sky.js'
 import { createScreenFade } from './ui/screenFade.js'
 import { createVehicle, vehiclePresets } from './vehicle/vehicle.js'
 import { createLighting } from './world/lighting.js'
+import { createAreas } from './world/areas.js'
+import { createReveal } from './world/reveal.js'
 import { createTriggerWatcher } from './world/triggers.js'
 import { createWorld } from './world/world.js'
+
+/**
+ * Reveal centres and radii per district, from the content seed and the
+ * layout in docs/pursuit-arena/02 §2 (territories ~30 m across, pillars and
+ * the RFP Gate ~36 m, HQ plaza 22 m, the Decade Drive along the 180° spoke).
+ */
+function districtCentres(seed) {
+  const centres = {
+    hq: { x: 0, z: 0, radius: 22 },
+    rfp_gate: { x: seed.rfpGate.position[0], z: seed.rfpGate.position[2], radius: 18 },
+    decade_drive: { x: 0, z: 55, radius: 30 },
+  }
+  for (const d of seed.territories) centres[d.id] = { x: d.position[0], z: d.position[2], radius: 15 }
+  for (const d of seed.pillars) centres[d.id] = { x: d.position[0], z: d.position[2], radius: 18 }
+  return centres
+}
 
 /** A `trigger_foo` empty's content id is `foo` -- see docs/blender-conventions.md. */
 function contentIdForTrigger(trigger) {
@@ -122,23 +140,30 @@ async function bootstrap() {
     totalEl: document.getElementById('progress-total'),
   })
 
-  // Driving into an `area_<id>` opens that station (Phase 5 adds the ring
-  // fill and the Enter key on top). `trigger_` volumes are passive: stamps
-  // and loop counters for the Phase 6 passport; a trigger whose id is also
-  // content still opens it.
-  const areaWatcher = createTriggerWatcher(gameWorld.areas, {
-    onEnter(area) {
-      interactionTarget = 1
-      const node = content.get(area.id)
+  // Enter areas (doc 05 §4): drive in, the border fills, then Enter / wait
+  // opens the station. Areas of streamed districts are added as they load.
+  const announcer = document.getElementById('announcer')
+  const areas = createAreas({
+    scene,
+    content,
+    announce(text) {
+      announcer.textContent = text
+    },
+    onOpen(area, node) {
       if (!node) return
       stationPanel.show(node)
       progress.markFound(area.id)
     },
-    onExit(area) {
-      interactionTarget = 0
-      if (stationPanel.currentId === area.id) stationPanel.hide()
+    onAutoClose() {
+      stationPanel.hide()
     },
+    isShowing: (id) => stationPanel.currentId === id,
   })
+  areas.add(gameWorld.areas)
+  gameWorld.onDistrictLoaded(() => areas.add(gameWorld.areas))
+
+  // `trigger_` volumes are passive: stamps and loop counters for the Phase 6
+  // passport; a trigger whose id is also content still opens it.
   const triggerWatcher = createTriggerWatcher(gameWorld.triggers, {
     onEnter(trigger) {
       const node = content.get(contentIdForTrigger(trigger))
@@ -147,6 +172,13 @@ async function bootstrap() {
   })
 
   const cameraRig = createCameraRig(camera, canvas)
+
+  // District reveals; the opening (letters falling at the RFP Gate) plays below.
+  const reveal = createReveal({
+    gameWorld,
+    focusPoint: () => cameraRig.focusPoint,
+    centres: districtCentres(arena),
+  })
 
   // Explore mode: fly the camera to a place and open it, without driving.
   const explore = createExploreMenu({
@@ -191,8 +223,10 @@ async function bootstrap() {
   vehicle.sync()
   shadowBlob.update()
   cameraRig.update(1 / 60, vehicle)
-  // Opening shot: start close and ease out while the car drops in.
+  // The opening: the camera starts close and eases out while the car drops
+  // in and PURSUIT ARENA + the golden "10" fall onto the RFP Gate.
   cameraRig.playIntro()
+  reveal.playIntro()
   sky.update(camera)
 
   loaderEl.classList.add('hidden')
@@ -204,7 +238,7 @@ async function bootstrap() {
   if (import.meta.env.DEV) {
     window.__proto = {
       vehicle, world, scene, camera, settings, input, stationPanel, explore, content, progress, gameWorld,
-      renderer, renderAssets, post, shadowBlob, sky, fps, cameraRig, floor, blobs, propStress,
+      renderer, renderAssets, post, shadowBlob, sky, fps, cameraRig, floor, blobs, propStress, areas, reveal,
       benchmark: { run: (options) => runPostBenchmark({ renderer, scene, camera }, options) },
     }
   }
@@ -239,21 +273,29 @@ async function bootstrap() {
     if (cameraRig.focused && (inputState.throttle !== 0 || inputState.steer !== 0)) {
       cameraRig.clearFocus()
     }
-    // interact / mute / passport have no consumers until Phases 5-9;
-    // unconsumed presses are dropped at the next update.
+    // Enter areas consume `interact`; mute / passport have no consumers until
+    // Phases 6-8, and unconsumed presses are dropped at the next update.
+    const { hold } = areas.update(delta, { vehicle, interact: () => input.consume('interact') })
+    // Just opened a station: a soft brake holds the car unless you accelerate.
+    if (hold && inputState.throttle === 0) inputState.brake = true
 
-    // Vehicle forces must be applied inside the fixed step, not per frame,
-    // or the feel changes with the display refresh rate.
-    step(delta, (fixedDelta) => vehicle.update(fixedDelta, inputState))
+    // Vehicle and prop forces must be applied inside the fixed step, not per
+    // frame, or the feel changes with the display refresh rate.
+    step(delta, (fixedDelta) => {
+      gameWorld.props.fixedUpdate(fixedDelta)
+      vehicle.update(fixedDelta, inputState)
+    })
 
     vehicle.sync()
-    areaWatcher(vehicle.position)
     triggerWatcher(vehicle.position)
+    reveal.update(delta, vehicle.position)
+    gameWorld.animate(delta)
+    interactionTarget = areas.active ? 1 : 0
     interaction += (interactionTarget - interaction) * (1 - Math.exp(-8 * delta))
     cameraRig.update(delta, vehicle)
     sky.update(camera)
     shadowBlob.update()
-    gameWorld.props.update()
+    gameWorld.props.update(delta)
     propStress?.update()
     blobs.update()
     floor.update()

@@ -31,7 +31,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from _common import BUDGETS, SFX_CLASSES, args  # noqa: E402
 
-PREFIXES = ('collision_', 'dyn_', 'inst_', 'area_', 'trigger_', 'collect_', 'spawn_', 'sfx_', 'decal_')
+PREFIXES = ('collision_', 'dyn_', 'inst_', 'area_', 'trigger_', 'collect_', 'spawn_', 'sfx_', 'decal_', 'anim_')
+# Optional behaviour properties on dyn_ roots (src/world/dynamicProps.js).
+DYN_NUMBERS = ('hang', 'springK', 'springDamp', 'buoyancy', 'tether')
 COLLECT_KINDS = ('dot', 'golden', 'shuriken')
 # Plain visual names the generators use; anything else unprefixed is a warning.
 VISUAL_NAMES = re.compile(r'^(ground|roads|road_kerbs|boundary_berm|ramp_\d+|plaza_.+|landmark_.+|pod_.+|kit_.+|dyn_.+_vis)$')
@@ -103,6 +105,11 @@ def main():
                     errors.append(f'{name}: missing custom property "{key}"')
             if obj.get('mass', 0) <= 0:
                 errors.append(f'{name}: mass must be > 0')
+            for key in DYN_NUMBERS:
+                if key in obj.keys() and not (isinstance(obj[key], (int, float)) and obj[key] > 0):
+                    errors.append(f'{name}: "{key}" must be a positive number')
+            if ('hang' in obj.keys()) != ('springK' in obj.keys()):
+                errors.append(f'{name}: hanging props need both "hang" and "springK"')
             if obj.get('sfx') not in SFX_CLASSES:
                 errors.append(f'{name}: sfx "{obj.get("sfx")}" not one of {SFX_CLASSES}')
             visuals = [c for c in obj.children if c.type == 'MESH' and not c.name.startswith('collision_')]
@@ -134,6 +141,14 @@ def main():
         elif name.startswith(('spawn_', 'sfx_')):
             if obj.type != 'EMPTY':
                 errors.append(f'{name}: must be an empty')
+        elif name.startswith('anim_'):
+            # Kinematic visuals the runtime animates (kept out of the static merge).
+            if obj.type != 'MESH':
+                errors.append(f'{name}: anim_ objects must be meshes')
+            if not isinstance(obj.get('spin'), (int, float)):
+                errors.append(f'{name}: anim_ needs a numeric "spin" (rad/s)')
+            if obj.get('axis') not in ('x', 'y', 'z'):
+                errors.append(f'{name}: anim_ "axis" must be x, y or z')
         elif name.startswith('decal_'):
             pass
         elif not VISUAL_NAMES.match(name):
