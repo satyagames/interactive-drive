@@ -2,6 +2,60 @@
 
 Pursuit Arena build log. One entry per phase (see `docs/pursuit-arena/06-phased-prompts.md`).
 
+## Phase 11 — QA and ship
+
+- **QA checklist** (`docs/pursuit-arena/QA-checklist.md`) covers build and tooling, content and IA, gameplay,
+  inputs, browsers and devices, accessibility, performance budgets and the offline package. Every row has a status
+  and its evidence; every open row has an owner (as a role: COE content, Brand, Dev, QA-Mac, QA-Android,
+  QA-laptop). It ends with an open-items list and how to re-run each part.
+- **Content-editing guide** (`docs/content-editing-guide.md`) for the Pursuits team: how to change station text,
+  pictures and links, the timeline, the leader's welcome, "What's new", birthdays, service awards and events in
+  `content/arena.seed.json` without touching code. It covers the rules (consent, never invent, placeholder until
+  approved, never change an id), VS Code's live schema checking, and the two commands that publish.
+- **Feeds now show up** (found while writing the guide: editing `feeds.events` or `feeds.serviceAwards` did
+  nothing, and birthdays only fired confetti):
+  - stations take an optional `"feed"`; Birthdays, Service awards and Upcoming events use it
+  - the station panel lists today's birthdays (else this month's), service awards (longest first) and upcoming
+    events (past ones drop off), with "sample" tags on placeholder entries (`src/content/feeds.js`)
+  - schemas for awards (`years` integer) and events (`YYYY-MM-DD`, optional time, place and link)
+  - birthdays reject a year
+  - the confetti finds its station by its feed instead of a hard-coded id
+- **Share package fixed and hardened:**
+  - `npm run package:share` failed on Windows: it spawned `npm` directly and needed a `zip` command. It now builds
+    through the shell and writes the zip itself (deflate, UTF-8 names, Unix permissions, so the Mac launcher stays
+    executable).
+  - The launchers (renamed **Start Pursuit Arena**) used `python -m http.server` or `npx serve`. That had three
+    problems:
+    - the Store `python` stub on Windows made the launcher fail
+    - `npx serve` downloads from the internet, which isn't offline
+    - Python's server on Windows can serve `.js` as `text/plain`, which breaks modules
+  - The fix: two bundled, dependency-free servers (`serve.py`, `serve.mjs`) with fixed MIME types, bound to
+    127.0.0.1 on a free port, that open the browser. The launchers *try* each runtime rather than just finding it.
+  - The `.bat` is written with CRLF; the zip is now `pursuit-arena-share.zip`.
+- An inline SVG favicon (a green disc with "10"; not the logo): the browser no longer requests `/favicon.ico` (the
+  only 404 in the offline run).
+- README now leads with Pursuit Arena and has sections on sharing, updating content and what's placeholder;
+  AGENTS.md points at the checklist and the guide.
+
+Checklist run (details and evidence in the checklist):
+- [x] Every IA node opens by driving into its area (43/43); Explore lists all 43.
+- [x] Every badge (17/17) through the real detection paths, from a clean store (backed up and restored after).
+- [x] Keyboard: all driving keys held and all action keys pressed for real.
+- [x] Gamepad: through a software stand-in (no physical pad here).
+- [x] Touch: joystick and respawn at phone size.
+- [x] Chrome and Edge (headless), default and reduced motion, from the **unzipped package with every off-machine
+  request blocked**: 0 off-machine requests, no errors. Windows extraction is identical to `share/`.
+- [x] Lighthouse accessibility 100 on all ten steps, including a station panel with a feed.
+- [x] Budgets (Phase 10 numbers): 7.8 MB first load, at most 117 draw calls, 85k triangles.
+- [ ] Open, with owners:
+  - COE content and Brand assets
+  - Firefox, Safari, iOS and Android (no devices here)
+  - the target-laptop frame rate
+  - a physical gamepad, and gamepad menu navigation
+  - NVDA / VoiceOver
+  - KTX2 (needs `toktx`)
+  - real audio
+
 ## Phase 10 — Art pass, the cart, and performance
 
 - **The anniversary cart** (`blender/scripts/gen_cart.py`, `npm run art:cart`): an original, toy-like open-top buggy,

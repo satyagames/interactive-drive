@@ -2,6 +2,7 @@ import * as THREE from 'three'
 
 import { rebuild, settings } from '../config.js'
 import { t } from '../content/ui.js'
+import { hasBirthdayToday } from '../content/feeds.js'
 import { morseTimeline } from '../game/morse.js'
 import { CELL, createAtlasTexture } from './atlas.js'
 import { createFireworks } from './fireworks.js'
@@ -120,11 +121,13 @@ export function createVfx({ scene, camera, cameraRig, renderer, renderAssets, ve
   const skidTracks = [ribbons.track(), ribbons.track()]
   const paintTracks = [ribbons.track(), ribbons.track()]
   const studio = seed.territories.find((d) => d.id === 'studio')?.position ?? null
-  const birthdayToday = () => {
-    const now = new Date()
-    const today = `--${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-    return (seed.feeds?.birthdays ?? []).some((b) => b.date === today)
-  }
+  // The station that shows the birthdays feed fires the confetti cannon.
+  const birthdayStations = new Set(
+    [seed.hq, seed.rfpGate, ...seed.territories, ...seed.pillars]
+      .flatMap((d) => d.stations)
+      .filter((s) => s.feed === 'birthdays')
+      .map((s) => s.id),
+  )
 
   // Scratch (nothing below allocates per frame).
   const contact = new THREE.Vector3()
@@ -438,7 +441,7 @@ export function createVfx({ scene, camera, cameraRig, renderer, renderAssets, ve
     }
   })
   events.on('station-open', ({ id }) => {
-    if (id !== cfg.birthdayStation || !birthdayToday()) return
+    if (!birthdayStations.has(id) || !hasBirthdayToday(seed.feeds)) return
     const area = gameWorld.areas.find((a) => a.id === id)
     const at = area?.position ?? vehicle.position
     confettiBurst({ x: at.x, y: groundY + 0.5, z: at.z }, cfg.confetti.burst * 0.7, 3, 13)

@@ -161,7 +161,16 @@
     "links": "Links",
     "opensInNewTab": "(opens in a new tab)",
     "gallery": "Gallery",
-    "imageAlt": "Image for {title}"
+    "imageAlt": "Image for {title}",
+    "birthdaysToday": "Birthdays today",
+    "birthdaysMonth": "Birthdays this month",
+    "birthdaysNone": "No birthdays this month yet.",
+    "serviceAwards": "Service awards",
+    "serviceYears": "{years} years",
+    "serviceNone": "No service awards listed yet.",
+    "events": "Upcoming events",
+    "eventsNone": "No upcoming events listed yet.",
+    "sample": "sample"
   },
   "explore": {
     "open": "Explore",

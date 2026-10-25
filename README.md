@@ -1,15 +1,21 @@
-# Driving prototype
+# Pursuit Arena
 
-An original interactive 3D portfolio in the drive-around-and-explore genre
-popularised by sites like bruno-simon.com: you drive a small car around an
-open lot, and driving into one of a handful of exhibits pops up a card about
-that project. Three.js for rendering, Rapier (wasm) for physics, Vite for the
-dev server and static build. The world and vehicle are Blender-authored
-placeholder shapes (ground, a few exhibit stand-ins, two ramps, a simple
-placeholder car), bevelled and matcap-shaded from one designed palette with
-baked contact shadows rather than flat-lit — see **Art pipeline**, **Look**
-and **Shading** below. See **What's placeholder** for what's real
-here versus what's a stand-in for a still-undecided final theme.
+A drive-around 3D world celebrating **10 years of the Deloitte USI Pursuits
+COE**. You drive a small anniversary cart around a stylised arena: the
+Pursuits HQ, six team territories and five pillar districts. Driving into a
+glowing square opens a station about that team or programme. A Passport,
+collectibles, the Deadline Dash time trial, mini-games and badges sit on top.
+
+Driving feel, camera and world interaction follow Bruno Simon's 2019 folio,
+reimplemented from scratch. The map, story, content, models, effects and
+sounds are this project's own. Three.js renders, Rapier (wasm) does the
+physics, Vite builds. Everything is self-contained: no CDN, no runtime
+network calls, and it runs offline from a zip (**Sharing without hosting**).
+
+- Team content is edited without touching code: **Updating the content**.
+- Release status and open items: **[docs/pursuit-arena/QA-checklist.md](docs/pursuit-arena/QA-checklist.md)**.
+- What is still a stand-in until the team supplies it (content, brand
+  assets, audio): **What's placeholder**.
 
 ## Running it
 
@@ -41,57 +47,57 @@ hosting** below.
 ## Sharing without hosting
 
 ```bash
-npm run package:share   # -> share/ and portfolio-share.zip
+npm run package:share   # -> share/ and pursuit-arena-share.zip
 ```
 
-This builds fresh, then packages that build into something a non-technical
-recipient can run on their own machine with one double-click — no hosting, no
-internet access, and no terminal for them to touch. `dist/` alone isn't quite
-that: `index.html` loads its JS as ES modules and fetches the GLTF
-models/textures, and browsers refuse both of those from a bare `file://`
-page, so *some* local web server is still required. This just makes starting
-one the recipient's problem to solve with one click instead of a terminal
-command:
+This builds fresh, then packages the build so a non-technical recipient can
+run it on their own computer with one double-click. No hosting, no internet,
+no terminal. `dist/` alone isn't enough: the page loads ES modules and
+fetches its 3D files, which browsers refuse from a bare `file://` page, so a
+*local* server is still needed. The package brings its own:
 
-- **`share/`** — the built site plus two launcher scripts,
-  [`Start Portfolio.command`](scripts/launchers/Start%20Portfolio.command)
-  (macOS) and [`Start Portfolio.bat`](scripts/launchers/Start%20Portfolio.bat)
-  (Windows). Each one picks a free port, starts a plain local static server
-  bound to `127.0.0.1` (`python3 -m http.server`, or `npx serve` if Python
-  isn't installed), and opens the portfolio in the default browser once it
-  answers. Nothing here talks to the network beyond that localhost port.
-- **`portfolio-share.zip`** — `share/` zipped into one file, ready to attach
-  to an email or drop in a shared folder. Re-running the command rebuilds
-  both from scratch each time, so there's no risk of handing someone a stale
-  copy.
+- **`share/`**: the built site plus
+  [`Start Pursuit Arena.bat`](scripts/launchers/Start%20Pursuit%20Arena.bat)
+  (Windows) and
+  [`Start Pursuit Arena.command`](scripts/launchers/Start%20Pursuit%20Arena.command)
+  (macOS). Each starts one of two tiny bundled servers,
+  [`serve.py`](scripts/launchers/serve.py) (Python 3) or
+  [`serve.mjs`](scripts/launchers/serve.mjs) (Node.js). Neither needs any
+  packages; both serve the folder on `127.0.0.1` (this computer only) on a
+  free port, with fixed MIME types, and open the browser. Nothing is
+  downloaded and nothing is exposed to the network.
+- **`pursuit-arena-share.zip`**: `share/` zipped, ready to attach or drop in
+  a shared folder. It's written by the script itself, so it works on Windows
+  too, and records the Mac launcher as executable.
 
 **What to tell the recipient:**
 
-1. Unzip `portfolio-share.zip` anywhere.
-2. Double-click `Start Portfolio.command` (Mac) or `Start Portfolio.bat`
-   (Windows).
-3. A terminal/console window opens and the portfolio opens in their browser
-   a moment later.
-4. To stop it, just close that window.
+1. Unzip `pursuit-arena-share.zip` anywhere.
+2. Double-click **Start Pursuit Arena** (`.bat` on Windows, `.command` on
+   Mac). A small window opens and the arena opens in the browser a moment
+   later.
+3. To stop it, close that window.
 
-If neither Python nor Node.js is installed on their machine (rare — Python
-ships with every Mac, and both are common on Windows), the launcher prints a
-plain-English explanation and a link to install one, instead of a stack trace
-or a window that silently closes.
+The launchers *try* Python 3 (then, on Windows, the `py` launcher) and then
+Node.js, rather than just looking for them. On Windows, `python` is often a
+Microsoft Store placeholder that can't run anything, and on a fresh Mac
+`python3` only offers to install developer tools. If neither works, the
+window says so in plain English, with links to install one.
 
-Two platform notes worth passing on if a recipient hits them:
+**macOS Gatekeeper**: a downloaded `.command` may be refused the first time
+("unidentified developer"). Right-click it, choose **Open** once, and
+double-clicking works from then on.
 
-- **macOS Gatekeeper**: a `.command` file downloaded via a browser (email
-  attachment, Slack, a download link) gets a quarantine flag, and macOS may
-  refuse to open it the first time with an "unidentified developer" warning.
-  Right-click (or Control-click) the file and choose **Open** once to clear
-  it — after that, double-clicking works normally. This is standard macOS
-  behaviour for any downloaded script, not specific to this one.
-- **Windows Store Python stub**: on a clean Windows install with no Python
-  installed, `python` on `PATH` can resolve to a Microsoft Store placeholder
-  instead of a real interpreter. If double-clicking the `.bat` doesn't
-  appear to do anything, that's the likely cause — installing real Python
-  (or Node.js) from the links the launcher prints fixes it.
+## Updating the content
+
+The Pursuits team edits the arena's content (station text, pictures, links,
+the timeline, birthdays, service awards, events, "What's new") in
+`content/arena.seed.json`, without touching code. Interface wording is in
+`content/ui.json`. See **[docs/content-editing-guide.md](docs/content-editing-guide.md)**;
+then `npm run content:check` and `npm run package:share`.
+
+Release QA is in **[docs/pursuit-arena/QA-checklist.md](docs/pursuit-arena/QA-checklist.md)**:
+what was tested, how, and what's still open, with owners.
 
 ## Controls
 
@@ -150,8 +156,8 @@ tools/
   blender.mjs           npm run art:* -- the headless arena pipeline
   content-check.mjs     npm run content:check -- schema + image-path checks
 scripts/
-  package-share.mjs    npm run package:share -> share/ + portfolio-share.zip
-  launchers/           the two double-click server+browser launchers it
+  package-share.mjs    npm run package:share -> share/ + pursuit-arena-share.zip (own zip writer)
+  launchers/           the double-click launchers + serve.py / serve.mjs it
                         copies into share/ -- see Sharing without hosting
 docs/
   blender-conventions.md   naming convention, axis notes, export settings
@@ -649,14 +655,19 @@ than the scene itself.
 
 ## What's placeholder
 
-The arena's *layout, names and physics* are real (Phase 4); its *look* is
-greybox until the Phase 10 art pass:
+The arena, the cart, the game layer, effects and screens are built (Phases
+0–10). What's still a stand-in waits on material only the team can supply;
+docs/pursuit-arena/QA-checklist.md has the owners:
 
-- **Arena geometry** — primitive landmarks, pods and props generated by
-  `blender/scripts/`, tinted matcaps, no AO bake yet.
-- **The car** — the prototype's wedge-and-boxes body from `blender/scene.blend`,
-  scaled to the arcade chassis; the anniversary cart replaces it in Phase 10.
-- **Content** — every station in `content/arena.seed.json` marked
+- **Content**: every station in `content/arena.seed.json` marked
   `"status": "placeholder"` shows a visible *Content coming soon* tag and the
   shared `placeholder.svg` until the USI Pursuits COE team supplies the real
-  text and images.
+  text and images (docs/content-editing-guide.md). The timeline years are
+  `null` until confirmed, and the one birthday entry is a tagged sample.
+- **Brand**: no Deloitte logo is shipped (only from an approved file, in
+  `public/brand/`). Fonts are the system UI fonts until approved font files
+  arrive. The palette (including the five arena matcaps) needs brand sign-off.
+- **Audio**: every sound and the music are synthesised placeholders.
+  `public/audio/MANIFEST.md` lists the files wanted; `CREDITS.md` logs what's
+  shipped.
+- **Team credits** in Menu → Credits read "to be supplied".

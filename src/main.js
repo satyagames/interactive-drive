@@ -156,7 +156,7 @@ async function bootstrap() {
   const screenFade = createScreenFade(document.getElementById('fade'))
   const shadowBlob = createShadowBlob({ scene, world, RAPIER, vehicle })
 
-  const stationPanel = createStationPanel(document.getElementById('station-panel'))
+  const stationPanel = createStationPanel(document.getElementById('station-panel'), { feeds: arena.feeds })
   // "N / 43 visited": distinct stations opened, until the Phase 6 passport.
   const progress = createProgressTracker(content.exploreIds().length, {
     countEl: document.getElementById('progress-count'),

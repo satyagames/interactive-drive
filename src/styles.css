@@ -246,6 +246,13 @@ html, body {
 }
 .station-panel__gallery.is-gallery img { flex: 0 0 85%; scroll-snap-align: start; }
 
+.station-panel__feed { margin: 0 0 14px; }
+.station-panel__feed[hidden], .station-panel__feed ul[hidden], .station-panel__feed p[hidden] { display: none; }
+.station-panel__feed h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
+.station-panel__feed ul { margin: 0; padding-left: 18px; font-size: 15px; line-height: 1.6; }
+.station-panel__feed p { margin: 0; font-size: 14px; color: #c9ced8; }
+.station-panel__feed a { color: #b9e07a; }
+.station-panel__sample { display: inline-block; padding: 0 6px; border-radius: 999px; border: 1px dashed currentColor; font-size: 11px; }
 .station-panel__links h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
 .station-panel__links ul { margin: 0; padding-left: 18px; }
 .station-panel__links a { color: #b9e07a; }

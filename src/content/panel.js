@@ -1,3 +1,4 @@
+import { birthdays, serviceAwards, upcomingEvents } from './feeds.js'
 import { t } from './ui.js'
 
 /**
@@ -6,13 +7,16 @@ import { t } from './ui.js'
  *
  * Shows any content-model node (`content/model.js`): a header in the
  * district's colour, kicker + title, a "coming soon" badge for anything still
- * marked placeholder, team lead / role lines, image or gallery, body, links.
+ * marked placeholder, team lead / role lines, image or gallery, body, links,
+ * and -- for a station that names one -- a feed from the seed (today's
+ * birthdays, service awards, upcoming events; src/content/feeds.js). Feed
+ * entries still marked placeholder carry a visible "sample" tag.
  *
  * `show(node, { focus })`: pass `focus: true` when the user opened it on
  * purpose (Explore, keyboard) so focus moves to the title; a panel that pops
  * up because you drove into a trigger never steals focus.
  */
-export function createStationPanel(root) {
+export function createStationPanel(root, { feeds = null } = {}) {
   root.classList.add('station-panel')
   root.setAttribute('aria-labelledby', 'station-title')
   root.innerHTML = `
@@ -27,6 +31,11 @@ export function createStationPanel(root) {
       <p class="station-panel__lead" hidden></p>
       <div class="station-panel__gallery" hidden></div>
       <p class="station-panel__body"></p>
+      <section class="station-panel__feed" hidden>
+        <h3></h3>
+        <ul></ul>
+        <p></p>
+      </section>
       <section class="station-panel__links" hidden>
         <h3></h3>
         <ul></ul>
@@ -44,6 +53,7 @@ export function createStationPanel(root) {
   const gallery = $('.station-panel__gallery')
   const body = $('.station-panel__body')
   const links = $('.station-panel__links')
+  const feed = $('.station-panel__feed')
   const scroll = $('.station-panel__scroll')
 
   closeButton.setAttribute('aria-label', t('panel.close'))
@@ -94,6 +104,7 @@ export function createStationPanel(root) {
     else gallery.removeAttribute('aria-label')
 
     body.textContent = node.body ?? ''
+    renderFeed(node.feed)
 
     links.querySelector('ul').replaceChildren(...node.links.map(({ label, url }) => {
       const li = document.createElement('li')
@@ -115,6 +126,57 @@ export function createStationPanel(root) {
     root.hidden = false
     if (focus) title.focus({ preventScroll: true })
     for (const listener of listeners) listener(node)
+  }
+
+  function renderFeed(name) {
+    const list = feed.querySelector('ul')
+    const empty = feed.querySelector('p')
+    feed.hidden = !name || !feeds
+    if (feed.hidden) return
+    let heading
+    let rows
+    let none
+    if (name === 'birthdays') {
+      const { scope, entries } = birthdays(feeds)
+      heading = t(scope === 'today' ? 'panel.birthdaysToday' : 'panel.birthdaysMonth')
+      rows = entries.map((b) => [b.name, null, b.status])
+      none = t('panel.birthdaysNone')
+    } else if (name === 'serviceAwards') {
+      heading = t('panel.serviceAwards')
+      rows = serviceAwards(feeds).map((a) => [a.name, t('panel.serviceYears', { years: a.years }), a.status])
+      none = t('panel.serviceNone')
+    } else {
+      heading = t('panel.events')
+      rows = upcomingEvents(feeds).map((e) => [e.title, [e.date, e.time, e.place].filter(Boolean).join(' · '), e.status, e.link])
+      none = t('panel.eventsNone')
+    }
+    feed.querySelector('h3').textContent = heading
+    list.replaceChildren(...rows.map(([label, detail, status, link]) => {
+      const li = document.createElement('li')
+      const strong = document.createElement('strong')
+      if (link) {
+        const a = document.createElement('a')
+        a.href = link.url
+        a.target = '_blank'
+        a.rel = 'noopener noreferrer'
+        a.textContent = label
+        strong.append(a)
+      } else {
+        strong.textContent = label
+      }
+      li.append(strong)
+      if (detail) li.append(document.createTextNode(` — ${detail}`))
+      if (status === 'placeholder') {
+        const tag = document.createElement('span')
+        tag.className = 'station-panel__sample'
+        tag.textContent = t('panel.sample')
+        li.append(' ', tag)
+      }
+      return li
+    }))
+    list.hidden = rows.length === 0
+    empty.textContent = rows.length ? '' : none
+    empty.hidden = rows.length > 0
   }
 
   function hide() {

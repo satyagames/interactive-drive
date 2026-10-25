@@ -51,6 +51,7 @@ export function buildContentModel(arena, { labels = {} } = {}) {
     images: imagesOf(station),
     links: station.links ?? [],
     roles: station.roles ?? [],
+    feed: station.feed ?? null,
     status: station.status,
     placeholder: station.status === 'placeholder',
     group,

@@ -374,6 +374,7 @@
           "body": "Content to be supplied by the USI Pursuits COE team.",
           "image": "content/placeholder.svg",
           "links": [],
+          "feed": "events",
           "status": "placeholder"
         },
         {
@@ -554,6 +555,7 @@
           "body": "Content to be supplied by the USI Pursuits COE team.",
           "image": "content/placeholder.svg",
           "links": [],
+          "feed": "birthdays",
           "status": "placeholder"
         },
         {
@@ -562,6 +564,7 @@
           "body": "Content to be supplied by the USI Pursuits COE team.",
           "image": "content/placeholder.svg",
           "links": [],
+          "feed": "serviceAwards",
           "status": "placeholder"
         },
         {

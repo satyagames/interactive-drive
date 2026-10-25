@@ -362,11 +362,6 @@ export const settings = {
     sparkleRange: 26,
     /** Golden skin: tiny 10s per second while moving (the Konami egg). */
     tensRate: 14,
-    /**
-     * The Birthdays station (content id) whose opening fires the confetti
-     * cannon when a `feeds.birthdays` date is today.
-     */
-    birthdayStation: 'culture_1',
     camera: {
       /** FOV punch when boost starts, degrees (doc 05 §2: ±4°). */
       boostKick: 4,

@@ -173,7 +173,16 @@
         "links",
         "opensInNewTab",
         "gallery",
-        "imageAlt"
+        "imageAlt",
+        "birthdaysToday",
+        "birthdaysMonth",
+        "birthdaysNone",
+        "serviceAwards",
+        "serviceYears",
+        "serviceNone",
+        "events",
+        "eventsNone",
+        "sample"
       ]
     },
     "explore": {

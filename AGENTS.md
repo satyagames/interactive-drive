@@ -18,6 +18,8 @@ npm run preview      # serve the production build
 npm run package:share
 ```
 
+Before a hand-over, run [`docs/pursuit-arena/QA-checklist.md`](docs/pursuit-arena/QA-checklist.md) and update its statuses. Content changes by the Pursuits team follow [`docs/content-editing-guide.md`](docs/content-editing-guide.md); keep that guide true when the content schema changes. `npm run package:share` writes `share/` + `pursuit-arena-share.zip` with bundled servers (`scripts/launchers/serve.py`, `serve.mjs`): keep them dependency-free and bound to 127.0.0.1.
+
 There is currently no automated test suite, lint configuration, or CI workflow. For runtime changes, validate with `npm run build` and manually exercise the affected browser workflow through a served page. Do not open the app from `file://`; ES modules and GLTF fetches need HTTP.
 
 ## Runtime conventions
