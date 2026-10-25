@@ -23,6 +23,12 @@ npm run probe:feel # arcade car vs docs/pursuit-arena/07-feel-targets.md (Node, 
 npm run content:check # validate content/*.json against their schemas
 ```
 
+On Windows the dev server **polls** for file changes (`vite.config.js`):
+the native watcher there could miss the second of two quick saves and keep
+serving a half-edited module. Polling picks up every edit in ~0.2 s at about
+0.3% of a core while idle. Force it with `VITE_WATCH_POLL=1` (or off with
+`VITE_WATCH_POLL=0`) on any platform; restart `npm run dev` after changing it.
+
 `dist/` is a fully static, self-contained bundle — no CDN scripts, no fonts,
 no analytics, no calls out to the internet at all, so it runs the same with
 the network off. It still has to be **served over HTTP**, not opened as a

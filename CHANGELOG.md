@@ -2,6 +2,20 @@
 
 Pursuit Arena build log. One entry per phase (see `docs/pursuit-arena/06-phased-prompts.md`).
 
+## Dev tooling — reliable reloads on Windows (between Phases 6 and 7)
+
+- `vite.config.js`: the dev server watches by **polling** on Windows (`usePolling`, 100 ms), and waits for a file to
+  stop changing before reloading (`awaitWriteFinish`, 80 ms). `VITE_WATCH_POLL=1|0` overrides it on any platform.
+  `dist/`, `share/`, `blender/` and `.git/` are ignored, so polling stays cheap.
+- Why: three times (Phases 2, 5 and 6) the native watcher missed the second of two quick edits, and Vite served a
+  half-edited module. The last time, that crashed every frame where the car took off.
+- Verified on this machine with a scratch stress test, then removed:
+  - 40/40 rapid double-writes (5 ms apart) to an unimported module served correctly: median 157 ms, max 206 ms
+  - 25/25 the same with the module in the running page's module graph: median 157 ms, max 190 ms
+  - two back-to-back Edit-tool edits to a real module (`src/game/events.js`), then their revert, both served within a
+    second
+  - idle cost: 0.3% of one core
+
 ## Phase 6 — Gamification
 
 The whole of doc 03, in `src/game/`, around one event bus (`events.js`; VFX, SFX and UI subscribe instead of being
