@@ -90,56 +90,260 @@ html, body {
 }
 #progress-count { font-variant-numeric: tabular-nums; font-weight: 600; }
 
-/* ---------- exhibit panel ---------- */
+/* ---------- shared ---------- */
 
-#exhibit-panel {
-  position: fixed;
-  top: max(16px, env(safe-area-inset-top));
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(92vw, 420px);
-  max-height: min(62vh, 480px);
-  overflow-y: auto;
-  padding: 16px 18px;
-  border-radius: 14px;
-  background: var(--ui-bg);
-  border: 1px solid var(--ui-border);
-  backdrop-filter: blur(10px);
-  z-index: 15;
-  pointer-events: auto;
+/* Panels sit over a bright 3D floor, so they are near-opaque: text contrast
+   has to hold for WCAG 2.2 AA whatever is drawn behind them. */
+:root {
+  --panel-bg: rgba(14, 16, 22, 0.94);
+  --brand: #86bc25;
+  --focus: #86bc25;
 }
-#exhibit-panel[hidden] { display: none; }
 
-#exhibit-close {
+.sr-only {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:where(button, a, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ---------- explore launcher + menu ---------- */
+
+#explore-open {
+  position: fixed;
+  top: calc(max(12px, env(safe-area-inset-top)) + 92px);
+  left: 12px;
+  z-index: 12;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
   border: 1px solid var(--ui-border);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--panel-bg);
   color: var(--ui-fg);
-  font-size: 16px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+#explore-open kbd {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--ui-border);
+  opacity: 0.8;
+}
+#explore-open[aria-expanded="true"] { border-color: var(--brand); }
+
+.explore {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  left: 12px;
+  width: min(340px, calc(100vw - 24px));
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  border: 1px solid var(--ui-border);
+  background: var(--panel-bg);
+  z-index: 16;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.explore[hidden] { display: none; }
+
+.explore__header { position: relative; padding: 16px 48px 10px 18px; }
+.explore__header h2 { margin: 0 0 4px; font-size: 18px; }
+.explore__intro { margin: 0; font-size: 13px; line-height: 1.45; opacity: 0.85; }
+
+.explore__close,
+.station-panel__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font-size: 18px;
   line-height: 1;
   display: grid;
   place-items: center;
   cursor: pointer;
 }
 
-#exhibit-image {
+.explore nav { flex: 1; overflow-y: auto; padding: 4px 10px 10px; }
+.explore__list { list-style: none; margin: 0; padding: 0; }
+.explore__list .explore__list { padding-left: 12px; }
+.explore__group { margin: 6px 0; border-left: 4px solid var(--district); padding-left: 8px; }
+.explore__group h3, .explore__group h4, .explore__group h5 { margin: 0; font-size: inherit; }
+.explore__items { list-style: none; margin: 0 0 4px; padding: 0; }
+
+.explore__group-button,
+.explore__item,
+.explore__back {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ui-fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.explore__group-button { font-weight: 700; font-size: 14px; }
+.explore__item { font-size: 13px; }
+.explore__group-button:hover,
+.explore__item:hover,
+.explore__back:hover { background: rgba(255, 255, 255, 0.08); }
+
+.explore__tag {
+  flex: none;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px dashed currentColor;
+  opacity: 0.85;
+}
+
+.explore__back {
+  justify-content: center;
+  margin: 0 10px 12px;
+  width: auto;
+  border: 1px solid var(--ui-border);
+  font-weight: 600;
+}
+
+/* ---------- station panel ---------- */
+
+.station-panel {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  width: min(400px, calc(100vw - 24px));
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  border: 1px solid var(--ui-border);
+  background: var(--panel-bg);
+  overflow: hidden;
+  z-index: 15;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.station-panel[hidden] { display: none; }
+
+.station-panel__header {
+  position: relative;
+  padding: 16px 52px 14px 18px;
+  background: var(--district, var(--brand));
+  color: var(--district-ink, #000);
+}
+.station-panel__kicker {
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.station-panel__title { margin: 0; font-size: 21px; line-height: 1.2; }
+.station-panel__title:focus { outline: none; }
+.station-panel__title:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+.station-panel__badge {
+  display: inline-block;
+  margin: 8px 0 0;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1.5px dashed currentColor;
+  font-size: 12px;
+  font-weight: 700;
+}
+.station-panel__badge[hidden] { display: none; }
+
+.station-panel__scroll { flex: 1; overflow-y: auto; padding: 16px 18px 20px; }
+.station-panel__roles { list-style: none; margin: 0 0 12px; padding: 0; font-size: 14px; line-height: 1.5; }
+.station-panel__lead { margin: 0 0 12px; font-size: 15px; font-weight: 600; }
+.station-panel__body { margin: 0 0 14px; font-size: 15px; line-height: 1.6; }
+.station-panel__roles[hidden],
+.station-panel__lead[hidden],
+.station-panel__gallery[hidden],
+.station-panel__links[hidden] { display: none; }
+
+.station-panel__gallery { margin: 0 0 14px; }
+.station-panel__gallery img {
   display: block;
   width: 100%;
-  max-height: 160px;
+  max-height: 220px;
   object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
 }
-#exhibit-image[hidden] { display: none; }
+.station-panel__gallery.is-gallery {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+.station-panel__gallery.is-gallery img { flex: 0 0 85%; scroll-snap-align: start; }
 
-#exhibit-title { margin: 0 0 4px; padding-right: 24px; font-size: 18px; }
-#exhibit-pitch { margin: 0 0 8px; font-size: 13px; font-weight: 600; opacity: 0.85; }
-#exhibit-description { margin: 0; font-size: 13px; line-height: 1.5; opacity: 0.8; }
+.station-panel__links h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
+.station-panel__links ul { margin: 0; padding-left: 18px; }
+.station-panel__links a { color: #b9e07a; }
+
+/* Narrow screens: the panel becomes a bottom sheet and Explore goes full width. */
+@media (max-width: 640px) {
+  .station-panel {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: 55vh;
+    border-radius: 16px 16px 0 0;
+    border-bottom: 0;
+  }
+  .explore { left: 8px; right: 8px; width: auto; }
+  /* With the touch pad up, float the sheet above it so the controls never
+     cover text and you can still drive with it open. */
+  .has-touch-pad .station-panel {
+    /* Clears the tallest control stack: three 64px buttons + gaps, and the
+       respawn button above the joystick. */
+    bottom: calc(max(24px, env(safe-area-inset-bottom)) + 226px);
+    left: 8px;
+    right: 8px;
+    width: auto;
+    max-height: calc(100vh - 226px - 170px);
+    border-radius: 16px;
+    border-bottom: 1px solid var(--ui-border);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .station-panel:not([hidden]) { animation: panel-in 0.18s ease-out; }
+  @keyframes panel-in { from { opacity: 0; transform: translateY(8px); } }
+}
 
 /* ---------- touch controls ---------- */
 

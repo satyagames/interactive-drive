@@ -52,6 +52,7 @@
   },
   "rfpGate": {
     "id": "rfp_gate",
+    "name": "RFP Gate",
     "position": [
       0.0,
       0,

@@ -39,7 +39,8 @@ const ACTIVATION_KEYS = new Set(['Space', 'Enter', 'NumpadEnter'])
 function ownedByFocusedControl(event) {
   const el = event.target
   if (!(el instanceof Element)) return false
-  if (el.closest('input, textarea, select, [contenteditable]')) return true
+  // Menus that use arrows/Space/Enter themselves (the Explore list) opt in.
+  if (el.closest('input, textarea, select, [contenteditable], [data-captures-keys]')) return true
   return ACTIVATION_KEYS.has(event.code) && Boolean(el.closest('button, a[href], [role="button"]'))
 }
 

@@ -104,24 +104,30 @@ anything more complex than a flat ramp anyway.
 ## Trigger -> content id
 
 A `trigger_` empty's name, minus the `trigger_` prefix, **is the id** it
-looks up in [`content/projects.json`](../content/projects.json). `main.js`'s
+looks up in the content model (`src/content/model.js`), which is built from
+[`content/arena.seed.json`](../content/arena.seed.json) -- every station,
+milestone and leader block has an `id` there. `main.js`'s
 `contentIdForTrigger()` does the stripping:
 
 ```
-trigger_exhibit_a  ->  id "exhibit_a"  ->  content/projects.json entry with "id": "exhibit_a"
+trigger_audit_managers  ->  id "audit_managers"  ->  arena.seed.json station with "id": "audit_managers"
 ```
 
 There's no separate mapping table to keep in sync -- the Blender empty's name
 *is* the key. To point an existing trigger at a different piece of content,
-edit `content/projects.json`'s `id` field to match (pure data edit, matches
-whatever `trigger_<name>` already exports). To add a whole new exhibit, add a
-`trigger_<name>` empty in Blender (+ a `collision_`/visual pair for the
-structure itself) and a matching `{ "id": "<name>", ... }` entry in
-`content/projects.json` -- order doesn't matter on either side, and a trigger
-with no matching content id is simply ignored (logged on enter, no panel).
+edit the `id` in `content/arena.seed.json` to match (pure data edit; run
+`npm run content:check` afterwards). To add a whole new station, add a
+`trigger_<id>` empty in Blender (+ a `collision_`/visual pair for the
+structure itself) and a matching station in the seed -- order doesn't matter
+on either side, and a trigger with no matching content id is simply ignored
+(logged on enter, no panel). The Phase 4 `area_<id>` empties use the same ids.
+
+The prototype world's `trigger_exhibit_a` ... `_d` still resolve, to the four
+entries in [`content/projects.json`](../content/projects.json), until the
+Phase 4 arena replaces that world.
 
 Renaming a `trigger_` empty means a re-export (see **Export settings**
-below); editing `content/projects.json` does not.
+below); editing the content JSON does not.
 
 ## Collision proxy shape
 

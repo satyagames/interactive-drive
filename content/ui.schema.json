@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Pursuit Arena UI strings",
+  "description": "Every piece of interface copy (HUD, panel, Explore menu, touch labels). Placeholders in {braces} are filled at runtime.",
+  "type": "object",
+  "required": ["version", "documentTitle", "loader", "loadFailed", "hud", "panel", "explore", "touch"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "documentTitle": { "$ref": "#/$defs/text" },
+    "loader": { "$ref": "#/$defs/text" },
+    "loadFailed": { "$ref": "#/$defs/text" },
+    "hud": { "$ref": "#/$defs/strings", "required": ["speedUnit", "found"] },
+    "panel": {
+      "$ref": "#/$defs/strings",
+      "required": ["regionLabel", "close", "placeholder", "links", "opensInNewTab", "gallery", "imageAlt"]
+    },
+    "explore": {
+      "$ref": "#/$defs/strings",
+      "required": ["open", "openHint", "title", "intro", "close", "backToCar", "start", "ourTeam", "timeline", "leader", "placeholderTag"]
+    },
+    "touch": {
+      "$ref": "#/$defs/strings",
+      "required": ["joystick", "boost", "brake", "reverse", "interact", "respawn"]
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "text": { "type": "string", "minLength": 1 },
+    "strings": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/text" }
+    }
+  }
+}

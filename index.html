@@ -6,51 +6,50 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
     />
-    <title>Driving Prototype</title>
+    <title>Pursuit Arena</title>
   </head>
   <body>
-    <canvas id="app"></canvas>
+    <canvas id="app" tabindex="-1"></canvas>
 
-    <div id="loader"><span>loading physics…</span></div>
+    <!-- All visible copy is filled from content/ui.json at start-up (data-ui*). -->
+    <div id="loader"><span data-ui="loader"></span></div>
 
     <!-- Covers respawn teleports; see src/ui/screenFade.js. -->
     <div id="fade" aria-hidden="true"></div>
 
     <div id="hud" aria-hidden="true">
-      <span id="hud-speed">0</span><small>km/h</small>
+      <span id="hud-speed">0</span><small data-ui="hud.speedUnit"></small>
       <span id="hud-fps" hidden></span>
     </div>
 
     <div id="progress" aria-live="polite">
-      <span id="progress-count">0</span>&nbsp;/&nbsp;<span id="progress-total">4</span> found
+      <span id="progress-count">0</span>&nbsp;/&nbsp;<span id="progress-total">4</span> <span data-ui="hud.found"></span>
     </div>
 
-    <!-- Exhibit info panel. Non-modal: shown while inside a `trigger_`
-         volume, dismissed on exit / close button / Escape. Driving keeps
-         working the whole time it's open. -->
-    <section id="exhibit-panel" hidden aria-label="Exhibit info">
-      <button id="exhibit-close" aria-label="Close">&times;</button>
-      <img id="exhibit-image" alt="" hidden />
-      <h2 id="exhibit-title"></h2>
-      <p id="exhibit-pitch"></p>
-      <p id="exhibit-description"></p>
-    </section>
+    <!-- Explore mode: every district and station as a list (src/content/explore.js). -->
+    <button id="explore-open" type="button" aria-expanded="false" aria-controls="explore">
+      <span data-ui="explore.open"></span> <kbd data-ui="explore.openHint"></kbd>
+    </button>
+    <div id="explore" hidden></div>
+
+    <!-- Station panel (src/content/panel.js): right-hand drawer, bottom sheet
+         on narrow screens. Non-modal; driving keeps working while it's open. -->
+    <aside id="station-panel" hidden></aside>
 
     <!-- Touch controls. Hidden by default; shown on coarse-pointer devices
          or when forced from the debug panel. The joystick points where you
-         want to drive (src/input/touch.js). Labels move to content JSON in
-         Phase 3. -->
+         want to drive (src/input/touch.js). -->
     <div id="touch" hidden>
-      <div class="touch-joystick" data-joystick role="group" aria-label="Drive: point the stick where you want to go">
+      <div class="touch-joystick" data-joystick role="group" data-ui-aria-label="touch.joystick">
         <div class="touch-joystick-knob"></div>
       </div>
       <div class="touch-cluster touch-right">
-        <button class="touch-btn" data-action="boost" aria-label="Boost">&#187;</button>
-        <button class="touch-btn" data-action="brake" aria-label="Brake">&#9632;</button>
-        <button class="touch-btn" data-action="reverse" aria-label="Reverse">&#9660;</button>
+        <button class="touch-btn" data-action="boost" data-ui-aria-label="touch.boost">&#187;</button>
+        <button class="touch-btn" data-action="brake" data-ui-aria-label="touch.brake">&#9632;</button>
+        <button class="touch-btn" data-action="reverse" data-ui-aria-label="touch.reverse">&#9660;</button>
       </div>
-      <button class="touch-btn touch-aux touch-interact" data-action="interact" aria-label="Interact">&#8629;</button>
-      <button class="touch-btn touch-aux touch-respawn" data-action="respawn" aria-label="Respawn">&#10227;</button>
+      <button class="touch-btn touch-aux touch-interact" data-action="interact" data-ui-aria-label="touch.interact">&#8629;</button>
+      <button class="touch-btn touch-aux touch-respawn" data-action="respawn" data-ui-aria-label="touch.respawn">&#10227;</button>
     </div>
 
     <script type="module" src="/src/main.js"></script>

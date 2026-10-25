@@ -20,6 +20,7 @@ npm run build      # static output in dist/
 npm run preview    # serve the built dist/ at http://localhost:4173
 npm run serve:dist # same thing, spelled out for anyone just here to demo it
 npm run probe:feel # arcade car vs docs/pursuit-arena/07-feel-targets.md (Node, no browser)
+npm run content:check # validate content/*.json against their schemas
 ```
 
 `dist/` is a fully static, self-contained bundle — no CDN scripts, no fonts,
@@ -110,7 +111,7 @@ its old handbrake role.
 The touch joystick works like the 2019 reference: point it in a screen
 direction and the car turns and drives that way, whatever the camera. The touch
 pad appears automatically on coarse-pointer devices, and can be forced on for
-desktop testing from **Debug → force touch pad**.
+desktop testing from **Debug → force touch pad** (with `#debug`).
 
 The default **iso** camera is the reference's: fixed south-east view, 32° down,
 40° FOV, easing after the car without ever rotating; it opens with a short
@@ -122,7 +123,10 @@ dolly-out while the car drops in (skipped under reduced motion).
 index.html            markup for the canvas, HUD and touch pad
 vite.config.js
 content/
-  projects.json       the 4 exhibit entries (id, title, pitch, description, image)
+  arena.seed.json     all arena content (see Content)
+  ui.json             all interface copy
+  *.schema.json       rules for both (npm run content:check)
+  projects.json       the prototype world's 4 exhibits (until Phase 4)
 blender/
   scene.blend           Blender source: "World" + "Vehicle" collections
   vehicle_details.py    adds the car's lamps + tail lip (idempotent)
@@ -133,6 +137,7 @@ blender/
 tools/
   generate-matcaps.mjs  the colour palette + the matcaps it bakes it into
   feel-probe.mjs        npm run probe:feel -- runs src/debug/feelProbe.js in Node
+  content-check.mjs     npm run content:check -- schema + image-path checks
 scripts/
   package-share.mjs    npm run package:share -> share/ + portfolio-share.zip
   launchers/           the two double-click server+browser launchers it
@@ -170,7 +175,11 @@ src/
     triggers.js       logs to console when the vehicle enters a trigger
     lighting.js       a single fallback ambient; matcaps need no lights
   content/
-    panel.js          the exhibit info card shown while inside a trigger
+    model.js          arena seed -> one content tree (triggers, Explore, Passport)
+    schema.js         small JSON Schema validator (dev + content:check only)
+    ui.js             t() / applyUiStrings() for content/ui.json
+    panel.js          station panel: drawer / bottom sheet
+    explore.js        Explore mode list with camera fly-to
     progress.js       "N of 4 found" tracker behind the HUD indicator
   vehicle/
     vehicle.js        picks the preset (rebuild.vehicle.preset / ?vehicle=)
@@ -216,7 +225,10 @@ current tune to `localStorage` (restored on the next load), reset to defaults,
 or copy the whole thing as JSON to paste back into `config.js` once a feel is
 worth keeping.
 
-The panel (lil-gui) is open by default in the top-right corner on desktop —
+The panel (lil-gui) only exists with `#debug` in the URL (e.g.
+`http://localhost:5173/#debug`), as in the reference; visitors never see it,
+and a tune saved from it is only restored in `#debug` too. It opens in the
+top-right corner on desktop —
 click its **Tuning** title bar to collapse or expand it, or a folder's own
 header to fold just that section. On a coarse-pointer (touch) device it
 starts collapsed instead, since it would otherwise cover most of the screen;
@@ -254,17 +266,32 @@ suspension load, so an unloaded wheel (airborne, or the inside wheel of a hard
 corner) simply stops gripping. An anti-roll bar flattens the car in corners, and
 a self-righting torque applies while all four wheels are off the ground.
 
-## Exhibits
+## Content
 
-Four `trigger_` volumes in `world.glb` mark exhibit stops. Driving into one
-looks up its id in `content/projects.json` and shows a card (title, one-line
-pitch, description, image) via `src/content/panel.js` — driving keeps working
-the whole time it's open, and it's dismissed by driving back out, the close
-button, or Escape. `src/content/progress.js` tracks how many of the 4 have
-been found at least once, shown in the small HUD indicator. To swap in real
-projects, edit `content/projects.json` — title, pitch, description and image
-are the only fields the panel reads, and ids there must match the `trigger_`
-names authored in Blender (see `docs/blender-conventions.md`).
+All copy lives in `content/`, never in code:
+
+- **`arena.seed.json`** — the whole arena: HQ and its leader block, the RFP
+  Gate, the 10-year timeline, six team territories, five pillar districts, their
+  stations, feeds and gamification numbers. Anything with
+  `"status": "placeholder"` shows a visible **Content coming soon** tag until the
+  USI Pursuits COE team supplies it.
+- **`ui.json`** — every interface string (HUD, panel, Explore menu, touch
+  labels). Markup picks them up through `data-ui*` attributes.
+- **`*.schema.json`** — the rules for both. `npm run content:check` validates
+  them (and checks that every image exists in `public/`); `npm run dev` does the
+  same in the console on start-up. Neither ships in the production build.
+
+`src/content/model.js` turns the seed into one tree, used in three places:
+`trigger_<id>` volumes in the world, the **Explore** menu (`Esc` or the
+Explore button — every district and station as a keyboard-navigable list that
+flies the camera there and opens it), and later the Passport. The station
+panel (`src/content/panel.js`) is a right-hand drawer, or a bottom sheet on
+narrow screens; it never pauses driving, and closes with its button, by
+driving out of the trigger, or with `Esc`.
+
+The prototype world's four `trigger_exhibit_*` volumes still open the
+placeholder entries in `content/projects.json` (and drive the "N / 4 found"
+counter) until the Phase 4 arena replaces that world.
 
 ## Art pipeline
 

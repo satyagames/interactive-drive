@@ -2,6 +2,58 @@
 
 Pursuit Arena build log. One entry per phase (see `docs/pursuit-arena/06-phased-prompts.md`).
 
+## Phase 3 — Content model and IA
+
+- **Arena seed is now the runtime content source.** `src/content/model.js` builds one tree (doc 05 §6) from
+  `content/arena.seed.json`, covering:
+  - the RFP Gate
+  - HQ, with the leader block shown at the Leadership Balcony
+  - the 10-year Decade Drive
+  - "I. Our Team" (6 territories)
+  - pillars II–VI, sorted by their numerals
+  
+  43 openable nodes in all. `trigger_<id>` resolves through the same tree. `content/projects.json` stays only for the
+  prototype world's four exhibit triggers until Phase 4.
+- **Schemas:** `content/arena.schema.json` and `content/ui.schema.json`, plus a small dependency-free validator
+  (`src/content/schema.js`).
+  - It runs in `npm run dev` (console) and in `npm run content:check`, which also checks image paths and cross-references.
+  - It is tree-shaken out of production.
+  - A negative test caught all six injected errors.
+- **Interface copy** moved to `content/ui.json` (`t()`, `data-ui*` attributes). `index.html` no longer carries
+  visible copy, and the document title comes from content.
+- **Station panel v2** (`src/content/panel.js`):
+  - right-hand drawer on desktop, bottom sheet on narrow screens
+  - header in the district colour, with black or white ink chosen for at least 4.5:1 contrast
+  - kicker, title, "Content coming soon" badge for placeholders, lead/role lines
+  - image or scroll-snap gallery, body, and links that open in a new tab with a screen-reader note
+  - never steals focus when a trigger opens it; returns focus to the Explore entry that opened it
+- **Explore mode** (`src/content/explore.js`, `Esc` or the Explore button):
+  - every district and station as a list you can move through with Up/Down/Home/End
+  - picking a district flies the iso camera there (1.2 s ease, instant under reduced motion)
+  - picking a station also opens its panel
+  - driving off returns the camera to the car; on narrow screens the list closes after a pick
+- **Esc order:** closes the panel first, then Explore, then opens Explore (the Phase 9 menu will take over that step).
+  Driving keys are ignored while focus is in the Explore list (`data-captures-keys`).
+- **Seed edit:** added `"name": "RFP Gate"` to `rfpGate`, the only group without a display name. It comes from doc 02.
+- **Debug panel:** the lil-gui tuning panel now only appears with `#debug`, as doc 01 specifies. It overlapped the new
+  drawer.
+
+Acceptance checks (in-app browser):
+- [x] All 43 IA nodes open from Explore, each with the right title, badge state and camera fly-to (scripted sweep, 0 failures).
+- [x] Keyboard only, with real key presses:
+  - Esc opens Explore with focus on the first entry
+  - arrows move through the list without driving the car
+  - Enter on a group flies the camera there
+  - Enter on a milestone opens its panel with focus on the title
+  - Esc closes the panel, then Explore, with the camera back on the car and `aria-expanded` reset
+- [x] Header text contrast across all 14 group colours: minimum 4.67:1 (Audit, Consulting), so AA passes.
+- [x] Driving into `trigger_exhibit_a` still opens its panel without stealing focus, and counts 1 / 4 found.
+- [x] At 375×812 with the touch pad, the bottom sheet sits clear of the controls (sheet bottom 570 px, highest control
+  572 px) and below the Explore button.
+- [x] `npm run content:check`, `npm run probe:feel` and `npm run build` pass.
+- [ ] Reaching every node *by driving* waits for Phase 4's `area_`/`trigger_` placement.
+- [ ] Screen-reader pass (NVDA/VoiceOver) not done; the structure is headings plus buttons plus a labelled region.
+
 ## Phase 2 — Camera, floor, shadows, input
 
 - **Iso camera** (`src/camera/isoFollowCamera.js`, now the default):

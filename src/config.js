@@ -216,6 +216,8 @@ export const settings = {
      */
     introZoom: -0.45,
     introDuration: 2.6,
+    /** Explore-mode camera flight to a district, and back to the car, s. */
+    flyDuration: 1.2,
     /** Same idea as the chase camera's: pull back on tall (portrait) viewports. */
     portraitFraming: true,
   },

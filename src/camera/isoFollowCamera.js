@@ -37,6 +37,9 @@ export function createIsoFollowCamera(camera, canvas) {
   let zoom = settings.isoCamera.defaultZoom
   let zoomTarget = zoom
   let intro = null
+  /** Explore mode: aim here instead of at the car (null = follow the car). */
+  let focusPoint = null
+  let flight = null
 
   // ---- zoom input ---------------------------------------------------------
 
@@ -81,16 +84,29 @@ export function createIsoFollowCamera(camera, canvas) {
       zoom += (zoomTarget - zoom) * (1 - Math.exp(-c.zoomRate * dt))
     }
 
-    target.set(vehicle.position.x, 0, vehicle.position.z)
-    if (c.lookAhead > 0) {
-      target.x += vehicle.velocity.x * c.lookAhead
-      target.z += vehicle.velocity.z * c.lookAhead
+    if (focusPoint) {
+      target.copy(focusPoint)
+    } else {
+      target.set(vehicle.position.x, 0, vehicle.position.z)
+      if (c.lookAhead > 0) {
+        target.x += vehicle.velocity.x * c.lookAhead
+        target.z += vehicle.velocity.z * c.lookAhead
+      }
     }
     if (!initialised) {
       targetEased.copy(target)
       initialised = true
     }
-    targetEased.lerp(target, 1 - Math.exp(-c.followRate * dt))
+    if (flight) {
+      // Explore fly-to (or the flight home): a timed ease from where the
+      // camera was, so long hops read as travel rather than a snap.
+      flight.time += dt
+      const t = Math.min(flight.time / flight.duration, 1)
+      targetEased.lerpVectors(flight.from, target, easeInOutCubic(t))
+      if (t >= 1) flight = null
+    } else {
+      targetEased.lerp(target, 1 - Math.exp(-c.followRate * dt))
+    }
 
     const pitch = THREE.MathUtils.degToRad(c.pitch)
     const azimuth = THREE.MathUtils.degToRad(c.azimuth)
@@ -113,6 +129,21 @@ export function createIsoFollowCamera(camera, canvas) {
   }
 
   /** Snap to the car on the next update (after a respawn or a mode switch). */
+  /**
+   * Fly to a world point ([x, y, z] or {x, z}) and hold there, or back to the
+   * car with `null`. Instant under prefers-reduced-motion.
+   */
+  function focusOn(point) {
+    const next = point ? new THREE.Vector3(point.x ?? point[0], 0, point.z ?? point[2]) : null
+    if (!next && !focusPoint) return
+    focusPoint = next
+    flight = reducedMotion || !initialised
+      ? null
+      : { time: 0, duration: settings.isoCamera.flyDuration, from: targetEased.clone() }
+    if (!flight && next) targetEased.copy(next)
+    if (!flight && !next) initialised = false
+  }
+
   function reset() {
     initialised = false
   }
@@ -135,6 +166,10 @@ export function createIsoFollowCamera(camera, canvas) {
     update,
     reset,
     playIntro,
+    focusOn,
+    get focused() {
+      return focusPoint !== null
+    },
     dispose,
     /** Current 0..1 zoom and the distance it maps to, for debugging. */
     get zoom() {

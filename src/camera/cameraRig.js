@@ -34,12 +34,38 @@ export function createCameraRig(camera, canvas) {
     settings.cameraMode = next
   }
 
+  // Explore fly-to always uses the iso view (a chase camera has nothing to
+  // sit behind); the player's chosen mode comes back with the car.
+  let modeBeforeFocus = null
+
+  function focusOn(point) {
+    if (modeBeforeFocus === null) modeBeforeFocus = settings.cameraMode
+    if (settings.cameraMode !== 'iso') {
+      settings.cameraMode = 'iso'
+      lastMode = 'iso'
+      modes.iso.reset()
+    }
+    modes.iso.focusOn(point)
+  }
+
+  function clearFocus() {
+    if (modeBeforeFocus === null) return
+    modes.iso.focusOn(null)
+    settings.cameraMode = modeBeforeFocus
+    modeBeforeFocus = null
+  }
+
   return {
     modes,
     update,
     toggle,
     reset: () => active().reset(),
     playIntro: () => modes.iso.playIntro(),
+    focusOn,
+    clearFocus,
+    get focused() {
+      return modeBeforeFocus !== null
+    },
     get mode() {
       return settings.cameraMode
     },

@@ -130,6 +130,8 @@ export function createTouchControls(root = document.getElementById('touch')) {
     joystick,
     setVisible(visible) {
       if (root) root.hidden = !visible
+      // Lets layout make room for the pad (the bottom-sheet panel sits above it).
+      document.body.classList.toggle('has-touch-pad', visible)
     },
     get state() {
       return {

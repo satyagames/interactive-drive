@@ -8,7 +8,8 @@
     "preview": "vite preview",
     "serve:dist": "vite preview --port 4173",
     "package:share": "node scripts/package-share.mjs",
-    "probe:feel": "node tools/feel-probe.mjs"
+    "probe:feel": "node tools/feel-probe.mjs",
+    "content:check": "node tools/content-check.mjs"
   },
   "type": "module",
   "dependencies": {

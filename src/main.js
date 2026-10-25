@@ -1,10 +1,14 @@
 import './styles.css'
 
+import arena from '../content/arena.seed.json'
 import projects from '../content/projects.json'
 
 import { createCameraRig } from './camera/cameraRig.js'
 import { rebuild, rendering, settings, world as worldConfig } from './config.js'
-import { createExhibitPanel } from './content/panel.js'
+import { createExploreMenu } from './content/explore.js'
+import { buildContentModel } from './content/model.js'
+import { createStationPanel } from './content/panel.js'
+import { applyUiStrings, t } from './content/ui.js'
 import { runPostBenchmark } from './debug/benchmark.js'
 import { createProgressTracker } from './content/progress.js'
 import { createLoop } from './core/loop.js'
@@ -55,6 +59,21 @@ async function bootstrap() {
   if (presetParam in vehiclePresets) rebuild.vehicle.preset = presetParam
   const debugMode = window.location.hash === '#debug'
 
+  // Interface copy comes from content/ui.json; the arena tree from the seed.
+  applyUiStrings()
+  document.title = t('documentTitle')
+  const content = buildContentModel(arena, {
+    // The prototype world's trigger_exhibit_* volumes, until Phase 4.
+    legacyExhibits: projects,
+    labels: {
+      start: t('explore.start'),
+      ourTeam: t('explore.ourTeam'),
+      timeline: t('explore.timeline'),
+      leader: t('explore.leader'),
+    },
+  })
+  if (import.meta.env.DEV) validateContentInDev(content)
+
   const canvas = document.getElementById('app')
   const loaderEl = document.getElementById('loader')
   const hudEl = document.getElementById('hud')
@@ -100,15 +119,8 @@ async function bootstrap() {
   const screenFade = createScreenFade(document.getElementById('fade'))
   const shadowBlob = createShadowBlob({ scene, world, RAPIER, vehicle })
 
-  const projectsById = new Map(projects.map((entry) => [entry.id, entry]))
-  const exhibitPanel = createExhibitPanel({
-    root: document.getElementById('exhibit-panel'),
-    closeButton: document.getElementById('exhibit-close'),
-    image: document.getElementById('exhibit-image'),
-    title: document.getElementById('exhibit-title'),
-    pitch: document.getElementById('exhibit-pitch'),
-    description: document.getElementById('exhibit-description'),
-  })
+  const stationPanel = createStationPanel(document.getElementById('station-panel'))
+  // "N of 4 found" counts the prototype exhibits until the Phase 6 passport.
   const progress = createProgressTracker(projects.length, {
     countEl: document.getElementById('progress-count'),
     totalEl: document.getElementById('progress-total'),
@@ -118,19 +130,36 @@ async function bootstrap() {
     onEnter(trigger) {
       interactionTarget = 1
       const id = contentIdForTrigger(trigger)
-      const entry = projectsById.get(id)
-      if (!entry) return
-      exhibitPanel.show(entry)
-      progress.markFound(id)
+      const node = content.get(id)
+      if (!node) return
+      stationPanel.show(node)
+      if (node.kind === 'exhibit') progress.markFound(id)
     },
     onExit(trigger) {
       interactionTarget = 0
       const id = contentIdForTrigger(trigger)
-      if (exhibitPanel.currentId === id) exhibitPanel.hide()
+      if (stationPanel.currentId === id) stationPanel.hide()
     },
   })
 
   const cameraRig = createCameraRig(camera, canvas)
+
+  // Explore mode: fly the camera to a place and open it, without driving.
+  const explore = createExploreMenu({
+    root: document.getElementById('explore'),
+    launcher: document.getElementById('explore-open'),
+    model: content,
+    onPickNode(node) {
+      if (node.position) cameraRig.focusOn(node.position)
+      stationPanel.show(node, { focus: true, returnFocus: document.activeElement })
+    },
+    onPickGroup(entry) {
+      if (entry.position) cameraRig.focusOn(entry.position)
+    },
+    onClose() {
+      cameraRig.clearFocus()
+    },
+  })
   const physicsDebug = createPhysicsDebug({ scene, world })
   const input = createInput()
   const fps = createFpsMeter(hudFpsEl)
@@ -146,9 +175,13 @@ async function bootstrap() {
     })
   }
 
-  createDebugGui({
-    vehicle, camera: cameraRig, hud: hudEl, resize, respawn: respawnVehicle, RAPIER, debugMode, propStress,
-  })
+  // The tuning panel (and any tune saved from it) is a `#debug` tool, as in
+  // the reference; visitors get the clean HUD.
+  if (debugMode) {
+    createDebugGui({
+      vehicle, camera: cameraRig, hud: hudEl, resize, respawn: respawnVehicle, RAPIER, debugMode, propStress,
+    })
+  }
   hudEl.hidden = !settings.debug.showHud
 
   vehicle.sync()
@@ -166,7 +199,7 @@ async function bootstrap() {
   //   await __proto.benchmark.run()  -- post-processing frame-cost table
   if (import.meta.env.DEV) {
     window.__proto = {
-      vehicle, world, scene, camera, settings, input, exhibitPanel, progress, gameWorld,
+      vehicle, world, scene, camera, settings, input, stationPanel, explore, content, progress, gameWorld,
       renderer, renderAssets, post, shadowBlob, sky, fps, cameraRig, floor, blobs, propStress,
       benchmark: { run: (options) => runPostBenchmark({ renderer, scene, camera }, options) },
     }
@@ -185,9 +218,19 @@ async function bootstrap() {
     // Audio (Phase 8) will hang the horn sound off this too.
     if (input.consume('horn')) vehicle.horn()
     if (input.consume('camera')) cameraRig.toggle()
-    // interact / mute / passport / menu have no consumers until Phases 5-9;
-    // unconsumed presses are dropped at the next update. (Esc already closes
-    // the exhibit panel through its own listener.)
+    // Esc peels back one layer at a time: station panel, then Explore, then
+    // opens Explore (the Phase 9 menu will take over that last step).
+    if (input.consume('menu')) {
+      if (stationPanel.isOpen) stationPanel.hide()
+      else explore.toggle()
+    }
+    // Explore's camera hold ends as soon as you drive off (driving keys only
+    // reach here when focus is outside the Explore list).
+    if (cameraRig.focused && (inputState.throttle !== 0 || inputState.steer !== 0)) {
+      cameraRig.clearFocus()
+    }
+    // interact / mute / passport have no consumers until Phases 5-9;
+    // unconsumed presses are dropped at the next update.
 
     // Vehicle forces must be applied inside the fixed step, not per frame,
     // or the feel changes with the display refresh rate.
@@ -221,8 +264,28 @@ async function bootstrap() {
   })
 }
 
+/**
+ * Development only: check content/*.json against their schemas and report
+ * problems loudly in the console. `npm run content:check` does the same (plus
+ * image paths) from the command line; neither ever runs in production.
+ */
+async function validateContentInDev(content) {
+  const [{ validate, formatErrors }, arenaSchema, uiSchema, ui] = await Promise.all([
+    import('./content/schema.js'),
+    import('../content/arena.schema.json'),
+    import('../content/ui.schema.json'),
+    import('../content/ui.json'),
+  ])
+  const report = [
+    formatErrors('content/arena.seed.json', validate(arenaSchema.default, arena)),
+    formatErrors('content/ui.json', validate(uiSchema.default, ui.default)),
+    ...content.issues.map((issue) => `content/arena.seed.json: ${issue}`),
+  ].filter(Boolean)
+  if (report.length) console.error(`Content problems:\n${report.join('\n')}`)
+}
+
 bootstrap().catch((error) => {
   console.error(error)
   const loaderEl = document.getElementById('loader')
-  if (loaderEl) loaderEl.textContent = `failed to start: ${error.message}`
+  if (loaderEl) loaderEl.textContent = t('loadFailed', { message: error.message })
 })

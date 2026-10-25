@@ -24,7 +24,7 @@ There is currently no automated test suite, lint configuration, or CI workflow. 
 
 - Put tunable gameplay and rendering values in [`src/config.js`](src/config.js). Values under `settings` are live-tunable; values under `rebuild` require recreating or reloading the affected system.
 - Preserve the local vehicle axis convention: `-Z` forward, `+X` right, `+Y` up. Physics forces belong in the fixed-timestep update, not directly in the render loop.
-- Keep content data in [`content/projects.json`](content/projects.json). A Blender `trigger_<name>` maps directly to the content id `<name>`; there is no separate mapping table.
+- Keep arena content in [`content/arena.seed.json`](content/arena.seed.json) and interface copy in [`content/ui.json`](content/ui.json), each validated against its `*.schema.json` (`npm run content:check`, and automatically in `npm run dev`). A Blender `trigger_<name>` maps directly to the content id `<name>` (see `src/content/model.js`); there is no separate mapping table. [`content/projects.json`](content/projects.json) only backs the prototype world's four `trigger_exhibit_*` volumes until the Phase 4 arena replaces them.
 - Preserve relative asset paths and the `base: './'` setting in [`vite.config.js`](vite.config.js), which allows `dist/` to work from a sub-path.
 - Keep user-facing HTML behavior accessible: preserve labels, `aria-live`, keyboard controls, and touch controls when changing the HUD or exhibit panel.
 

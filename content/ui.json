@@ -1,0 +1,41 @@
+{
+  "$schema": "./ui.schema.json",
+  "version": 1,
+  "documentTitle": "Pursuit Arena — USI Pursuits COE · 10 Years",
+  "loader": "Loading the arena…",
+  "loadFailed": "The arena could not start: {message}",
+  "hud": {
+    "speedUnit": "km/h",
+    "found": "found"
+  },
+  "panel": {
+    "regionLabel": "Station details",
+    "close": "Close",
+    "placeholder": "Content coming soon",
+    "links": "Links",
+    "opensInNewTab": "(opens in a new tab)",
+    "gallery": "Gallery",
+    "imageAlt": "Image for {title}"
+  },
+  "explore": {
+    "open": "Explore",
+    "openHint": "Esc",
+    "title": "Explore the arena",
+    "intro": "Choose a place to fly there and open it. You can keep driving at any time.",
+    "close": "Close",
+    "backToCar": "Back to the car",
+    "start": "Start",
+    "ourTeam": "I. Our Team",
+    "timeline": "10 Years: Decade Drive",
+    "leader": "Welcome from our COE Lead",
+    "placeholderTag": "coming soon"
+  },
+  "touch": {
+    "joystick": "Drive: point the stick where you want to go",
+    "boost": "Boost",
+    "brake": "Brake",
+    "reverse": "Reverse",
+    "interact": "Interact",
+    "respawn": "Respawn"
+  }
+}
