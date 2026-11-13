@@ -861,6 +861,20 @@ export const rebuild = {
     /** The learning bar garden: one planted bar per metric, along local X. */
     learningGarden: { lx: 7.4, lz: 2.6, spacing: 2.6, base: 0.5, perDecade: 1.45 },
     /** Signpost forest: one fingerpost per quick-link group; drive round a post to browse its arms. */
+    /**
+     * Chronicles champion plates, on rings round the arena (world frame;
+     * bearings in degrees clockwise from north, as doc 02). Between the
+     * spokes, on the verges: one ring just outside the Deadline Loop, one
+     * between the pillars beyond the Outer Loop. The last ring takes any
+     * extra names. Every plate has 1.2 m clear of any mesh (raycast-checked
+     * against all districts, trees and lamps, Phase LD-C).
+     */
+    champions: {
+      rings: [
+        { radius: 47, from: 15, step: 30, count: 12 },
+        { radius: 95, from: 22.5, step: 45, count: 8 },
+      ],
+    },
     signposts: [
       { lx: -12.5, lz: -1.5 },
       { lx: -7.5, lz: 1.5 },

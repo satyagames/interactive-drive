@@ -46,13 +46,15 @@ export function createRnr(ctx) {
   }
 
   function trophyGeometry({ h, r }) {
-    // Base, stem, cup: a lathe profile, then two handles.
+    // Base, stem, cup: a lathe profile, then two handles. Kept lean (~150
+    // triangles): prop batches are never frustum-culled, so all 117 draw
+    // wherever you are.
     const pts = [
-      [0, 0], [r * 1.05, 0], [r * 1.05, h * 0.1], [r * 0.45, h * 0.14], [r * 0.18, h * 0.2],
-      [r * 0.16, h * 0.45], [r * 0.5, h * 0.5], [r * 0.95, h * 0.68], [r * 1.0, h * 0.98], [r * 0.85, h], [0, h * 0.9],
+      [0, 0], [r * 1.05, 0], [r * 1.05, h * 0.1], [r * 0.18, h * 0.2],
+      [r * 0.16, h * 0.45], [r * 0.95, h * 0.66], [r * 1.0, h], [0, h * 0.9],
     ].map(([x, y]) => new THREE.Vector2(x, y))
-    const lathe = new THREE.LatheGeometry(pts, 12)
-    const handle = new THREE.TorusGeometry(r * 0.38, r * 0.09, 5, 8, Math.PI)
+    const lathe = new THREE.LatheGeometry(pts, 8)
+    const handle = new THREE.TorusGeometry(r * 0.38, r * 0.09, 3, 5, Math.PI)
     const parts = [lathe.toNonIndexed()]
     for (const side of [-1, 1]) {
       const g = handle.toNonIndexed()

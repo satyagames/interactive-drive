@@ -336,7 +336,7 @@ async function bootstrap() {
   if (debugMode) {
     createDebugGui({
       vehicle, camera: cameraRig, hud: hudEl, resize, respawn: respawnVehicle, RAPIER, debugMode, propStress,
-      gameTest: () => runGameTest({ game, gameWorld, vehicle, reveal, stationPanel, content, seed: arena }),
+      gameTest: () => runGameTest({ game, gameWorld, vehicle, reveal, stationPanel, content, seed: arena, showcase }),
     })
   }
   // Speed / fps readout: a development tool, so only with #debug.

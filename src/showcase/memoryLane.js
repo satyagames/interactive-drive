@@ -183,6 +183,10 @@ export function createMemoryLane(ctx) {
     name: 'memoryLane',
     district: data.district,
     build,
+    /** Debug / the badge test: where every frame stands. */
+    get frames() {
+      return frames
+    },
     update(dt, car) {
       if (streamed || !lane) return
       if (Math.hypot(car.position.x - lane.x, car.position.z - lane.z) < settings.showcase.streamRadius) stream()

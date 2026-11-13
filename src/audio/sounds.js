@@ -110,7 +110,8 @@ export function createSounds({ ctx, bus, noiseBuffers, voices, vehicle, camera }
   }
 
   function collect({ kind, combo }) {
-    if (kind === 'golden') {
+    // A Chronicles champion plate rings the golden dot's bell.
+    if (kind === 'golden' || kind === 'champion') {
       play((out, at) => {
         let end = 0
         for (const [i, s] of [0, 4, 7, 12].entries()) end = Math.max(end, bell(out, at + i * 0.04, note(C5, s), 0.18, 0.9))

@@ -16,6 +16,7 @@ import { t } from '../content/ui.js'
 export function createHotspots({ announce }) {
   const spots = []
   let active = null
+  let pressed = false
 
   function setActive(spot, item) {
     if (active && active.spot === spot && active.item === item) return
@@ -51,7 +52,13 @@ export function createHotspots({ announce }) {
         }
       }
       setActive(best, bestItem)
-      if (active && interact()) active.spot.open(active.item)
+      const press = active && (pressed || interact())
+      pressed = false
+      if (press) active.spot.open(active.item)
+    },
+    /** Debug (the badge test): act as if Enter were pressed on the next update. */
+    press() {
+      pressed = true
     },
     /** `{ label }` of the hotspot in reach, or null. */
     get active() {

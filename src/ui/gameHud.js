@@ -86,6 +86,10 @@ export function createGameHud({ root, countsRoot, dashRoot, toastRoot, game, see
     if (kind === 'dot' && combo > 1 && combo % 5 === 0) toast(t('game.toastCombo', { combo }))
   })
   ev.on('finale', () => toast(t('game.finale'), 'badge'))
+  // The Chronicles champion hunt counts up in a toast (src/showcase/champions.js).
+  ev.on('exhibit-progress', ({ counter, key, count, total }) => {
+    if (counter === 'champions') toast(t('showcase.championFound', { name: key, n: count, total }))
+  })
   ev.on('easter-egg', ({ id }) => {
     const text = { konami: t('game.konami'), beacon_morse: t('game.beacon'), pptx_trophy: t('game.trophy') }[id]
     if (text) toast(text, 'badge')

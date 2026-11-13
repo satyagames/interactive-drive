@@ -2,10 +2,12 @@ import * as THREE from 'three'
 
 import { rebuild } from '../config.js'
 import { showcaseBodies } from './builder.js'
+import { createChampions } from './champions.js'
 import { districtFrames } from './frame.js'
 import { createHotspots } from './hotspots.js'
 import { createMascots } from './mascots.js'
 import { createPeopleWalls } from './peopleWalls.js'
+import { viewYaw } from './labels.js'
 import { createLearningGarden } from './learningGarden.js'
 import { createMemoryLane } from './memoryLane.js'
 import { createNewsstand } from './newsstand.js'
@@ -96,7 +98,7 @@ export async function createShowcase({ scene, world, RAPIER, seed, gameWorld, re
     },
   }
 
-  const modules = (await Promise.all([createMascots(ctx), createWinsBoard(ctx), createPeopleWalls(ctx), createRnr(ctx), createMemoryLane(ctx), createNewsstand(ctx), createLearningGarden(ctx), createSignposts(ctx)])).filter(Boolean)
+  const modules = (await Promise.all([createMascots(ctx), createWinsBoard(ctx), createPeopleWalls(ctx), createRnr(ctx), createMemoryLane(ctx), createNewsstand(ctx), createLearningGarden(ctx), createSignposts(ctx), createChampions(ctx)])).filter(Boolean)
 
   const built = new Set()
   const stats = new Map()
@@ -122,6 +124,8 @@ export async function createShowcase({ scene, world, RAPIER, seed, gameWorld, re
   }
   // Register before the reveal does (main.js creates the showcase first),
   // so a district's exhibits are hidden and revealed with it.
+  // Exhibits that live between districts build once, now.
+  for (const module of modules) module.init?.()
   for (const info of gameWorld.districts) buildFor(info)
   gameWorld.onDistrictLoaded(buildFor)
 
@@ -158,5 +162,10 @@ export async function createShowcase({ scene, world, RAPIER, seed, gameWorld, re
     /** Per-district exhibit draw calls added (`#debug`; recorded in docs/memory/progress.md). */
     stats: () => [...stats.values()],
     modules,
+    frames,
+    layout: rebuild.showcase,
+    get viewYaw() {
+      return viewYaw()
+    },
   }
 }

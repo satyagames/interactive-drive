@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { settings } from '../config.js'
 import { t } from '../content/ui.js'
 import { loadGLTF } from '../core/gltf.js'
-import { applyMatcapMaterials } from '../render/materials.js'
+import { applyMatcapMaterials, createMatcapMaterial } from '../render/materials.js'
 
 /**
  * Percy and the blob family (doc 10 §2.1): the 2D community's own mascots as
@@ -22,6 +22,12 @@ import { applyMatcapMaterials } from '../render/materials.js'
  * Each has a kinematic capsule so the car bumps into it rather than through
  * it, and a blob shadow. Reduced motion: no squash, no hops, the finale
  * gathering is a cut.
+ *
+ * Draw calls: the characters keep their scene graph (that's what animates),
+ * but their meshes are drawn through instanced batches -- one per shared
+ * part (body, face, each arm; tinted per character by instance colour) and
+ * one per unique prop -- so the whole family costs ~10 draw calls wherever
+ * they stand, instead of 5 each (30 when they gather at HQ).
  */
 export async function createMascots(ctx) {
   const { layout, exhibits, frames, world, RAPIER, renderAssets, game, overlayRoot, camera, blobs, seed } = ctx
@@ -45,6 +51,48 @@ export async function createMascots(ctx) {
   ].filter((spec) => layout.mascots[spec.id])
   const characters = []
   const quat = new THREE.Quaternion()
+
+  // --- instanced batches -------------------------------------------------
+  const SHARED = ['body', 'face', 'arm_L', 'arm_R']
+  const batches = new Map()
+  const hiddenMatrix = new THREE.Matrix4().makeScale(0, 0, 0)
+  function batchFor(key, mesh, capacity) {
+    let batch = batches.get(key)
+    if (batch) return batch
+    // The cached material is `matcap:<matcap>|<bake>|<profile>|<tint>`; the
+    // batch uses the untinted matcap and puts the tint in the instance colour.
+    const matcap = mesh.material.name.split(':')[1]?.split('|')[0] ?? 'ivory'
+    const im = new THREE.InstancedMesh(mesh.geometry, createMatcapMaterial(renderAssets, matcap), capacity)
+    im.name = `mascots:${key}`
+    im.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    im.frustumCulled = false
+    for (let i = 0; i < capacity; i++) {
+      im.setMatrixAt(i, hiddenMatrix)
+      im.setColorAt(i, WHITE)
+    }
+    ctx.group.add(im)
+    batch = { mesh: im, next: 0 }
+    batches.set(key, batch)
+    return batch
+  }
+  function batchParts(c) {
+    c.parts = []
+    c.root.traverse((o) => {
+      if (!o.isMesh) return
+      const part = o.name.replace(`blob_${c.spec.id}_`, '')
+      const shared = SHARED.includes(part)
+      const batch = batchFor(shared ? part : o.name, o, shared ? specs.length : 1)
+      const slot = batch.next++
+      batch.mesh.setColorAt(slot, o.material.color)
+      batch.mesh.instanceColor.needsUpdate = true
+      o.visible = false
+      c.parts.push({ object: o, batch, slot })
+    })
+  }
+  function writeBatches(c, visible) {
+    c.root.updateMatrixWorld(true)
+    for (const part of c.parts) part.batch.mesh.setMatrixAt(part.slot, visible ? part.object.matrixWorld : hiddenMatrix)
+  }
   const v = new THREE.Vector3()
   let clock = 0
 
@@ -83,6 +131,7 @@ export async function createMascots(ctx) {
       hop: null,
       travel: null,
     })
+    batchParts(characters[characters.length - 1])
   }
 
   // --- the Decade Finale: everyone gathers round the HQ tower -------------
@@ -224,11 +273,13 @@ export async function createMascots(ctx) {
         if (c.armR) c.armR.rotation.z = c.wave * (1.25 + (calm ? 0 : 0.45 * Math.sin(clock * 10 + c.phase)))
         if (c.armL) c.armL.rotation.z = calm ? 0 : -0.12 * Math.sin(clock * 2.4 + c.phase)
 
+        writeBatches(c, visible)
         if (visible && d < s.mascotTalkRadius && d < speakerD) {
           speaker = c
           speakerD = d
         }
       }
+      for (const batch of batches.values()) batch.mesh.instanceMatrix.needsUpdate = true
       bubble(speaker, car)
     },
     get count() {
@@ -236,6 +287,8 @@ export async function createMascots(ctx) {
     },
   }
 }
+
+const WHITE = new THREE.Color(1, 1, 1)
 
 function dampAngle(from, to, rate, dt) {
   let delta = (to - from) % (Math.PI * 2)

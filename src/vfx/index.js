@@ -86,7 +86,7 @@ export function createVfx({ scene, camera, cameraRig, renderer, renderAssets, ve
   P.glow.color = GREEN
   P.glow.intensity = k
   const CHIP_COLOURS = { brick: [c('#C8102E'), c('#9E1B1B')], wood: [c('#B07A45'), c('#8A5A2B')] }
-  const PICKUP_COLOURS = { dot: GREEN, golden: GOLD, shuriken: WHITE }
+  const PICKUP_COLOURS = { dot: GREEN, golden: GOLD, shuriken: WHITE, champion: GOLD }
 
   const group = new THREE.Group()
   group.name = 'vfx'

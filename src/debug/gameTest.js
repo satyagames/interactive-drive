@@ -1,5 +1,3 @@
-import { BADGES } from '../game/progression.js'
-
 /**
  * Debug-only (`#debug`): earn every badge through the game's real detection
  * paths -- the car is moved, props are knocked over, stations opened -- and
@@ -7,7 +5,7 @@ import { BADGES } from '../game/progression.js'
  *
  * It changes your progress; use Passport -> Reset progress afterwards.
  */
-export async function runGameTest({ game, gameWorld, vehicle, reveal, stationPanel, content, seed }) {
+export async function runGameTest({ game, gameWorld, vehicle, reveal, stationPanel, content, seed, showcase = null }) {
   const frame = () => new Promise((resolve) => requestAnimationFrame(() => resolve()))
   const frames = async (n) => { for (let i = 0; i < n; i++) await frame() }
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -104,6 +102,50 @@ export async function runGameTest({ game, gameWorld, vehicle, reveal, stationPan
   }
   stationPanel.hide()
 
+  if (showcase) {
+    // The exhibit badges (doc 10 §3), through the showcase's own paths:
+    // hotspots opened with Enter, plates driven through, trophies knocked.
+    // people_of_pursuits came with the passport step (a station in every territory).
+    const mod = (name) => showcase.modules.find((m) => m.name === name)
+    const pressAt = async (x, z) => {
+      place(x, z)
+      await frames(3)
+      showcase.hotspots.press()
+      await frames(2)
+    }
+    step('gen_ai_insider: drive round the newsstand, open three issues')
+    const kiosk = mod('newsstand')
+    if (kiosk) {
+      const centre = seed.exhibits.newsstand
+      const layout = showcase.layout.newsstand
+      const f = showcase.frames.get(centre.district)
+      const c = f.toWorld(layout.lx, layout.lz)
+      for (const k of [0, 1, 2]) {
+        const a = showcase.viewYaw + (k * Math.PI * 2) / centre.issues.length
+        await pressAt(c.x + Math.sin(a) * (layout.radius + 2), c.z + Math.cos(a) * (layout.radius + 2))
+      }
+    }
+    step('memory_maker: open ten albums along Memory Lane')
+    const lane = mod('memoryLane')
+    const centre = showcase.frames.get(seed.exhibits.memoryLane.district)
+    for (const frame of (lane?.frames ?? []).slice(0, 10)) {
+      // Just inside the rail, towards the district centre.
+      const dx = centre.x - frame.position.x
+      const dz = centre.z - frame.position.z
+      const l = Math.hypot(dx, dz) || 1
+      await pressAt(frame.position.x + (dx / l) * 2.2, frame.position.z + (dz / l) * 2.2)
+    }
+    stationPanel.hide()
+    step('chronicles_collector: drive through every champion plate')
+    for (const plate of mod('champions')?.plates ?? []) {
+      place(plate.position.x, plate.position.z)
+      await frames(3)
+    }
+    step('spot_on: knock over every Thank It Forward trophy')
+    knock(gameWorld.props.props.filter((p) => p.type.startsWith('trophy-')))
+    await wait(800)
+  }
+
   step('deadline_hero: start the Dash and hit every checkpoint fast')
   stationPanel.show(content.get('gate_deadline_dash'))
   stationPanel.hide()
@@ -114,7 +156,7 @@ export async function runGameTest({ game, gameWorld, vehicle, reveal, stationPan
     await frames(4)
   }
 
-  const results = BADGES.map((id) => ({ badge: id, unlocked: Boolean(game.store.state.badges[id]) }))
+  const results = game.progression.badges.map(({ id, unlocked }) => ({ badge: id, unlocked }))
   return {
     passed: results.every((r) => r.unlocked),
     results,

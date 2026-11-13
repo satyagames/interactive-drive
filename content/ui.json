@@ -384,7 +384,7 @@
     "wallTitle": "People of Pursuits",
     "wallPending": "Roster awaiting confirmation",
     "wallEmpty": "Roster coming soon",
-    "openWall": "meet the {team} team",
+    "openWall": "the {team} roster",
     "trophyBin": "{label} · {count}",
     "openTrophies": "Thank It Forward",
     "star": "{label} · {count}",
