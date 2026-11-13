@@ -1,5 +1,7 @@
 import * as THREE from 'three'
 
+import { settings } from '../config.js'
+
 /**
  * Text and pictures for the exhibits, drawn once into canvas atlases.
  *
@@ -236,6 +238,22 @@ export function createLabelQuads({ items, material, name, geometry = new THREE.P
 export function quadMatrix(x, y, z, yaw, w, h, out = new THREE.Matrix4()) {
   const q = new THREE.Quaternion().setFromAxisAngle(UP, yaw)
   return out.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(w, h, 1))
+}
+
+/**
+ * The yaw that turns a sign towards the default (isometric) camera, which
+ * looks on from a fixed bearing (`settings.isoCamera.azimuth`, degrees east
+ * of due south). Floor text laid with `floorMatrix` at this yaw reads upright
+ * on screen; a standing plate at it faces the viewer.
+ */
+export function viewYaw() {
+  return (settings.isoCamera.azimuth * Math.PI) / 180
+}
+
+/** A quad lying on the floor (y = lift), text upright when `yaw` is `viewYaw()`. */
+export function floorMatrix(x, z, yaw, w, h, lift = 0.04) {
+  const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, yaw, 0, 'YXZ'))
+  return new THREE.Matrix4().compose(new THREE.Vector3(x, lift, z), q, new THREE.Vector3(w, h, 1))
 }
 
 const UP = new THREE.Vector3(0, 1, 0)

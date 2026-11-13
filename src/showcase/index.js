@@ -5,6 +5,7 @@ import { districtFrames } from './frame.js'
 import { createHotspots } from './hotspots.js'
 import { createMascots } from './mascots.js'
 import { createPeopleWalls } from './peopleWalls.js'
+import { createRnr } from './rnr.js'
 import { createWinsBoard } from './winsBoard.js'
 
 /**
@@ -43,6 +44,7 @@ export async function createShowcase({ scene, world, RAPIER, seed, gameWorld, re
     group,
     world,
     RAPIER,
+    gameWorld,
     seed,
     exhibits: seed.exhibits,
     layout: rebuild.showcase,
@@ -89,7 +91,7 @@ export async function createShowcase({ scene, world, RAPIER, seed, gameWorld, re
     },
   }
 
-  const modules = (await Promise.all([createMascots(ctx), createWinsBoard(ctx), createPeopleWalls(ctx)])).filter(Boolean)
+  const modules = (await Promise.all([createMascots(ctx), createWinsBoard(ctx), createPeopleWalls(ctx), createRnr(ctx)])).filter(Boolean)
 
   const built = new Set()
   const stats = new Map()
@@ -101,7 +103,12 @@ export async function createShowcase({ scene, world, RAPIER, seed, gameWorld, re
       if (built.has(key)) continue
       built.add(key)
       const before = info.staticGroup.children.length + info.propMeshes.length
-      module.build(info)
+      // One exhibit failing must never take a district (or the stream) down.
+      try {
+        module.build(info)
+      } catch (error) {
+        console.error(`[showcase] ${module.name} failed to build in ${info.id}`, error)
+      }
       const record = stats.get(info.id) ?? { district: info.id, exhibits: [], drawCalls: 0 }
       record.exhibits.push(module.name)
       record.drawCalls += info.staticGroup.children.length + info.propMeshes.length - before
