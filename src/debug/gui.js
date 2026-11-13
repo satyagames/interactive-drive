@@ -14,7 +14,7 @@ const PRESETS = ['arcade2019', 'sim']
  * Tuned values can be stashed in localStorage so a good feel survives a
  * refresh, and dumped as JSON to paste back into `src/config.js`.
  */
-export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, debugMode, propStress, gameTest }) {
+export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, debugMode, propStress, gameTest, navTest }) {
   const gui = new GUI({ title: 'Tuning', width: Math.min(300, window.innerWidth - 30) })
   // On a phone the panel would cover most of the screen, so start it shut.
   if (window.matchMedia?.('(pointer: coarse)').matches) gui.close()
@@ -244,6 +244,17 @@ export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, 
         console.log(report.passed ? 'Badge test: all badges unlocked.' : 'Badge test: some badges did not unlock.', report)
       },
     }, 'run').name('Run badge test (console)')
+  }
+  if (import.meta.env.DEV && navTest) {
+    // Doc 11 R0: interpolation, pan, zone angles and the flicker sweep (dev builds only).
+    debugFolder.add({
+      async run() {
+        const report = await navTest()
+        console.table(report.rows)
+        for (const note of report.notes) console.log(note)
+        console.log(report.passed ? 'Nav test: all checks passed.' : 'Nav test: some checks failed.', report)
+      },
+    }, 'run').name('Run nav test (console)')
   }
   if (propStress) {
     // Phase 2 budget check: 300 blob shadows under 0.3 ms (see stats in the console).

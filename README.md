@@ -275,6 +275,7 @@ src/
     benchmark.js      GPU timing: post chain (benchmark.run) and VFX (benchmark.vfx)
     feelProbe.js      scripted feel test of the arcade car (#debug button)
     gameTest.js       #debug: earn every badge via the real detection paths
+    navTest.js        #debug, dev builds only: interpolation, pan, zone angles, flicker sweep
     propStress.js     #debug: drop 300 physics props to check the blob budget
     physicsDebug.js   collider wireframe overlay
     fps.js            frame-rate readout in the HUD

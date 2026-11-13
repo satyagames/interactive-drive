@@ -22,3 +22,10 @@
 - Judge smoothness with synthetic uneven frames through `__proto.loop.step(dt)` (headless GPU is too slow for
   real-time tests); exclude camera-zone transitions from the measurement.
 - Dev bundle with `__proto`: `NODE_ENV=development npx vite build --mode development`.
+- Label lifts (12-40 mm) only z-fight at distance: sweep for flicker at max zoom as well as the default, and always
+  run a control (depth offsets off) to prove the sweep can see fighting at all.
+- A CV over a window still settling (the camera look-ahead, rate 3/s) measures the trend, not judder: use
+  frame-to-frame differences for the camera.
+- Synthetic `PointerEvent`s with `pointerId: 1, pointerType: 'mouse'` and `KeyboardEvent`s on `window` drive the
+  real pan and key paths; with `post.render` stubbed the whole nav test runs in about 4 s.
+- A key in `KEY_MAP` that should fire once must also be in `EDGE_ACTIONS`, or `input.consume` never sees it.

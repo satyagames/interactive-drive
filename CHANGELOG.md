@@ -2,6 +2,23 @@
 
 Pursuit Arena build log. One entry per phase (see `docs/pursuit-arena/06-phased-prompts.md`).
 
+## R0 — Reference features: baseline and audit (2026-11-13)
+
+Plan: `docs/pursuit-arena/11-reference-features-prompt.md`. No feature changes in this phase.
+
+- **Nav test** (`src/debug/navTest.js`, development builds only): **Debug → Run nav test** or
+  `await __proto.navTest()`. 34 checks through the real input paths, stepped by hand so a slow or hidden tab does
+  not matter: interpolation under uneven 144 Hz frames, drag-to-pan (grab accuracy, idle hold, return, `F`,
+  Explore, arena limit), zone pitch easing, and a flicker sweep (3 renders with 4 mm camera nudges at every
+  gateway and zone view, at the default zoom and zoomed out, with a control that removes the label depth offsets).
+- **Result**: 31 pass, 3 fail. `F` does not re-centre (the press is never queued); a long pan takes 1.79 s to
+  return; two coplanar surfaces in the PACE oval flicker when zoomed out. Interpolation, the camera follow, zone
+  easing and the label flicker fix all hold.
+- **Audit**: doc 08 §A re-marked with file references: 22 done, 17 partial, 5 missing, 1 n/a. The gap list is in
+  `docs/memory/progress.md`.
+- **Checks**: `probe:feel` 19/19, `content:check` OK, `build` OK (bundle unchanged: the test is not shipped).
+- **Not done**: baseline screenshots under `docs/pursuit-arena/lookdev/R0/` (no feature changed); a hand drive.
+
 ## Rosters v2, flicker fix, reference depth post-processing, smooth motion, map pan (2026-11-13)
 
 - **Our team rosters rebuilt** (`tools/site-export/teams.py` v2). The 2D export has no section layout, so it was

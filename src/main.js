@@ -331,12 +331,23 @@ async function bootstrap() {
     })
   }
 
+  // Navigation checks (interpolation, pan, zone angles, flicker): development
+  // builds only, so the module never reaches the production bundle.
+  const navTest = import.meta.env.DEV
+    ? async (options) => (await import('./debug/navTest.js')).runNavTest({
+      loop, vehicle, cameraRig, camera, canvas, renderer, scene, post, world, RAPIER, gameWorld, reveal,
+      isReady: () => started && !menu.isOpen,
+      ...options,
+    })
+    : null
+
   // The tuning panel (and any tune saved from it) is a `#debug` tool, as in
   // the reference; visitors get the clean HUD.
   if (debugMode) {
     createDebugGui({
       vehicle, camera: cameraRig, hud: hudEl, resize, respawn: respawnVehicle, RAPIER, debugMode, propStress,
       gameTest: () => runGameTest({ game, gameWorld, vehicle, reveal, stationPanel, content, seed: arena, showcase }),
+      navTest,
     })
   }
   // Speed / fps readout: a development tool, so only with #debug.
@@ -483,7 +494,10 @@ async function bootstrap() {
 
     post.render(delta)
   })
-  if (import.meta.env.DEV) window.__proto.loop = loop
+  if (import.meta.env.DEV) {
+    window.__proto.loop = loop
+    window.__proto.navTest = navTest
+  }
 }
 
 const SETTINGS_KEY = 'pursuit-arena/settings'
