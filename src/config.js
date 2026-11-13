@@ -413,7 +413,7 @@ export const settings = {
     /** A point hotspot (a board, a wall, a garden) is in reach within this, m. */
     hotspotRadius: 4.5,
     /** Galleries pick the item nearest the car within this, m (Memory Lane). */
-    galleryReach: 3.2,
+    galleryReach: 4,
     /** Mascots turn to watch the car inside this radius, m. */
     mascotLookRadius: 18,
     /** ... wave inside this one, m. */

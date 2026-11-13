@@ -391,7 +391,7 @@
     "openStars": "BrightStar Awards",
     "albumKicker": "Memory Lane",
     "albumOpen": "the {title} album",
-    "albumMeta": "{photos} photos",
+    "albumMeta": "Photos: {photos}",
     "albumNoPhoto": "The full album lives on the PursuitArena site.",
     "issueKicker": "The Intelligence Update",
     "issueOpen": "the {label} issue",
