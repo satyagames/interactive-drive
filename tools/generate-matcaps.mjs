@@ -181,6 +181,64 @@ const PALETTE = {
     rim: [0.22, 3.0],
     ambient: 0.08,
   },
+  // ---- Phase 10 (doc 04 §3): the arena's own materials -------------------
+  // Deloitte Green (CLAUDE.md rule 4): the cart's body, the HQ beacon, the
+  // portal, the 10 monument. Glossy like the old hull, so the cart stays the
+  // hero object on screen.
+  'brand-green': {
+    hex: '#86BC25',
+    key: [1.16, 1.12, 1.00],
+    fill: [0.28, 0.42, 0.58],
+    bounce: [0.18, 0.24, 0.12],
+    spec: [0.52, 56],
+    rim: [0.40, 2.4],
+    ambient: 0.05,
+  },
+  // Trophies, coins, the golden 10: a tight hot specular and a strong rim
+  // read as metal without any environment map.
+  gold: {
+    hex: '#E3B505',
+    key: [1.22, 1.08, 0.84],
+    fill: [0.34, 0.36, 0.46],
+    bounce: [0.36, 0.28, 0.10],
+    spec: [0.80, 70],
+    rim: [0.50, 2.0],
+    ambient: 0.05,
+  },
+  // The HQ tower and the Innovation dome: pale and cool with a bright rim,
+  // so a large surface reads as glass rather than as painted plaster.
+  glass: {
+    hex: '#A9CFDC',
+    key: [1.06, 1.10, 1.16],
+    fill: [0.34, 0.48, 0.70],
+    bounce: [0.16, 0.24, 0.30],
+    spec: [0.70, 64],
+    rim: [0.62, 1.8],
+    ambient: 0.07,
+  },
+  // Paper: the RFP Gate's document arch, binders, forms. Matte, warm white.
+  paper: {
+    hex: '#F4F2EC',
+    key: [1.06, 1.04, 1.00],
+    fill: [0.36, 0.42, 0.56],
+    bounce: [0.26, 0.25, 0.22],
+    spec: [0.08, 20],
+    rim: [0.16, 3.4],
+    ambient: 0.08,
+  },
+  // Red tape: the Toolkit's toolbox and the Red Tape Wall. The brand red's
+  // green channel is 0x10, so nothing additive may carry much green: a low
+  // specular (it adds the key's colour) and a green-poor fill, bounce and
+  // ambient, or the solve can't get the centre texel that dark in green.
+  'red-tape': {
+    hex: '#C8102E',
+    key: [1.18, 0.96, 0.92],
+    fill: [0.26, 0.10, 0.40],
+    bounce: [0.34, 0.04, 0.08],
+    spec: [0.08, 36],
+    rim: [0.32, 2.6],
+    ambient: 0.01,
+  },
 }
 
 /**

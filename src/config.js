@@ -55,6 +55,87 @@ export const settings = {
     drivetrain: 'rwd',
   },
 
+  /**
+   * The 'arcade2019' preset (`src/vehicle/arcadePhysics.js`): Rapier's
+   * DynamicRayCastVehicleController driven by the 2019 folio's control model.
+   *
+   * Every value here is in **reference units**, exactly as recorded in
+   * docs/pursuit-arena/01-reference-analysis.md §7, and is scaled by
+   * `rebuild.worldScale` at use time following the rules in
+   * docs/pursuit-arena/07-feel-targets.md §3: lengths, speeds, forces and
+   * impulses x s; times, rates, angles, stiffness (1/s^2, Rapier multiplies it
+   * by chassis mass -- verified in Phase 1), damping (1/s) and friction
+   * coefficients unscaled. Keeping the reference units means the debug panel
+   * and the doc can be compared number for number.
+   */
+  arcade: {
+    /** Drive force per rear wheel. Constant: the reference has no ramp-in. */
+    engineForce: 272,
+    boostEngineForce: 476,
+    /** Speed gate, units/s: drive force is cut at or above it (not faded). */
+    maxSpeed: 9.706,
+    boostMaxSpeed: 19.41,
+    /**
+     * Game-feel change from the reference: instead of switching the drive
+     * force off at the cap (which toggles every step at full throttle and makes
+     * the car surge), fade it over the last `capSoftness` of the cap. Top speed
+     * stays within about 1% of the gate; 0 restores the hard gate.
+     */
+    capSoftness: 0.04,
+    /** Brake applied to all four wheels while Space/Ctrl is held. */
+    brakeForce: 1.35,
+    /**
+     * With neither throttle nor reverse held, an impulse of
+     * `coastImpulse * |v|` opposes the direction of travel every 1/60 s step.
+     * This, not rolling friction, is what slows a coasting car.
+     */
+    coastImpulse: 0.1,
+
+    /** Steering angle change rate, rad/s (the reference's 0.015 rad/ms). */
+    steerRate: 15,
+    /** Max road-wheel angle, rad (pi * 0.17). */
+    maxSteer: 0.534,
+
+    suspensionStiffness: 50,
+    dampingRelaxation: 1.8,
+    dampingCompression: 1.5,
+    maxSuspensionTravel: 0.3,
+    maxSuspensionForce: 100000,
+    frictionSlip: 10,
+    sideFrictionStiffness: 1,
+    /**
+     * Our addition, not in the reference: rear side-friction multiplier while
+     * the handbrake (Q) is held, for a deliberate drift. 1 disables it.
+     */
+    handbrakeSideFriction: 0.3,
+
+    /** Visual wheel spin while a driven wheel slides, rad/s. */
+    slidingWheelSpin: -30,
+    /** Sideways speed (units/s) above which a wheel counts as sliding. */
+    slideSpeed: 1,
+
+    /** Auto-flip when the chassis up axis . world up stays below this... */
+    flipUpDot: 0.5,
+    /** ...for this long, s. */
+    flipDelay: 1,
+    /** Time after a flip before another can trigger, s. */
+    flipCooldown: 1,
+    /** Upward impulse, applied 0.1 units off-centre so it rolls the car over. */
+    flipImpulse: 150,
+    flipLever: 0.1,
+
+    /** Horn (H) hop impulse and its minimum spacing, s. */
+    hopImpulse: 150,
+    hopCooldown: 0.4,
+    /** Respawn drops the car from this height above the spawn point. */
+    respawnDrop: 12,
+
+    /** Antenna spring, per 1/60 s step (reference `Car.js` values). */
+    antennaStrength: 10,
+    antennaDamping: 0.035,
+    antennaPullBack: 0.02,
+  },
+
   suspension: {
     /** Uncompressed distance from the wheel anchor to the wheel centre, m. */
     restLength: 0.34,
@@ -78,6 +159,8 @@ export const settings = {
   },
 
   camera: {
+    /** Near clip plane, m. The chase view sits close to the car, so it stays small. */
+    near: 0.3,
     /** Horizontal distance the camera trails behind the car, m. */
     distance: 9.5,
     /** Height above the car, m. */
@@ -105,6 +188,503 @@ export const settings = {
      * to restore roughly the framing you tuned on desktop.
      */
     portraitFraming: true,
+  },
+
+  /** Which camera drives the view: 'iso' (default, the reference's) or 'chase'. C toggles. */
+  cameraMode: 'iso',
+
+  /**
+   * The reference's camera (docs/pursuit-arena/07 §2): fixed world yaw and
+   * pitch, narrow FOV, never rotates with the car. Distances are reference
+   * units, scaled by `rebuild.worldScale` like the arcade car.
+   */
+  isoCamera: {
+    fov: 40,
+    /**
+     * Near clip plane, m. The iso view is never closer than ~11 m to what it
+     * looks at, and depth precision scales with this: 1 m (the reference's
+     * value) is ten times finer than the old 0.1 m at the overview distance.
+     */
+    near: 1,
+    /** Degrees below horizontal (C2: atan(1.15 / hypot(1.135, 1.45))). */
+    pitch: 32.0,
+    /** Camera position seen from the car, degrees east of due south (C3). */
+    azimuth: 38.05,
+    /** distance = minDistance + zoomRange * zoom, zoom in 0..1 (C4). */
+    minDistance: 14,
+    zoomRange: 15,
+    defaultZoom: 0.5,
+    /** Exponential follow / zoom rates, 1/s (C5, C6: 0.15 and 0.1 per 60 Hz frame). */
+    followRate: 9.75,
+    zoomRate: 6.32,
+    /** Zoom change per wheel deltaY pixel (C6). */
+    wheelSensitivity: 0.001,
+    /**
+     * Seconds of velocity added to the aim point. 0 = the reference (no
+     * look-ahead); a small value (~0.15) leads the car slightly at speed.
+     */
+    /**
+     * Seconds of the car's velocity the aim point leads by (smoothed), capped
+     * at `lookAheadMax` m. The reference has none; a little lets you see where
+     * you are going at boost speed without changing the framing at rest.
+     */
+    lookAhead: 0.12,
+    lookAheadMax: 5,
+    lookAheadRate: 3,
+    /** Highest wheel/pinch zoom (1 = the reference's max distance). Above 1 is an overview. */
+    maxZoom: 1.8,
+    /**
+     * Drag the floor to look around (the reference's camera pan). The grabbed
+     * point stays under the pointer; any driving input eases the view back.
+     */
+    pan: {
+      enabled: true,
+      /** Furthest the view may wander from the arena centre, m. */
+      maxRadius: 150,
+      /**
+       * The glide back to the car (driving, F, a double-click, the Back to car
+       * chip) and to a minimap or Overview point: `returnDuration` s plus
+       * `returnPerMetre` s for every metre to go, never more than
+       * `returnMaxDuration`. Instant under reduced motion.
+       */
+      returnDuration: 0.7,
+      returnPerMetre: 0.008,
+      returnMaxDuration: 1.3,
+      /** Pixels the pointer must move before a press becomes a drag (taps stay clicks). */
+      dragThreshold: 6,
+      /** Two taps or clicks this close together (ms, CSS px) re-centre the view. */
+      doubleTapMs: 350,
+      doubleTapSlop: 30,
+      /** A press within this many CSS px of the touch joystick never pans. */
+      joystickMargin: 28,
+      /** Alt + arrow keys: camera distances per second (so it is faster when zoomed out). */
+      keySpeed: 0.9,
+    },
+    /**
+     * Camera zones (the reference tilts steeper over its project boards and
+     * turns its blur off there). While the car is inside a zone the pitch
+     * eases to `pitch` (optional) and the tilt-shift blur to `tiltShift` x
+     * its normal strength (optional; 0 = none, for places with boards to
+     * read); leaving restores both. Circles in game space (x, z, radius m);
+     * the first zone that contains the car wins. Zoom stays the visitor's.
+     */
+    zoneRate: 1.6,
+    zones: [
+      { id: 'decade_drive', x: 0, z: 70, radius: 26, pitch: 46, tiltShift: 0 },
+      { id: 'hq', x: 0, z: 0, radius: 24, pitch: 38 },
+      { id: 'memory_lane', x: -91, z: -52, radius: 22, pitch: 42, tiltShift: 0 },
+      // The Intelligence Update kiosk in the Innovation Lab: no tilt, just sharp covers.
+      { id: 'newsstand', x: -10.5, z: -107, radius: 9, tiltShift: 0 },
+    ],
+    /**
+     * Opening shot: start at this zoom (negative = closer than minDistance)
+     * and ease out to `defaultZoom` over `introDuration` seconds while the car
+     * drops in. Skipped under prefers-reduced-motion.
+     */
+    introZoom: -0.45,
+    introDuration: 2.6,
+    /** Explore-mode camera flight to a district, and back to the car, s. */
+    flyDuration: 1.2,
+    /** Same idea as the chase camera's: pull back on tall (portrait) viewports. */
+    portraitFraming: true,
+  },
+
+  /**
+   * World-space floor gradient (`render/floorGradient.js`). Corner colours
+   * from docs/pursuit-arena/02 §2; the colour tells you roughly where on the
+   * map you are -- a deliberate change from the reference's screen-space one.
+   */
+  floor: {
+    northWest: 0x0b3d2e,
+    northEast: 0x0d5b5f,
+    southEast: 0xe9e2d0,
+    southWest: 0xdadfe3,
+    /** The gradient spans -halfExtent..+halfExtent on X and Z, m. */
+    halfExtent: 135,
+    /** Beyond this radius the floor dissolves into the fog colour... */
+    boundaryRadius: 135,
+    /** ...over this many metres. */
+    fadeWidth: 45,
+  },
+
+  /**
+   * Instanced floor blobs for props (`render/blobShadows.js`), modelled on the
+   * reference's: no raycasts, offset along a fixed sun direction by height,
+   * faded by height and by tilt. The car keeps its own raycast blob below.
+   */
+  blobShadows: {
+    enabled: true,
+    tint: 0x2b1d14,
+    /** Overall opacity (reference: 0.5 after the intro fade-in). */
+    opacity: 0.5,
+    /** Horizontal shift per metre of height; reference sun (-2.5, -2.65, 3.75) -> (0.667, 0.707) in its Z-up frame. */
+    sunOffsetX: 0.667,
+    sunOffsetZ: -0.707,
+    /** Fully faded at this height above the floor, m (3 reference units x 1.6). */
+    fadeHeight: 4.8,
+    fadePower: 2,
+  },
+
+  /** Arena dynamic props (`world/dynamicProps.js`). */
+  props: {
+    /** Most bodies one district keeps awake; the slowest extra ones are put to sleep. */
+    awakeBudget: 60,
+    /** Angular damping on free props (rolling resistance stand-in). Read when a district loads. */
+    angularDamping: 0.3,
+  },
+
+  /**
+   * Collision impacts (`world/impacts.js`): Rapier contact-force events,
+   * shared by the VFX (sparks, paper, chips) and the Phase 8 SFX.
+   * The two thresholds are baked into the colliders when they are created.
+   */
+  impacts: {
+    /** A prop contact counts once it could change the prop's speed by this much in one step, m/s. */
+    minDeltaV: 1.5,
+    /** The same for the car's own body against walls (it's heavier and scrapes more). */
+    carMinDeltaV: 2.5,
+    /** Speed change that counts as a full-strength impact, m/s. */
+    fullDeltaV: 10,
+    /** At most one impact per body this often, ms (doc 05 §3). */
+    perBodyMs: 80,
+  },
+
+  /**
+   * Sound (`src/audio/`, doc 05 §3). Nothing plays -- no AudioContext even
+   * exists -- until the first click, tap or key press. Every sound is
+   * synthesised (oscillators and noise) until the real files listed in
+   * public/audio/MANIFEST.md arrive.
+   */
+  audio: {
+    /** Bus levels, 0..1. The visitor's own choice (the Sound panel) is saved and wins over these. */
+    volumes: { master: 0.8, music: 0.45, sfx: 0.8, ambience: 0.6 },
+    muted: false,
+    /** Most one-shot sounds playing at once (doc 05 §3); more are dropped. */
+    maxVoices: 12,
+    /** Music level under an open station panel or the Passport. */
+    duck: 0.3,
+    /** Impacts and one-shots further than this from the car are not played, m. */
+    hearing: 60,
+    engine: {
+      /**
+       * The reference's engine "progress" (folio-2019 Sounds.js / Car.js), 0..1:
+       *   |forward speed| x speedMultiplier + throttle x accelMultiplier
+       * with speed in reference units per 60 Hz frame (m/s / worldScale / 60)
+       * and throttle counted as 0.5, or 1 while boosting. It rises fast and
+       * falls slowly (`easeUp` / `easeDown` are the reference's per-frame
+       * factors at 60 Hz, applied frame-rate independently), and it drives
+       * the layer crossfade, the pitch, the level and the brightness.
+       * Cruising at the cap is about 0.61, boosting 1, coasting at the cap 0.41.
+       */
+      speedMultiplier: 2.5,
+      accelMultiplier: 0.4,
+      easeUp: 0.3,
+      easeDown: 0.15,
+      /** Pitch multiplier at progress 0 and 1 (doc 05 §3: 0.8 -> 1.8). */
+      pitchMin: 0.8,
+      pitchMax: 1.8,
+      /** Engine level at full progress, and the share of it left at progress 0 (the reference: 0.4 -> 1). */
+      gain: 0.52,
+      volumeMin: 0.4,
+      volumeMax: 1,
+      /** Sideways speed (m/s) where the skid starts, and where it is at full level. */
+      skidFrom: 2,
+      skidFull: 7,
+      /** A landing this fast (downward, m/s) thuds; full level 8 m/s above it. */
+      landingSpeed: 3.5,
+    },
+    /**
+     * Tyre screech (the reference plays one when forward acceleration spikes,
+     * at most once per 5 s). Ours fires on a hard launch (forward acceleration
+     * past `accel`, smoothed over `accelSmoothing` s, while a tyre is on the
+     * ground and the throttle is down) and on a hard handbrake slide (sideways
+     * speed past `handbrakeSlip` with the handbrake held). One shared cooldown,
+     * so it can never machine-gun. Level runs from `volumeMin` to `volumeMax`
+     * with the slip (how far past the threshold, up to `slipFull` x it); the
+     * pitch is random in `rateMin`..`rateMax` so two never sound the same.
+     */
+    screech: {
+      enabled: true,
+      /** m/s². Measured peaks (smoothed): a standing start 21.7, a boost start 35.5. */
+      accel: 18,
+      accelSmoothing: 0.05,
+      /**
+       * Only from low speed, m/s: the drive force is constant up to the cap, so
+       * acceleration alone cannot tell a launch from throttle re-applied at speed.
+       */
+      launchMaxSpeed: 6,
+      /** After the threshold is crossed, the launch is judged for this long (s) and the peak sets the volume. */
+      judgeTime: 0.08,
+      /** m/s sideways with the handbrake held. Measured: about 2.2 at the cap, 6 to 8 at boost speed. */
+      handbrakeSlip: 1.8,
+      /** Below this speed (m/s) a handbrake slide makes no screech. */
+      handbrakeMinSpeed: 8,
+      slipFull: 2,
+      /** Seconds between screeches, whatever caused them (the reference: 5). */
+      cooldown: 5,
+      volumeMin: 0.75,
+      volumeMax: 1,
+      rateMin: 0.9,
+      rateMax: 1.1,
+      /** Level of the one-shot at volume 1. */
+      gain: 0.3,
+    },
+    /**
+     * Impact sounds per material class (the reference's per-sound table;
+     * speeds here are m/s, its units x worldScale). For each hit:
+     *   skipped if the same class played less than `minDelta` ms ago,
+     *   or if the hit's speed change is not above `velocityMin`;
+     *   volume = clamp((speed - velocityMin) x velocityMultiplier, volumeMin, volumeMax)²
+     *   rate   = random in rateMin..rateMax (pitch; this is what stops repetition).
+     * `car` is the car's own body against something that does not move.
+     */
+    impacts: {
+      metal: { minDelta: 60, velocityMin: 1.5, velocityMultiplier: 0.3, volumeMin: 0.35, volumeMax: 0.9, rateMin: 0.8, rateMax: 1.25 },
+      wood: { minDelta: 30, velocityMin: 1.5, velocityMultiplier: 0.6, volumeMin: 0.5, volumeMax: 1, rateMin: 0.75, rateMax: 1.5 },
+      paper: { minDelta: 80, velocityMin: 1.5, velocityMultiplier: 0.4, volumeMin: 0.35, volumeMax: 0.8, rateMin: 0.8, rateMax: 1.3 },
+      plastic: { minDelta: 60, velocityMin: 1.5, velocityMultiplier: 0.4, volumeMin: 0.35, volumeMax: 0.85, rateMin: 0.8, rateMax: 1.35 },
+      brick: { minDelta: 100, velocityMin: 1.6, velocityMultiplier: 0.47, volumeMin: 0.45, volumeMax: 0.92, rateMin: 0.8, rateMax: 1.2 },
+      rubber: { minDelta: 80, velocityMin: 1.5, velocityMultiplier: 0.4, volumeMin: 0.4, volumeMax: 0.9, rateMin: 0.85, rateMax: 1.2 },
+      car: { minDelta: 100, velocityMin: 3.2, velocityMultiplier: 0.6, volumeMin: 0.45, volumeMax: 0.78, rateMin: 0.8, rateMax: 1.25 },
+    },
+    music: {
+      bpm: 108,
+      /**
+       * Adaptive music (doc 05 §3): each stem joins once this many passport
+       * stamps are earned; the Decade Finale brings in everything.
+       */
+      unlock: { keys: 0, bass: 2, drums: 5, lead: 8 },
+    },
+  },
+
+  /**
+   * Visual effects (`src/vfx/`, doc 05 §2). Everything is pooled: these caps
+   * are allocated once at boot and never grow.
+   */
+  vfx: {
+    enabled: true,
+    /**
+     * Spawn-count multiplier, set by the quality tier (`qualityTiers`).
+     * Caps and pools stay the same size; fewer particles are asked for.
+     */
+    density: 1,
+    /** 'auto' follows prefers-reduced-motion; true / false force it (testing). */
+    reducedMotion: 'auto',
+    /**
+     * HDR multiplier for emissive effects. Matcap surfaces never exceed 1.0
+     * (see `post.bloom`), so anything drawn above the bloom threshold is,
+     * by construction, an emissive -- that is the bloom "layer".
+     */
+    emissive: 2.6,
+    dust: {
+      /** Puffs per second per sliding rear wheel. */
+      slideRate: 22,
+      /** A landing this fast (downward, m/s) throws a ring of dust. */
+      landingSpeed: 3.5,
+      landingPuffs: 12,
+      color: '#A89C86',
+    },
+    boost: {
+      /** Exhaust flame sprites per second, per pipe. */
+      flameRate: 45,
+      /** Speed-line opacity at full boost speed. */
+      lines: 0.55,
+    },
+    skid: { width: 0.3, opacity: 0.32, fade: 6, color: '#2B2B2B' },
+    /** Paint Trail (doc 02 §3, Studio): green tyre paint inside `radius` m of the Studio. */
+    paint: { width: 0.42, opacity: 0.85, fade: 10, color: '#86BC25', radius: 15, minSpeed: 2 },
+    confetti: { max: 400, burst: 260 },
+    /** Idle twinkles on collectibles within this many metres. */
+    sparkleRange: 26,
+    /** Golden skin: tiny 10s per second while moving (the Konami egg). */
+    tensRate: 14,
+    camera: {
+      /** FOV punch when boost starts, degrees (doc 05 §2: ±4°). */
+      boostKick: 4,
+      /** Landings punch inwards. */
+      landingKick: -2.5,
+      maxKick: 4,
+      kickDecay: 3.5,
+      landingShake: 0.45,
+      impactShake: 0.35,
+      stampShake: 0.5,
+      /** Metres of shake at full trauma. */
+      maxShake: 0.35,
+      /** Trauma lost per second. */
+      shakeDecay: 1.6,
+    },
+  },
+
+  /** Landmark level of detail (`world/world.js` updateLod). Set by the quality tier. */
+  lod: {
+    /** Camera distance to a district's landmarks past which their LOD1 shows, m. */
+    distance: 95,
+  },
+
+  /** The HUD corners (`ui/hud.js`, doc 05 §5). */
+  hud: {
+    /** Seconds of driving with nothing new before the corners fade. */
+    idleHide: 4,
+  },
+
+  /** Enter areas (`world/areas.js`, doc 05 §4). */
+  areas: {
+    /** Ring fill on entering, s. */
+    fillTime: 0.4,
+    /** Standing still this long opens the station too, s (0 disables). */
+    dwellTime: 1.5,
+    /** Below this speed counts as standing still, m/s. */
+    dwellSpeed: 0.6,
+    /** After opening, the car is held with a soft brake this long unless you accelerate, s. */
+    holdTime: 0.6,
+    /** Leaving the area closes the panel it opened after this delay, s. */
+    closeDelay: 1.0,
+    /**
+     * The fence that pops up round an active area or exhibit hotspot
+     * (`world/areaMarkers.js`; the reference's Area fence: 0.5 units high,
+     * back.out(2), 250 ms; 0.5 units x worldScale = 0.8 m here).
+     */
+    fence: {
+      enabled: true,
+      height: 0.8,
+      riseTime: 0.25,
+      dropTime: 0.18,
+      overshoot: 2,
+      /** Raised this far off the floor so its foot never fights the area's own border, m. */
+      lift: 0.1,
+      /** Wall opacity at the floor, and what the stripes add (the reference: 0.5 and 0.25). */
+      borderAlpha: 0.5,
+      strikeAlpha: 0.25,
+      /** Stripe period, m, and how many periods pass per second. */
+      strikeWidth: 0.9,
+      strikeSpeed: 0.35,
+      /** Side of the fence round an exhibit hotspot that gives no size of its own, m. */
+      hotspotSize: 3,
+    },
+    /** ENTER / TAP written on the floor beside the active area, on the camera's side. */
+    label: {
+      enabled: true,
+      /** Width on the floor, m (the height follows the plate's shape). */
+      width: 2.6,
+      /** Gap between the area's edge and the label, m. */
+      gap: 0.35,
+      lift: 0.09,
+      /** Fade rate, 1/s. */
+      fadeRate: 12,
+    },
+  },
+
+  /**
+   * The content-driven exhibits (`src/showcase/`, phase LD-C): hotspots you
+   * open with Enter, and how the mascots react to the car.
+   */
+  showcase: {
+    /** A point hotspot (a board, a wall, a garden) is in reach within this, m. */
+    hotspotRadius: 4.5,
+    /**
+     * Boards with pictures on them (Memory Lane, the newsstand, the wins
+     * board) fade their images in as the car comes within `boardRevealRadius`
+     * m, over `boardRevealTime` s (power4 in/out, as the reference's project
+     * boards do), and back out when it leaves. Instant under reduced motion.
+     */
+    boardRevealRadius: 24,
+    boardRevealTime: 1,
+    /** A reset pad is in reach within this, m; the rebuilt props drop from `resetDropHeight` m. */
+    resetPadRadius: 2.2,
+    resetDropHeight: 5,
+    resetStagger: 0.035,
+    /** Galleries pick the item nearest the car within this, m (Memory Lane). */
+    galleryReach: 4,
+    /** Mascots turn to watch the car inside this radius, m. */
+    mascotLookRadius: 18,
+    /** ... wave inside this one, m. */
+    mascotWaveRadius: 9,
+    /** ... and speak (the speech bubble) inside this one, m. */
+    mascotTalkRadius: 8,
+    /** Turn rate towards the car, 1/s (exponential). */
+    mascotTurnRate: 4,
+    /** Idle squash-and-stretch amplitude (fraction of height). */
+    mascotSquash: 0.035,
+    /** Seconds between the HQ wins board's flips. */
+    winsFlipInterval: 7,
+    /** A trophy counts as knocked once moved this far from home, m (or tipped past 50°). */
+    trophyKnockDistance: 0.6,
+    /** Memory Lane loads its album photos once the car is this close, m. */
+    streamRadius: 40,
+    /** A champion plate is found within this radius, m. */
+    championPickup: 2.4,
+  },
+
+  /** District reveals and the intro (`world/reveal.js`). */
+  reveal: {
+    /** A district reveals when the car comes within its radius + this, m. */
+    distance: 40,
+    /** Landmark scale-in, s (with overshoot). */
+    scaleTime: 0.9,
+    /** Props drop in from this high, m, over `dropTime` s, staggered by distance from the centre. */
+    dropHeight: 8,
+    dropTime: 0.7,
+    stagger: 0.6,
+    /** The opening: intro letters fall from higher, one after another. */
+    introHeight: 18,
+    introStagger: 0.12,
+  },
+
+  /** Collectibles (`game/collectibles.js`, doc 03 §2.3). */
+  collectibles: {
+    /** Pickups within this many metres fly to the car. */
+    magnet: 2.0,
+    flyTime: 0.18,
+    /** Dots within this many seconds of the last one extend the combo. */
+    comboWindow: 2.0,
+    spinSpeed: 2.0,
+    bob: 0.15,
+  },
+
+  /** Gameplay tunables that aren't content (`game/`). */
+  game: {
+    /** "First Drive": metres driven. */
+    firstDriveDistance: 25,
+    /**
+     * "Airtime" badge threshold, s. Doc 03 says 2 s, but doc 07 §1 V15 shows
+     * the arena's 15° ramps give 0.39 s (0.77 s boosted), so 2 s is
+     * unreachable; 1 s needs a boosted ramp jump plus a horn hop. Decided in
+     * Phase 6 (CHANGELOG); change here if a launch pad is ever built.
+     */
+    airtimeSeconds: 1.0,
+    /** Deadline Dash. */
+    dash: {
+      countdown: 3,
+      /** Reaching a checkpoint: within this many metres of it. */
+      checkpointRadius: 7,
+      /** A "heavy collision": speed drops by more than this in one frame (m/s)... */
+      penaltySpeedDrop: 6,
+      /** ...at most once per this many seconds. */
+      penaltyCooldown: 1,
+      /** Give up a run that takes longer than bronze x this. */
+      timeoutFactor: 3,
+    },
+    /** Coin Run: knock every Tax coin within this many seconds of the first. */
+    coinRunSeconds: 20,
+    /** Paint Trail: seconds of driving in the Studio for the paint-splash skin. */
+    paintSeconds: 60,
+    /** Easter eggs. */
+    hornsAtHq: 10,
+    loopsForTrophy: 10,
+  },
+
+  /** On-screen touch pad (`input/touch.js`). */
+  touch: {
+    /** Joystick travel radius, CSS px. */
+    joystickRadius: 52,
+    /** Fraction of the radius ignored around the centre. */
+    deadZone: 0.18,
+  },
+
+  /** Gamepad (`input/gamepad.js`), standard mapping. */
+  gamepad: {
+    stickDeadZone: 0.15,
+    triggerDeadZone: 0.05,
   },
 
   /**
@@ -222,39 +802,73 @@ export const settings = {
       msaaSamples: 4,
     },
     /**
-     * Off by default, and that is a finding rather than an oversight.
+     * Selective bloom for emissive layers only (doc 05 §2), done with HDR
+     * rather than a second render pass.
      *
-     * Bloom needs its bright pixels to be *small*, and in this scene they
-     * never are. Matcaps are 8-bit textures, so nothing a surface can produce
-     * exceeds 1.0, and after the look pass the frame's linear values stack up
-     * as: ground 0.73, sky horizon 0.95, headlamps 0.90. The only genuinely
-     * small bright features are two 26 cm headlamp discs, and there is no
-     * threshold that isolates them -- anything under 0.90 also catches the
-     * entire sky, and anything under 0.73 catches the ground as well and
-     * turns the whole frame to mush. Above 0.95 it does nothing at all, even
-     * at strength 3.
+     * Matcaps are 8-bit textures, so nothing a surface can produce exceeds
+     * 1.0: after the look pass the frame's linear values stack up as ground
+     * 0.73, sky horizon 0.95, headlamps 0.90 (and the Fresnel rim adds at
+     * most a few hundredths). The emissive effects -- the Submission Portal,
+     * sparks, pickup sparkles, the stamp's light pillar, boost exhaust,
+     * fireworks, bulb and beacon halos -- are drawn at
+     * `settings.vfx.emissive` (x2.6) into the half-float target. A threshold
+     * above 1.0 therefore *is* the layer mask: surfaces can never reach it,
+     * emissives always do.
      *
-     * (The numbers moved with the palette -- this used to read "the brightest
-     * highlight lands around 0.6" against the old grey-and-blue scheme -- but
-     * the conclusion did not, and for the same structural reason: a stylised
-     * matcap scene has broad flat colour, not specular pinpoints.)
+     * Why not three's two-pass selective bloom (darken everything else,
+     * render again): it renders the scene twice, doubling the draw calls the
+     * performance budget counts (rule 5), and needs every non-bloom material
+     * swapped per frame. The HDR band costs nothing extra and gets occlusion
+     * right for free (a wall in front of the portal hides its glow).
      *
-     * So it stays wired up and tunable, ready for the first emissive or
-     * genuinely bright material, and costs nothing while disabled -- a
-     * disabled pass is skipped entirely by the composer.
+     * (History: before Phase 7 there were no emissives and no threshold
+     * isolated anything -- under 0.90 caught the sky, under 0.73 the ground.)
      */
     bloom: {
       enabled: true,
-      /** A sheen on the highlights, not a glow, for when there are any. */
-      strength: 0.28,
-      radius: 0.6,
-      threshold: 0.9,
+      strength: 0.85,
+      radius: 0.45,
+      /** Linear luminance; keep it above 1.0 so matcap surfaces never bloom. */
+      threshold: 1.15,
+      /** Ramp width above the threshold (UnrealBloomPass's smoothWidth). */
+      softness: 0.6,
     },
     vignette: {
       enabled: true,
       /** Higher = the darkening starts closer to the centre. */
       offset: 1.0,
       darkness: 1.05,
+    },
+    /**
+     * The reference's "miniature" depth (folio-2019 Application.js setPasses):
+     * a separable 9-tap blur, horizontal then vertical, mixed in by
+     * 1 - sin(pi * y), so the middle band of the screen stays sharp and the
+     * top and bottom go soft. Like the reference it is off on touch screens
+     * (it reads as out-of-focus on small displays) and on the low tier.
+     */
+    tiltShift: {
+      enabled: true,
+      /** Blur radius multiplier in pixels (the reference uses 1 on each axis). */
+      strength: 1.2,
+      /** Pixel-ratio aware: the radius is in CSS pixels, scaled by the DPR. */
+      onTouch: false,
+      /** Shape: 1 = the reference's 1 - sin(pi*y); higher keeps a wider sharp band. */
+      falloff: 1,
+    },
+    /**
+     * The reference's soft radial glow (Application.js: #ffcfe0, at (0, 0.25),
+     * radius 0.7, alpha 0.55). Retinted to our golden-hour palette and placed
+     * where the warm light comes from (upper left), a little lighter so the
+     * sand floor does not wash out.
+     */
+    glow: {
+      enabled: true,
+      color: '#fff0d9',
+      /** Screen UV of the glow centre (0,0 = bottom left). */
+      x: 0.0,
+      y: 0.85,
+      radius: 0.85,
+      alpha: 0.35,
     },
   },
 
@@ -282,6 +896,18 @@ export const settings = {
      * on realistic art. Read live by `renderer.js`'s resize handler.
      */
     pixelRatioCap: 1.5,
+    /**
+     * Render interpolation: blend the car and awake props between the last two
+     * fixed physics steps (src/core/physics.js `step.alpha`). Off = snap to the
+     * latest step, which stutters whenever a frame runs 0 or 2 steps.
+     */
+    interpolate: true,
+    /**
+     * A body that moved further than this in one physics step was teleported
+     * (a respawn, a reset, a debug placement), m: never blend across that.
+     * The car covers about 0.5 m in a step at boost speed.
+     */
+    teleportDistance: 3,
   },
 
   /**
@@ -306,6 +932,68 @@ export const settings = {
  * reload (world), so they live apart from the live-tunable `settings`.
  */
 export const rebuild = {
+  vehicle: {
+    /**
+     * 'arcade2019' (default) or 'sim' (the original force-based model in
+     * `src/vehicle/simVehicle.js`). Switching rebuilds the body and the
+     * physics world's gravity, so it is a reload, not a live setting: add
+     * `?vehicle=sim` to the URL, or use the debug panel's dropdown.
+     */
+    preset: 'arcade2019',
+  },
+
+  /**
+   * Reference units -> metres for the arcade preset. 1.6 makes the car about
+   * 3.25 m long: toy-sized next to 6-20 m buildings (doc 01 §6).
+   */
+  worldScale: 1.6,
+
+  /** Arcade-preset geometry, in reference units (doc 01 §7). Scaled by `worldScale`. */
+  arcade: {
+    chassis: {
+      width: 1.02,
+      height: 1.16,
+      depth: 2.03,
+      /**
+       * The collider box sits this far above the body origin, and the centre
+       * of mass stays at the origin (set explicitly -- Rapier would otherwise
+       * put it at the box centre), which is what keeps the car planted.
+       */
+      offsetUp: 0.41,
+      /** Kept unscaled: props keep their reference masses too (doc 07 §3). */
+      mass: 40,
+      friction: 0,
+      restitution: 0.2,
+      /** cannon's default body damping, which the reference never changed. */
+      linearDamping: 0.01,
+      angularDamping: 0.01,
+    },
+    wheels: {
+      radius: 0.25,
+      width: 0.24,
+      /** Distance ahead of / behind the body origin. */
+      frontOffset: 0.635,
+      backOffset: 0.475,
+      halfTrack: 0.39,
+      restLength: 0.1,
+    },
+    /** World gravity while this preset is active, units/s^2. */
+    gravity: -13,
+  },
+
+  /**
+   * The anniversary cart (docs/pursuit-arena/04 §5), the arcade preset's body.
+   * Generated by `npm run art:cart` (blender/scripts/gen_cart.py) already in
+   * the physics body's space and size, so it needs no offset or scale -- only
+   * the yaw: it is authored nose towards glTF +Z and the game drives to -Z.
+   * Its `wheel_*`, `antenna` and `light_*` nodes are read by name
+   * (src/vehicle/arcadeVehicle.js).
+   */
+  cart: {
+    url: 'models/cart.glb',
+    yawOffset: Math.PI,
+  },
+
   chassis: {
     /** Visual + collider box size in metres (width, height, length). */
     size: { x: 1.68, y: 0.7, z: 4.1 },
@@ -345,6 +1033,89 @@ export const rebuild = {
     /** GLB loaded into the vehicle's `chassis-visual` group. */
     url: 'models/vehicle.glb',
   },
+  /**
+   * Where the content-driven exhibits stand (`src/showcase/`, phase LD-C).
+   * Every position is in its district's local layout frame -- the same frame
+   * as blender/scripts/_common.py `Frame.facing_centre`: origin at the
+   * district centre, local -Z towards HQ (the gateway side), +X to the right
+   * when you face it -- so they follow the district if the map moves. `yaw`
+   * is in that frame too (0 = the exhibit's front faces local +Z, the back
+   * of the district; 180 = it faces the gateway). Spots were chosen on clear
+   * ground from the generated layout: the side band opposite each district's
+   * playground, the gateway wings, the plaza rim inside the tree ring.
+   * The data itself (names, numbers, covers) is content: content/arena.seed.json `exhibits`.
+   */
+  showcase: {
+    mascotsUrl: 'models/mascots.glb',
+    mascots: {
+      // Beside the spawn, in the first shot of the intro camera.
+      percy: { district: 'rfp_gate', lx: -6, lz: 9, yaw: 108 },
+      // Buddies stand just inside each pillar's gateway, beside the left or
+      // right post (the pillar gateways sit on the Outer Loop road itself).
+      rnr: { district: 'rnr', lx: -6.5, lz: -15, yaw: 180 },
+      lnd: { district: 'lnd', lx: 6.5, lz: -15, yaw: 180 },
+      toolkit: { district: 'toolkit', lx: -6.5, lz: -15, yaw: 180 },
+      innovation: { district: 'innovation', lx: 6.5, lz: -15, yaw: 180 },
+      culture: { district: 'culture', lx: -6.5, lz: -15, yaw: 180 },
+    },
+    /** Where the blobs gather at HQ for the Decade Finale: a ring round the tower, m. */
+    finaleRing: 15,
+    /** The split-flap board on the HQ plaza (world frame: HQ's frame is the arena's). */
+    winsBoard: { lx: -12.5, lz: 12.5, yaw: 25, width: 7.2, height: 3.6, lift: 2.2 },
+    /** People of Pursuits: the two gateway wings of each team territory. */
+    peopleWall: { inner: 5.2, outer: 11, lz: -14, height: 2.6, cols: 4, tile: [1.22, 0.42], gap: 0.08 },
+    rnr: {
+      /** Thank It Forward trays, one per award (the award id from the content). */
+      trays: {
+        spot: { lx: -10.6, lz: 4.2, cols: 9, pitch: 0.52 },
+        applause: { lx: -11.4, lz: -0.6, cols: 7, pitch: 0.52 },
+        outstanding: { lx: -7.6, lz: -0.6, cols: 2, pitch: 0.8 },
+      },
+      /** BrightStar: six star sculptures, in content order. */
+      stars: [
+        { lx: 7.4, lz: 4.6 }, { lx: 10.6, lz: 4.6 }, { lx: 7.4, lz: 8.4 },
+        { lx: 10.6, lz: 8.4 }, { lx: 7.4, lz: 12.2 }, { lx: 10.6, lz: 12.2 },
+      ],
+      starHeight: [1.4, 4.6],
+    },
+    /** Memory Lane: frames on an arc round the Culture plaza (degrees from the gateway, clockwise seen from above). */
+    memoryLane: { radius: 16.3, from: -66, to: -162, frame: 0.86, lift: 0.95 },
+    /**
+     * Reset pads (the reference's playground has them): a floor pad beside a
+     * knock-down set that rebuilds it. District-local (lx, lz); `type` is the
+     * prop type it rebuilds, `label` a key under showcase.* in ui.json.
+     */
+    resetPads: [
+      // In front of the wall (bricks span lx 6..12.7 at lz -1), a car's length clear of it and of area toolkit_4.
+      { district: 'toolkit', type: 'brick', lx: 10.6, lz: -4.8, label: 'resetWall' },
+      // In front of the pin triangle (pins span lx 12.2..15.8, lz -1..2.3; the stars start at lz 4.6).
+      { district: 'rnr', type: 'pin', lx: 14, lz: -4.4, label: 'resetPins' },
+    ],
+    /** The Intelligence Update newsstand: a carousel kiosk you drive round. */
+    newsstand: { lx: 10.5, lz: 2, radius: 1.5, height: 3.4 },
+    /** The learning bar garden: one planted bar per metric, along local X. */
+    learningGarden: { lx: 7.4, lz: 2.6, spacing: 2.6, base: 0.5, perDecade: 1.45 },
+    /** Signpost forest: one fingerpost per quick-link group; drive round a post to browse its arms. */
+    /**
+     * Chronicles champion plates, on rings round the arena (world frame;
+     * bearings in degrees clockwise from north, as doc 02). Between the
+     * spokes, on the verges: one ring just outside the Deadline Loop, one
+     * between the pillars beyond the Outer Loop. The last ring takes any
+     * extra names. Every plate has 1.2 m clear of any mesh (raycast-checked
+     * against all districts, trees and lamps, Phase LD-C).
+     */
+    champions: {
+      rings: [
+        { radius: 47, from: 15, step: 30, count: 12 },
+        { radius: 95, from: 22.5, step: 45, count: 8 },
+      ],
+    },
+    signposts: [
+      { lx: -12.5, lz: -1.5 },
+      { lx: -7.5, lz: 1.5 },
+      { lx: -13, lz: 4.5 },
+    ],
+  },
   physics: {
     gravity: { x: 0, y: -9.81, z: 0 },
     /** Fixed simulation step, seconds. */
@@ -355,14 +1126,22 @@ export const rebuild = {
 }
 
 /**
- * World asset + the naming convention `world.js` reads out of it. See
- * `docs/blender-conventions.md` for the authoring side of this contract.
+ * The arena (written by `npm run art:export`) + the naming convention
+ * `world/world.js` reads out of it. See `docs/blender-conventions.md` and
+ * docs/pursuit-arena/04 §2 for the authoring side of this contract.
  */
 export const world = {
-  url: 'models/world.glb',
+  /** Lists kit.glb and every district GLB, each tagged 'core' or 'stream'. */
+  manifestUrl: 'models/arena.manifest.json',
   collisionPrefix: 'collision_',
   spawnPrefix: 'spawn_',
   triggerPrefix: 'trigger_',
+  areaPrefix: 'area_',
+  dynamicPrefix: 'dyn_',
+  instancePrefix: 'inst_',
+  collectPrefix: 'collect_',
+  sfxPrefix: 'sfx_',
+  animPrefix: 'anim_',
 }
 
 /**
@@ -412,14 +1191,21 @@ export const rendering = {
   ],
 
   /**
-   * Which AO bake each static object samples. Two atlases rather than one:
-   * the 240 m ground needs a whole texture to itself to have any resolution
-   * left, while the props are small enough to share.
+   * Which AO bake each static object samples, by name prefix. Empty while the
+   * arena is greybox: the per-district bakes arrive with the Phase 10 art
+   * pass (docs/pursuit-arena/04 §4). The prototype world's two bakes went
+   * with it in Phase 4.
    */
   bakeRules: [
-    { prefix: 'ground', file: 'world-ao-ground.png' },
-    { prefix: 'exhibit_', file: 'world-ao-props.png' },
-    { prefix: 'ramp_', file: 'world-ao-props.png' },
+    // The cart's AO (blender/scripts/gen_cart.py), on its body parts only.
+    { prefix: 'cart_', file: 'cart-ao.jpg' },
+  ],
+
+  /** Every matcap in public/textures/matcaps/, nameable as `mc_<name>` from Blender. */
+  matcaps: [
+    'neutral', 'stone', 'accent-warm', 'accent-cool', 'accent-deep', 'ivory', 'dark', 'vehicle',
+    // Phase 10 (doc 04 §3).
+    'brand-green', 'gold', 'glass', 'paper', 'red-tape',
   ],
 
   /** Matcaps used by geometry built in code (wheels), not loaded from glTF. */
@@ -479,20 +1265,25 @@ export const rendering = {
 export const defaultSettings = structuredClone(settings)
 
 /**
- * Quality presets bundling the knobs that actually move the frame-time
- * needle: AA mode, the device-pixel-ratio cap, and whether post-processing
- * runs at all. Applying one (`createDebugGui`'s "Quality" dropdown) just
- * assigns these three fields into `settings` and resizes -- it is a
- * convenience preset, not a mode the rest of the app has to branch on.
+ * Quality presets (doc 06 Phase 10) bundling the knobs that move the
+ * frame-time needle. Applying one (Menu → Graphics, `?quality=`, or the
+ * `#debug` preset) assigns these fields into `settings` and resizes -- it is
+ * a convenience preset, not a mode the rest of the app branches on.
+ *
+ *   high    SMAA, bloom, full VFX, pixel ratio up to 1.5, landmark LOD at 95 m
+ *   medium  FXAA, bloom, 60% VFX, pixel ratio 1, LOD at 70 m
+ *   low     FXAA, no bloom, 35% VFX, pixel ratio 1, LOD at 45 m
+ *
+ * Doc 06 also lists "half-res blobs" for Low; our blob shadows are analytic
+ * shader quads (src/render/blobShadows.js) with no texture or render target
+ * to halve, so Low saves that time through the pixel ratio instead.
  *
  * Only `high` is tuned against this machine's actual measurements; `medium`
- * and `low` are reasonable guesses (cheaper AA, a tighter pixel-ratio cap,
- * post off entirely for `low`) and unverified -- there is no lower-end or
- * mobile hardware to test them on yet. They exist so that testing, once it's
- * possible, has somewhere to land instead of starting from nothing.
+ * and `low` are unverified -- there is no lower-end or mobile hardware to
+ * test them on yet (the 2020 integrated-GPU laptop target).
  */
 export const qualityTiers = {
-  high: { pixelRatioCap: 1.5, aaMode: 'smaa', postEnabled: true },
-  medium: { pixelRatioCap: 1, aaMode: 'fxaa', postEnabled: true },
-  low: { pixelRatioCap: 1, aaMode: 'none', postEnabled: false },
+  high: { pixelRatioCap: 1.5, aaMode: 'smaa', postEnabled: true, bloom: true, tiltShift: true, vfxDensity: 1, lodDistance: 95 },
+  medium: { pixelRatioCap: 1, aaMode: 'fxaa', postEnabled: true, bloom: true, tiltShift: true, vfxDensity: 0.6, lodDistance: 70 },
+  low: { pixelRatioCap: 1, aaMode: 'fxaa', postEnabled: true, bloom: false, tiltShift: false, vfxDensity: 0.35, lodDistance: 45 },
 }

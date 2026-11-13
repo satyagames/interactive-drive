@@ -1,0 +1,1103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Pursuit Arena content",
+  "description": "All arena content (docs/pursuit-arena/05 §6). Anything with \"status\": \"placeholder\" is shown with a visible 'coming soon' tag until the USI Pursuits COE team supplies it. Blender `area_<id>` / `trigger_<id>` names point at the ids in here.",
+  "type": "object",
+  "required": [
+    "version",
+    "meta",
+    "hq",
+    "rfpGate",
+    "timeline",
+    "territories",
+    "pillars",
+    "feeds",
+    "gamification"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "meta": {
+      "type": "object",
+      "required": [
+        "title",
+        "subtitle",
+        "organisation"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/text"
+        },
+        "subtitle": {
+          "$ref": "#/$defs/text"
+        },
+        "organisation": {
+          "$ref": "#/$defs/text"
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "hq": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "position",
+        "color",
+        "leader",
+        "stations"
+      ],
+      "properties": {
+        "id": {
+          "const": "hq"
+        },
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "position": {
+          "$ref": "#/$defs/position"
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "leader": {
+          "$ref": "#/$defs/leader"
+        },
+        "stations": {
+          "$ref": "#/$defs/stations"
+        }
+      },
+      "additionalProperties": false
+    },
+    "rfpGate": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "position",
+        "spawn",
+        "stations"
+      ],
+      "properties": {
+        "id": {
+          "const": "rfp_gate"
+        },
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "position": {
+          "$ref": "#/$defs/position"
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "spawn": {
+          "type": "string",
+          "pattern": "^spawn_[a-z0-9_]+$"
+        },
+        "stations": {
+          "$ref": "#/$defs/stations"
+        }
+      },
+      "additionalProperties": false
+    },
+    "timeline": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "$ref": "#/$defs/milestone"
+      }
+    },
+    "territories": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "$ref": "#/$defs/district",
+        "properties": {
+          "kind": {
+            "const": "territory"
+          }
+        }
+      }
+    },
+    "pillars": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "$ref": "#/$defs/district",
+        "properties": {
+          "kind": {
+            "const": "pillar"
+          }
+        }
+      }
+    },
+    "feeds": {
+      "type": "object",
+      "required": [
+        "birthdays",
+        "serviceAwards",
+        "events"
+      ],
+      "properties": {
+        "birthdays": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "date",
+              "status"
+            ],
+            "properties": {
+              "name": {
+                "$ref": "#/$defs/text"
+              },
+              "date": {
+                "type": "string",
+                "pattern": "^--(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                "description": "Month and day only, as --MM-DD."
+              },
+              "status": {
+                "$ref": "#/$defs/status"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "serviceAwards": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "years",
+              "status"
+            ],
+            "properties": {
+              "name": {
+                "$ref": "#/$defs/text"
+              },
+              "years": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Years of service being celebrated, e.g. 5, 10, 15, 20."
+              },
+              "status": {
+                "$ref": "#/$defs/status"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "title",
+              "date",
+              "status"
+            ],
+            "properties": {
+              "title": {
+                "$ref": "#/$defs/text"
+              },
+              "date": {
+                "type": "string",
+                "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                "description": "YYYY-MM-DD. Past events stop showing on their own."
+              },
+              "time": {
+                "type": "string",
+                "description": "Optional, free text, e.g. \"15:00 IST\"."
+              },
+              "place": {
+                "type": "string",
+                "description": "Optional, free text."
+              },
+              "link": {
+                "$ref": "#/$defs/link"
+              },
+              "status": {
+                "$ref": "#/$defs/status"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "gamification": {
+      "type": "object",
+      "required": [
+        "ranks",
+        "xp",
+        "collectibles",
+        "deadlineDash"
+      ],
+      "properties": {
+        "ranks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "$ref": "#/$defs/text"
+              },
+              {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  {
+                    "const": "fullPassport"
+                  }
+                ]
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "xp": {
+          "$ref": "#/$defs/numbers"
+        },
+        "collectibles": {
+          "$ref": "#/$defs/numbers"
+        },
+        "deadlineDash": {
+          "type": "object",
+          "required": [
+            "medals",
+            "collisionPenaltySec"
+          ],
+          "properties": {
+            "medals": {
+              "type": "object",
+              "required": [
+                "gold",
+                "silver",
+                "bronze"
+              ],
+              "properties": {
+                "gold": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "silver": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "bronze": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false
+            },
+            "collisionPenaltySec": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "exhibitBadges": {
+          "description": "Badges earned at the content-driven exhibits (doc 10 §3). counter: territories | issues | champions | trophies | albums; target: a number, or \"all\" for every item the exhibit has.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "counter",
+              "target"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/id"
+              },
+              "counter": {
+                "enum": [
+                  "territories",
+                  "issues",
+                  "champions",
+                  "trophies",
+                  "albums"
+                ]
+              },
+              "target": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 1
+                  },
+                  {
+                    "const": "all"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "exhibits": {
+      "$ref": "#/$defs/exhibits"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "status": {
+      "enum": [
+        "placeholder",
+        "final"
+      ]
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
+    },
+    "position": {
+      "description": "Game space, metres: [x east, y up, z south].",
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "numbers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "image": {
+      "description": "Path relative to public/, e.g. content/placeholder.svg.",
+      "type": "string",
+      "pattern": "^(?!https?:|//)[A-Za-z0-9_./-]+\\.(svg|png|jpe?g|webp|ktx2)$"
+    },
+    "link": {
+      "type": "object",
+      "required": [
+        "label",
+        "url"
+      ],
+      "properties": {
+        "label": {
+          "$ref": "#/$defs/text"
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^(https://|mailto:|content/docs/[A-Za-z0-9_.-]+\\.pdf$)",
+          "description": "https:// or mailto: link, or a PDF bundled under public/content/docs/."
+        }
+      },
+      "additionalProperties": false
+    },
+    "station": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "body",
+        "links",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "title": {
+          "$ref": "#/$defs/text"
+        },
+        "body": {
+          "$ref": "#/$defs/text"
+        },
+        "image": {
+          "$ref": "#/$defs/image"
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/image"
+          }
+        },
+        "roles": {
+          "description": "Team lead / role lines shown under the title, e.g. { \"name\": \"…\", \"role\": \"…\" }. Only with the person's consent.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "role"
+            ],
+            "properties": {
+              "name": {
+                "$ref": "#/$defs/text"
+              },
+              "role": {
+                "$ref": "#/$defs/text"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/link"
+          }
+        },
+        "feed": {
+          "description": "Show one of the feeds (top-level \"feeds\") in this station's panel.",
+          "enum": [
+            "birthdays",
+            "serviceAwards",
+            "events"
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        }
+      },
+      "additionalProperties": false
+    },
+    "stations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/station"
+      }
+    },
+    "leader": {
+      "type": "object",
+      "required": [
+        "name",
+        "title",
+        "role",
+        "welcome",
+        "status"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "title": {
+          "$ref": "#/$defs/text"
+        },
+        "role": {
+          "$ref": "#/$defs/text"
+        },
+        "welcome": {
+          "$ref": "#/$defs/text"
+        },
+        "photo": {
+          "$ref": "#/$defs/image"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        }
+      },
+      "additionalProperties": false
+    },
+    "milestone": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "year",
+        "title",
+        "caption",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^year_([1-9]|10)$"
+        },
+        "label": {
+          "$ref": "#/$defs/text"
+        },
+        "year": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 2100
+            }
+          ]
+        },
+        "title": {
+          "$ref": "#/$defs/text"
+        },
+        "caption": {
+          "$ref": "#/$defs/text"
+        },
+        "image": {
+          "$ref": "#/$defs/image"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        }
+      },
+      "additionalProperties": false
+    },
+    "district": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "landmark",
+        "position",
+        "angleDeg",
+        "color",
+        "stampTrigger",
+        "miniGame",
+        "stations"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "kind": {
+          "enum": [
+            "territory",
+            "pillar"
+          ]
+        },
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "landmark": {
+          "$ref": "#/$defs/text"
+        },
+        "position": {
+          "$ref": "#/$defs/position"
+        },
+        "angleDeg": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 360
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "stampTrigger": {
+          "type": "string",
+          "pattern": "^trigger_stamp_[a-z0-9_]+$"
+        },
+        "miniGame": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/id"
+            }
+          ]
+        },
+        "stations": {
+          "$ref": "#/$defs/stations"
+        }
+      },
+      "additionalProperties": false
+    },
+    "exhibits": {
+      "description": "Data for the content-driven 3D objects (docs/content-backup/10 §2, phase LD-C). Written by tools/site-export/build-exhibits.mjs; positions live in src/config.js rebuild.showcase.",
+      "type": "object",
+      "required": [
+        "mascots",
+        "winsBoard",
+        "thankItForward",
+        "brightStar",
+        "memoryLane",
+        "newsstand",
+        "learningGarden",
+        "signposts",
+        "champions"
+      ],
+      "properties": {
+        "note": {
+          "type": "string"
+        },
+        "mascots": {
+          "type": "object",
+          "required": [
+            "percy",
+            "buddies"
+          ],
+          "properties": {
+            "percy": {
+              "type": "object",
+              "required": [
+                "district",
+                "name",
+                "greeting",
+                "station"
+              ],
+              "properties": {
+                "district": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9_]+$"
+                },
+                "name": {
+                  "$ref": "#/$defs/text"
+                },
+                "greeting": {
+                  "$ref": "#/$defs/text"
+                },
+                "station": {
+                  "$ref": "#/$defs/id"
+                }
+              },
+              "additionalProperties": false
+            },
+            "buddies": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "district"
+                ],
+                "properties": {
+                  "id": {
+                    "$ref": "#/$defs/id"
+                  },
+                  "district": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9_]+$"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "winsBoard": {
+          "type": "object",
+          "required": [
+            "district",
+            "station",
+            "heading",
+            "sets"
+          ],
+          "properties": {
+            "district": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            },
+            "station": {
+              "$ref": "#/$defs/id"
+            },
+            "heading": {
+              "$ref": "#/$defs/text"
+            },
+            "sets": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "caption",
+                  "rows"
+                ],
+                "properties": {
+                  "title": {
+                    "$ref": "#/$defs/text"
+                  },
+                  "caption": {
+                    "type": "string"
+                  },
+                  "rows": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "label",
+                        "value"
+                      ],
+                      "properties": {
+                        "label": {
+                          "$ref": "#/$defs/text"
+                        },
+                        "value": {
+                          "$ref": "#/$defs/text"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "thankItForward": {
+          "type": "object",
+          "required": [
+            "district",
+            "station",
+            "title",
+            "period",
+            "awards"
+          ],
+          "properties": {
+            "district": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            },
+            "station": {
+              "$ref": "#/$defs/id"
+            },
+            "title": {
+              "$ref": "#/$defs/text"
+            },
+            "period": {
+              "type": "string"
+            },
+            "awards": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "label",
+                  "count"
+                ],
+                "properties": {
+                  "id": {
+                    "$ref": "#/$defs/id"
+                  },
+                  "label": {
+                    "$ref": "#/$defs/text"
+                  },
+                  "count": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 200
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "brightStar": {
+          "type": "object",
+          "required": [
+            "district",
+            "station",
+            "title",
+            "period",
+            "categories"
+          ],
+          "properties": {
+            "district": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            },
+            "station": {
+              "$ref": "#/$defs/id"
+            },
+            "title": {
+              "$ref": "#/$defs/text"
+            },
+            "period": {
+              "type": "string"
+            },
+            "categories": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "label",
+                  "count"
+                ],
+                "properties": {
+                  "label": {
+                    "$ref": "#/$defs/text"
+                  },
+                  "count": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "memoryLane": {
+          "type": "object",
+          "required": [
+            "district",
+            "station",
+            "title",
+            "albums"
+          ],
+          "properties": {
+            "district": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            },
+            "station": {
+              "$ref": "#/$defs/id"
+            },
+            "title": {
+              "$ref": "#/$defs/text"
+            },
+            "albums": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "when",
+                  "place",
+                  "photos",
+                  "image"
+                ],
+                "properties": {
+                  "title": {
+                    "$ref": "#/$defs/text"
+                  },
+                  "when": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "place": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "photos": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "image": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/image"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "newsstand": {
+          "type": "object",
+          "required": [
+            "district",
+            "station",
+            "title",
+            "issues"
+          ],
+          "properties": {
+            "district": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            },
+            "station": {
+              "$ref": "#/$defs/id"
+            },
+            "title": {
+              "$ref": "#/$defs/text"
+            },
+            "issues": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "label",
+                  "url"
+                ],
+                "properties": {
+                  "label": {
+                    "$ref": "#/$defs/text"
+                  },
+                  "url": {
+                    "type": "string",
+                    "pattern": "^content/docs/[a-z0-9-]+.pdf$"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "learningGarden": {
+          "type": "object",
+          "required": [
+            "district",
+            "station",
+            "bars"
+          ],
+          "properties": {
+            "district": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            },
+            "station": {
+              "$ref": "#/$defs/id"
+            },
+            "bars": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "label",
+                  "value",
+                  "unit"
+                ],
+                "properties": {
+                  "label": {
+                    "$ref": "#/$defs/text"
+                  },
+                  "value": {
+                    "type": "number",
+                    "minimum": 1
+                  },
+                  "unit": {
+                    "$ref": "#/$defs/text"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "signposts": {
+          "type": "object",
+          "required": [
+            "district",
+            "station",
+            "groups"
+          ],
+          "properties": {
+            "district": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            },
+            "station": {
+              "$ref": "#/$defs/id"
+            },
+            "groups": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "links"
+                ],
+                "properties": {
+                  "title": {
+                    "$ref": "#/$defs/text"
+                  },
+                  "links": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "$ref": "#/$defs/link"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "champions": {
+          "type": "object",
+          "required": [
+            "station",
+            "title",
+            "names"
+          ],
+          "properties": {
+            "station": {
+              "$ref": "#/$defs/id"
+            },
+            "title": {
+              "$ref": "#/$defs/text"
+            },
+            "names": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/text"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

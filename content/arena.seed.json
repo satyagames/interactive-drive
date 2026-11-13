@@ -1,0 +1,2042 @@
+{
+  "$schema": "./arena.schema.json",
+  "version": 1,
+  "meta": {
+    "title": "Pursuit Arena",
+    "subtitle": "USI Pursuits COE · 10 Years",
+    "organisation": "Deloitte USI",
+    "note": "Area ids in Blender are area_<station id>. Stations with status 'placeholder' show a visible 'Content coming soon' tag."
+  },
+  "hq": {
+    "id": "hq",
+    "name": "Pursuits HQ — Command Tower",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "color": "#86BC25",
+    "leader": {
+      "name": "Vineet K. Arora",
+      "title": "Senior Vice President",
+      "role": "USI Pursuits COE Lead",
+      "welcome": "Welcome message to be supplied and approved.",
+      "photo": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    "stations": [
+      {
+        "id": "hq_leadership",
+        "title": "Leadership",
+        "body": "Leadership visit From November 3 to November 6, we embarked on a remarkable week dedicated to learning, growth, and meaningful connection. Curated training sessions sparked meaningful discussions and equipped participants with practical strategies for giving and receiving feedback, strengthening stakeholder relationships, and writing with impact. Lesli Hamilton, Annabell Lepe, Kandace Gallant, Vineet Arora, Rajat Mishra, and Ripunjay (RJ) Nandikonda facilitated workshops on ‘Culture of Feedback,’ ‘Master Delivery,’ and ‘Smart Brevity.’ These sessions provided attendees with valuable and actionable insights to elevate their impact and drive success together.",
+        "image": "content/site/hq-leadership-leadership-visit.webp",
+        "links": [],
+        "status": "final",
+        "roles": [
+          {
+            "name": "Vineet K. Arora",
+            "role": "Senior Vice President · Audit Pursuit Manager for USI Strategic segment"
+          },
+          {
+            "name": "Rajat Mishra",
+            "role": "AVP · USI Strategic segment"
+          },
+          {
+            "name": "Ripunjay Nandikonda",
+            "role": "AVP · USI Strategic segment"
+          },
+          {
+            "name": "Ranjit Rao",
+            "role": "Executive Manager · USI Strategic segment"
+          },
+          {
+            "name": "Sandeep Mishra",
+            "role": "Manager · USI Strategic segment"
+          }
+        ]
+      },
+      {
+        "id": "hq_org",
+        "title": "Our COE at a glance",
+        "body": "Welcome to the world of Pursuits\n\nYour glimpse into the macrocosm of USI Pursuits –\nOur own community to Communicate, Collaborate, and Celebrate\n\nMeet the Pursuit dream team.\nSuccess isn't built in silos — it's what happens when creative, driven minds work as one.\n\nMenu of services: Pursuit Management and Design (CoE), Pursuits Design Studio and Pursuits Research, serving Audit & Assurance, Tax, Advisory and Consulting.\n\nFrom training programs at DU to “war rooms” in local offices around the globe, any time our teams can get together in person is a guaranteed WIN!\n\nHappy pursuits!\nExcellent teamwork and passion for excellence. Our diverse cultures and experiences make us who we are as a team\n\nPursuit Wins, FY26 (site snapshot, Sep 2025)\nWin revenue: $47M\nTotal TCV: $260M\nTotal Pursuit count: 240\n\nPursuit Wins, FY25 (site snapshot, Sep-Oct 2024)\nWin revenue: $35M\nTotal TCV: $310M\nTotal Pursuit count: 275",
+        "image": "content/site/hq-org-homepage-2-2x.webp",
+        "links": [],
+        "status": "final"
+      },
+      {
+        "id": "hq_submission_portal",
+        "title": "Submission Portal",
+        "body": "Finish line of the Deadline Dash.",
+        "status": "final",
+        "links": []
+      }
+    ]
+  },
+  "rfpGate": {
+    "id": "rfp_gate",
+    "name": "RFP Gate",
+    "position": [
+      0,
+      0,
+      105
+    ],
+    "spawn": "spawn_rfp_gate",
+    "stations": [
+      {
+        "id": "gate_how_to_drive",
+        "title": "How to drive",
+        "status": "final",
+        "body": "Hello, Percy here, your PursuitArena mascot!\nWelcome to our Pursuit community where we communicate, collaborate, and celebrate every step of the way.\n\nW/↑ drive · S/↓ brake & reverse · A D steer · Shift boost · Space brake · R reset · H horn · Enter interact · C camera · M mute · Esc menu",
+        "links": [],
+        "image": "content/site/gate-how-to-drive-percy-banner.webp"
+      },
+      {
+        "id": "gate_deadline_dash",
+        "title": "Deadline Dash",
+        "status": "final",
+        "body": "Pick up the RFP, hit every checkpoint, submit at HQ before the deadline.",
+        "links": []
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "id": "year_1",
+      "label": "Year 1",
+      "year": null,
+      "title": "Milestone 1",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_2",
+      "label": "Year 2",
+      "year": null,
+      "title": "Milestone 2",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_3",
+      "label": "Year 3",
+      "year": null,
+      "title": "Milestone 3",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_4",
+      "label": "Year 4",
+      "year": null,
+      "title": "Milestone 4",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_5",
+      "label": "Year 5",
+      "year": null,
+      "title": "Milestone 5",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_6",
+      "label": "Year 6",
+      "year": null,
+      "title": "Milestone 6",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_7",
+      "label": "Year 7",
+      "year": null,
+      "title": "Milestone 7",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_8",
+      "label": "Year 8",
+      "year": null,
+      "title": "Milestone 8",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_9",
+      "label": "Year 9",
+      "year": null,
+      "title": "Milestone 9",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    },
+    {
+      "id": "year_10",
+      "label": "Year 10",
+      "year": null,
+      "title": "Milestone 10",
+      "caption": "To be supplied.",
+      "image": "content/placeholder.svg",
+      "status": "placeholder"
+    }
+  ],
+  "territories": [
+    {
+      "id": "audit",
+      "kind": "territory",
+      "name": "Audit: Assurance Citadel",
+      "landmark": "Ledger towers + magnifying glass",
+      "position": [
+        -31,
+        0,
+        -53.7
+      ],
+      "angleDeg": 330,
+      "color": "#0D8390",
+      "stampTrigger": "trigger_stamp_audit",
+      "miniGame": "chart_stack",
+      "stations": [
+        {
+          "id": "audit_managers",
+          "title": "Audit Managers",
+          "body": "Pursuit managers for Audit & Assurance: end-to-end pursuit management, strategic value-add, compelling storytelling and writing, and orals guidance for US pursuits.\n\nTeam membership is reconstructed from the 2D site and is awaiting confirmation by the Pursuits team.",
+          "image": "content/site/team-1-our-team-final-layout-for-the-bg-01.webp",
+          "links": [],
+          "status": "placeholder",
+          "roles": [
+            {
+              "name": "Rajat Mishra",
+              "role": "AVP · USI Strategic segment"
+            },
+            {
+              "name": "Ranjit Rao",
+              "role": "Executive Manager · USI Strategic segment"
+            },
+            {
+              "name": "Skandh Suresh",
+              "role": "Executive Manager · Audit"
+            },
+            {
+              "name": "Vinnu Priya",
+              "role": "Executive Manager · Audit"
+            },
+            {
+              "name": "Deepak Pandey",
+              "role": "Deputy Manager · Audit"
+            },
+            {
+              "name": "Preya Deb",
+              "role": "Deputy Manager · Deloitte Private"
+            },
+            {
+              "name": "Avantika Manu",
+              "role": "Assistant Manager · Audit"
+            },
+            {
+              "name": "Khushboo Sharma",
+              "role": "Assistant Manager · team to confirm"
+            },
+            {
+              "name": "Shankha Sen",
+              "role": "Assistant Manager · Deployment"
+            },
+            {
+              "name": "Dhruv Ahuja",
+              "role": "Senior Analyst · team to confirm"
+            },
+            {
+              "name": "Ahmed Muzammil",
+              "role": "Manager · Deloitte Private"
+            },
+            {
+              "name": "Mayoura Chatta",
+              "role": "Manager · Audit"
+            },
+            {
+              "name": "Nadeem Farooque",
+              "role": "Manager · Audit"
+            },
+            {
+              "name": "Sandeep Mishra",
+              "role": "Manager · USI Strategic segment"
+            },
+            {
+              "name": "Sushma Yanamadala",
+              "role": "Manager"
+            }
+          ]
+        },
+        {
+          "id": "audit_designers",
+          "title": "Audit Designers",
+          "body": "Pursuit designers aligned to Audit & Assurance: professional end-to-end graphic design, creative conceptualization, motion and interactive design, art and illustration, and special print and package design.\n\nTeam membership is reconstructed from the 2D site and is awaiting confirmation by the Pursuits team.",
+          "image": "content/site/team-1-our-team-final-layout-for-the-bg-01.webp",
+          "links": [],
+          "status": "placeholder",
+          "roles": [
+            {
+              "name": "Sateeshsai Modukuru",
+              "role": "Executive Manager"
+            },
+            {
+              "name": "Mohammad Raqeeb",
+              "role": "Deputy Manager"
+            },
+            {
+              "name": "Pramodh Kumar Peddagani",
+              "role": "Deputy Manager"
+            },
+            {
+              "name": "Akhila Gadepalli",
+              "role": "Assistant Manager"
+            },
+            {
+              "name": "Kashyap Joshi",
+              "role": "Assistant Manager"
+            },
+            {
+              "name": "Shailaja Rana",
+              "role": "Assistant Manager"
+            },
+            {
+              "name": "Tripti Rungta",
+              "role": "Assistant Manager"
+            },
+            {
+              "name": "Iti Mishra",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Kavin Prabahar",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Mohit Acharya",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Nitesh Rana",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Purwa Tiwari",
+              "role": "Senior Analyst · team to confirm"
+            },
+            {
+              "name": "Shloka Mathur",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Shweta Sawji",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Sravya Sudha",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Sumit Kumar Shrivastava",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Ujwal Pachode",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Yashaswini Singh",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Aprajita Suman",
+              "role": "Analyst · XFSS"
+            },
+            {
+              "name": "Harshika Chopra",
+              "role": "Analyst"
+            },
+            {
+              "name": "Rishika Sahare",
+              "role": "Analyst"
+            },
+            {
+              "name": "Soham Banerjee",
+              "role": "Analyst"
+            },
+            {
+              "name": "Tanisha Puri",
+              "role": "Analyst · Audit"
+            },
+            {
+              "name": "Chayan Banerjee",
+              "role": "Manager"
+            },
+            {
+              "name": "Kartik Lalit",
+              "role": "Manager"
+            },
+            {
+              "name": "Tripti Gupta",
+              "role": "Manager"
+            }
+          ]
+        },
+        {
+          "id": "audit_researchers",
+          "title": "Audit Researchers",
+          "body": "The USI Pursuit Research Team: pre-sales market researchers providing \"pursuit intelligence\" and \"RFP content\" support to pursuit managers across regions. Pre-proposal: news and media analysis, industry landscape, competitor and SWOT analysis, cross-board analysis, track packs, ContactNet relationship reports. Proposal: RFP response search, analyst quotes, non-standard responses, bios, Qvidian and client-list validation. Post-proposal: executive biographic research and onboarding documents.\n\nTeam membership is reconstructed from the 2D site and is awaiting confirmation by the Pursuits team.",
+          "image": "content/site/team-1-our-team-final-layout-for-the-bg-01.webp",
+          "links": [],
+          "status": "placeholder",
+          "roles": [
+            {
+              "name": "Priyanka Lole",
+              "role": "Deputy Manager · team to confirm"
+            },
+            {
+              "name": "Mithilesh Kumar",
+              "role": "Assistant Manager"
+            },
+            {
+              "name": "Kriti Srivastava",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Nidhi Vijay Sharma",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Rashmi Pandey",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Ritik Srivastava",
+              "role": "Senior Analyst"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tax",
+      "kind": "territory",
+      "name": "Tax: Tax Terrace",
+      "landmark": "Calculator buildings + coin tower",
+      "position": [
+        31,
+        0,
+        -53.7
+      ],
+      "angleDeg": 30,
+      "color": "#00A3E0",
+      "stampTrigger": "trigger_stamp_tax",
+      "miniGame": "coin_run",
+      "stations": [
+        {
+          "id": "tax_managers",
+          "title": "Tax Managers",
+          "body": "Pursuit managers for Tax: end-to-end pursuit management, strategic value-add, compelling storytelling and writing, and orals guidance.\n\nTeam membership is reconstructed from the 2D site and is awaiting confirmation by the Pursuits team.",
+          "image": "content/site/team-1-our-team-final-layout-for-the-bg-01.webp",
+          "links": [],
+          "status": "placeholder",
+          "roles": [
+            {
+              "name": "Ripunjay Nandikonda",
+              "role": "AVP · USI Strategic segment"
+            },
+            {
+              "name": "P. Prasad Nandula",
+              "role": "Executive Manager"
+            },
+            {
+              "name": "Ayan Gupta",
+              "role": "Deputy Manager"
+            },
+            {
+              "name": "Soumalya Rana",
+              "role": "Assistant Manager"
+            },
+            {
+              "name": "Bhuvan Grover",
+              "role": "Manager"
+            },
+            {
+              "name": "Karan Singh",
+              "role": "Manager"
+            },
+            {
+              "name": "Vamsee Krishna Sonti",
+              "role": "Manager · team to confirm"
+            }
+          ]
+        },
+        {
+          "id": "tax_designers",
+          "title": "Tax Designers",
+          "body": "Pursuit designers aligned to Tax: end-to-end graphic design, creative conceptualization, motion and interactive design, art and illustration.\n\nTeam membership is reconstructed from the 2D site and is awaiting confirmation by the Pursuits team.",
+          "image": "content/site/team-1-our-team-final-layout-for-the-bg-01.webp",
+          "links": [],
+          "status": "placeholder",
+          "roles": [
+            {
+              "name": "Aastha Boora",
+              "role": "Executive Manager"
+            },
+            {
+              "name": "Anindya Chakrabarti",
+              "role": "Assistant Manager"
+            },
+            {
+              "name": "Devavrat Matkari",
+              "role": "Assistant Manager · LBS"
+            },
+            {
+              "name": "Divya Menon",
+              "role": "Assistant Manager"
+            },
+            {
+              "name": "Praful Sambaturu",
+              "role": "Assistant Manager"
+            },
+            {
+              "name": "John Pal Chigurupati",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Kummara Palli Mohan Kumar",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Rishabh Chhabra",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "A Venkata Kartheek",
+              "role": "Analyst"
+            },
+            {
+              "name": "Chandana Chepuri",
+              "role": "Analyst · Tax"
+            },
+            {
+              "name": "Jyoshna Sree Masulu",
+              "role": "Analyst · Tax"
+            },
+            {
+              "name": "Tejaswini Padyala",
+              "role": "Analyst"
+            },
+            {
+              "name": "Vamshi Kumar",
+              "role": "Analyst · Tax"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "consulting",
+      "kind": "territory",
+      "name": "Consulting Services: Consulting Skyline",
+      "landmark": "Gears + flowchart bridge",
+      "position": [
+        62,
+        0,
+        0
+      ],
+      "angleDeg": 90,
+      "color": "#26890D",
+      "stampTrigger": "trigger_stamp_consulting",
+      "miniGame": "idea_spark",
+      "stations": [
+        {
+          "id": "consulting_designers",
+          "title": "Consulting Services Pursuit Designers",
+          "body": "Pursuit design services for Consulting: end-to-end graphic design, creative conceptualization, motion and interactive design, art and illustration.\n\nTeam membership is reconstructed from the 2D site and is awaiting confirmation by the Pursuits team.",
+          "image": "content/site/team-1-our-team-final-layout-for-the-bg-01.webp",
+          "links": [],
+          "status": "placeholder",
+          "roles": [
+            {
+              "name": "Chandrasekhar Chandramsetti",
+              "role": "Deputy Manager · Shift 1 Lead"
+            },
+            {
+              "name": "Vaseem Kader",
+              "role": "Deputy Manager · Shift 2"
+            },
+            {
+              "name": "Anirban Mondal",
+              "role": "Assistant Manager · Consulting"
+            },
+            {
+              "name": "Nandini Rathi",
+              "role": "Assistant Manager · Shift 2"
+            },
+            {
+              "name": "Muskan Dharod",
+              "role": "Senior Analyst · Shift 2"
+            },
+            {
+              "name": "Subhajyoti Pal",
+              "role": "Senior Analyst · Shift 1"
+            },
+            {
+              "name": "Mohammad Afrid Hussain",
+              "role": "Analyst · Shift 2"
+            },
+            {
+              "name": "Uma Keerthi Akkinapally",
+              "role": "Analyst · Shift 1"
+            },
+            {
+              "name": "Richa Saxena",
+              "role": "Manager · Shift 2 Lead"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pace",
+      "kind": "territory",
+      "name": "PACE: PACE Speedway",
+      "landmark": "Mini oval + pace tower",
+      "position": [
+        31,
+        0,
+        53.7
+      ],
+      "angleDeg": 150,
+      "color": "#ED8B00",
+      "stampTrigger": "trigger_stamp_pace",
+      "miniGame": "pace_lap",
+      "stations": [
+        {
+          "id": "pace_managers",
+          "title": "PACE Managers",
+          "body": "PACE: the agile, cross-functional pursuit team. Pursuit managers working across functions and segments (including ARA and ESG pursuits).\n\nTeam membership is reconstructed from the 2D site and is awaiting confirmation by the Pursuits team.",
+          "image": "content/site/team-1-our-team-final-layout-for-the-bg-01.webp",
+          "links": [],
+          "status": "placeholder",
+          "roles": [
+            {
+              "name": "Namrata Pathak",
+              "role": "Deputy Manager · ARA ESG"
+            },
+            {
+              "name": "Abhinav Kodavati",
+              "role": "Assistant Manager · team to confirm"
+            },
+            {
+              "name": "Jaspreet Singh Saluja",
+              "role": "Assistant Manager"
+            },
+            {
+              "name": "Khushpreet Singh",
+              "role": "Assistant Manager"
+            },
+            {
+              "name": "Prithwish Ghosh",
+              "role": "Assistant Manager · Audit"
+            },
+            {
+              "name": "Sai Shyam Somala",
+              "role": "Assistant Manager · Deloitte Private"
+            },
+            {
+              "name": "Vahista Variava",
+              "role": "Assistant Manager · team to confirm"
+            },
+            {
+              "name": "Sukanya Tripathi",
+              "role": "Senior Analyst · ESG"
+            },
+            {
+              "name": "Kristi Saha",
+              "role": "Analyst · Audit"
+            },
+            {
+              "name": "Archana Anand",
+              "role": "Manager"
+            },
+            {
+              "name": "Divya Singh",
+              "role": "Manager · team to confirm"
+            },
+            {
+              "name": "Lakshmi Nair",
+              "role": "Manager · team to confirm"
+            },
+            {
+              "name": "Pujitha Annamraju",
+              "role": "Manager"
+            }
+          ]
+        },
+        {
+          "id": "pace_designers",
+          "title": "PACE Designers",
+          "body": "Designers supporting PACE's agile, cross-functional pursuits, including motion graphics.\n\nTeam membership is reconstructed from the 2D site and is awaiting confirmation by the Pursuits team.",
+          "image": "content/site/team-1-our-team-final-layout-for-the-bg-01.webp",
+          "links": [],
+          "status": "placeholder",
+          "roles": [
+            {
+              "name": "Sephin Alexander",
+              "role": "Assistant Manager"
+            },
+            {
+              "name": "Sivaley Pawar",
+              "role": "Senior Analyst · Audit"
+            },
+            {
+              "name": "Surabhi Cholkar",
+              "role": "Senior Analyst"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "studio",
+      "kind": "territory",
+      "name": "Pursuit Studio: The Studio",
+      "landmark": "Pencil obelisk + swatch wall",
+      "position": [
+        -31,
+        0,
+        53.7
+      ],
+      "angleDeg": 210,
+      "color": "#62B5E5",
+      "stampTrigger": "trigger_stamp_studio",
+      "miniGame": "paint_trail",
+      "stations": [
+        {
+          "id": "studio_designers",
+          "title": "Pursuits Studio Designers",
+          "body": "Pursuits Design Studio: a production-support model with a follow-the-sun shift pattern that picks up where US pursuit teams leave off. Services: proposals, orals material, marketing collateral (print and digital), video and audio (storyboarding, motion graphics, character animation), interactive (microsites, interactive PDFs, forms) and desktop publishing (Word, PowerPoint, Keynote, HTML e-mails).\n\nTeam membership is reconstructed from the 2D site and is awaiting confirmation by the Pursuits team.",
+          "image": "content/site/team-1-our-team-final-layout-for-the-bg-01.webp",
+          "links": [],
+          "status": "placeholder",
+          "roles": [
+            {
+              "name": "Pramod Medichalam",
+              "role": "Executive Manager · USI Emerging Media Lead"
+            },
+            {
+              "name": "Premshankar Rama",
+              "role": "Deputy Manager"
+            },
+            {
+              "name": "Arojit Sen",
+              "role": "Senior Analyst · Shift 2"
+            },
+            {
+              "name": "Megha Jayan",
+              "role": "Senior Analyst · Shift 1"
+            },
+            {
+              "name": "Rudrasish Sengupta",
+              "role": "Senior Analyst · Shift 1"
+            },
+            {
+              "name": "Sravya Kolachana",
+              "role": "Senior Analyst · Shift 2"
+            },
+            {
+              "name": "Swathi Mutyala",
+              "role": "Analyst · Shift 1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "catalyst",
+      "kind": "territory",
+      "name": "Israel Catalyst Team: Catalyst Bridge",
+      "landmark": "Bridge + globe + twin clocks",
+      "position": [
+        -62,
+        0,
+        0
+      ],
+      "angleDeg": 270,
+      "color": "#007680",
+      "stampTrigger": "trigger_stamp_catalyst",
+      "miniGame": "bridge_run",
+      "stations": [
+        {
+          "id": "catalyst_team",
+          "title": "Israel Catalyst Team",
+          "body": "The Israel Catalyst Team. Team members are not identifiable in the 2D site export: please supply the roster.",
+          "image": "content/site/team-1-our-team-final-layout-for-the-bg-01.webp",
+          "links": [],
+          "status": "placeholder",
+          "roles": [
+            {
+              "name": "Maha Waseem Jan",
+              "role": "Assistant Manager"
+            },
+            {
+              "name": "Pratyasha Dutta",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Vineeth Kumar Yadav",
+              "role": "Analyst · Shift 2"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "pillars": [
+    {
+      "id": "innovation",
+      "kind": "pillar",
+      "name": "II. Innovation Lab",
+      "landmark": "Glass dome with orbiting rings",
+      "position": [
+        0,
+        0,
+        -105
+      ],
+      "angleDeg": 0,
+      "color": "#00ABAB",
+      "stampTrigger": "trigger_stamp_innovation",
+      "miniGame": "ninja_hunt",
+      "stations": [
+        {
+          "id": "innovation_1",
+          "title": "Upcoming events & activities",
+          "body": "Innovation Lab: calling all innovators on the deck!\nAt Pursuits, we are constantly exploring ways to drive innovation and improve our pursuits. Share your insights and expertise with us by filling this survey and stand a chance to win rewards.\n\nComing up!\nDesign Alchemy Season 2 Module 2 for non-designers across Growth and Purpose team:\nStay tuned for more updates\n\n“There’s a way to do it better. Find it.”\nThomas Edison",
+          "image": "content/site/innovation-1-7-innovation-upcoming-bg.webp",
+          "links": [
+            {
+              "label": "survey",
+              "url": "https://deloittesurvey.deloitte.com/Community/se/3FC11B266F849A90"
+            }
+          ],
+          "feed": "events",
+          "status": "final"
+        },
+        {
+          "id": "innovation_2",
+          "title": "The Intelligence Update",
+          "body": "The Intelligence Update Navigate through the ever-evolving landscape of Generative AI with the latest industry updates, news, and inspiring stories of how our colleagues are leveraging the technology.\n\n13 editions in the archive, June 2024 to June 2025.",
+          "image": "content/site/innovation-2-7-innovation-intelligence-bg.webp",
+          "links": [
+            {
+              "label": "The Intelligence Update, Jun 2025 (PDF)",
+              "url": "content/docs/intelligence-update-2025-06.pdf"
+            },
+            {
+              "label": "The Intelligence Update, May 2025 (PDF)",
+              "url": "content/docs/intelligence-update-2025-05.pdf"
+            },
+            {
+              "label": "The Intelligence Update, Apr 2025 (PDF)",
+              "url": "content/docs/intelligence-update-2025-04.pdf"
+            },
+            {
+              "label": "The Intelligence Update, Mar 2025 (PDF)",
+              "url": "content/docs/intelligence-update-2025-03.pdf"
+            },
+            {
+              "label": "The Intelligence Update, Feb 2025 (PDF)",
+              "url": "content/docs/intelligence-update-2025-02.pdf"
+            },
+            {
+              "label": "The Intelligence Update, Jan 2025 (PDF)",
+              "url": "content/docs/intelligence-update-2025-01.pdf"
+            },
+            {
+              "label": "The Intelligence Update, Dec 2024 (PDF)",
+              "url": "content/docs/intelligence-update-2024-12.pdf"
+            },
+            {
+              "label": "The Intelligence Update, Nov 2024 (PDF)",
+              "url": "content/docs/intelligence-update-2024-11.pdf"
+            },
+            {
+              "label": "The Intelligence Update, Oct 2024 (PDF)",
+              "url": "content/docs/intelligence-update-2024-10.pdf"
+            },
+            {
+              "label": "The Intelligence Update, Sep 2024 (PDF)",
+              "url": "content/docs/intelligence-update-2024-09.pdf"
+            },
+            {
+              "label": "The Intelligence Update, Aug 2024 (PDF)",
+              "url": "content/docs/intelligence-update-2024-08.pdf"
+            },
+            {
+              "label": "The Intelligence Update, Jul 2024 (PDF)",
+              "url": "content/docs/intelligence-update-2024-07.pdf"
+            },
+            {
+              "label": "The Intelligence Update, Jun 2024 (PDF)",
+              "url": "content/docs/intelligence-update-2024-06.pdf"
+            }
+          ],
+          "status": "final"
+        },
+        {
+          "id": "innovation_3",
+          "title": "Behind-the-scenes!",
+          "body": "Behind-the-scenes!\nLatest creative moves, big ideas, and tiny tweaks Crafting proposals is an art that we are transforming into science. We don’t just follow best practices; we invent them to make the proposal creation journey smarter, more efficient, and dare we say…fun.\nFrom small but mighty fixes to fresh design hacks, we have been tackling those little ‘proposal quirks’ one by one. Here, we dish out the secret sauce behind turning ‘good’ into ‘marvelous’—from clever content tips, and design tricks to workflow improvement that make our work shine. Think of it as our very own lab where we’re brewing up solutions for every little proposal pickle that pops up. So, buckle in, grab your imagination hats, and get ready to see how we’re making proposals sparkle one genius tweak at a time!\n\nLatest tips:\n• Using Adobe Color checker for color accessibility: Aastha\n• Must know After Effects shortcuts to make your life easy: Praful\n• Horizon feedback: Sateesh\n• Solution for ‘PPT repair’ issue for Mac users: Simon and Prasad\n• Reviving author names in comments on PowerPoint: Anindya",
+          "image": "content/site/innovation-3-istory1.webp",
+          "links": [],
+          "status": "final",
+          "images": [
+            "content/site/innovation-3-istory1.webp",
+            "content/site/innovation-3-istory2.webp",
+            "content/site/innovation-3-istory3.webp",
+            "content/site/innovation-3-istory4.webp",
+            "content/site/innovation-3-istory5.webp"
+          ]
+        },
+        {
+          "id": "innovation_4",
+          "title": "Calling all Proposal Ninjas",
+          "body": "Calling all Proposal Ninjas Calling all creative thinkers and problem solvers! We’re on the lookout for bright ideas that can take our proposal game to the next level. If you have come up with a clever hack, a time-saving process, or even a unique design sprinkle that’s made a difference in our proposals, we want to hear about it! And wait… if you are battling “Is-my-idea-good-enough” syndrome, then please remember— sometimes, it’s the tiniest tweak that makes the biggest impact!\nPlease contact the USI Pursuit COE Innovate to Evolve team member ( Aastha , Vinnu , Deepak , Ben , Sephin and Bharti ) to contribute.",
+          "image": "content/site/innovation-4-7-innovation-ninja-bg.webp",
+          "links": [
+            {
+              "label": "Contact the Innovate to Evolve team",
+              "url": "mailto:aboora@deloitte.com"
+            }
+          ],
+          "status": "final",
+          "roles": [
+            {
+              "name": "Aastha Boora",
+              "role": "Innovate to Evolve team"
+            },
+            {
+              "name": "Vinnu Priya",
+              "role": "Innovate to Evolve team"
+            },
+            {
+              "name": "Deepak Pandey",
+              "role": "Innovate to Evolve team"
+            },
+            {
+              "name": "Ben",
+              "role": "Innovate to Evolve team"
+            },
+            {
+              "name": "Sephin Alexander",
+              "role": "Innovate to Evolve team"
+            },
+            {
+              "name": "Bharti",
+              "role": "Innovate to Evolve team"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rnr",
+      "kind": "pillar",
+      "name": "III. R&R Arena",
+      "landmark": "Trophy stadium",
+      "position": [
+        90.9,
+        0,
+        -52.5
+      ],
+      "angleDeg": 60,
+      "color": "#E3B505",
+      "stampTrigger": "trigger_stamp_rnr",
+      "miniGame": "strike_a_win",
+      "stations": [
+        {
+          "id": "rnr_1",
+          "title": "applauD",
+          "body": "Recognition fuels lasting inspiration.\nShout out a colleague or be recognized for being your authentic self across USI G&P, GPS-Growth Office, S&T, TT and Global teams USI CMG, BGS, GPS-CMG, & Global teams.\n\nReward the good deeds.\nRecognition is the most sustainable source of continued inspiration. This is your place to  recognize anyone in USI CMG, BGS, GPS-CMG, & Global teams and be recognized for who you awesomely are!\n\nThank It Forward stats, June 2023 - December 2024\nOutstanding Awards: 4\nApplause Awards: 41\nSpot Awards: 72",
+          "image": "content/site/rnr-1-applaud-01.webp",
+          "links": [
+            {
+              "label": "Visit CoinD",
+              "url": "https://americas.internal.deloitteonline.com/sites/coin/SitePages/index.html"
+            }
+          ],
+          "status": "final"
+        },
+        {
+          "id": "rnr_2",
+          "title": "Reward and Excellence",
+          "body": "Recognizing and rewarding professionals whose performance exemplifies their dedication and willingness to go the extra mile!\n\nThe Bravo Bulletin From Recognition to Inspiration: Success Stories that Shine Bright",
+          "image": "content/site/rnr-2-reward-and-excellence-1.webp",
+          "links": [],
+          "status": "final",
+          "images": [
+            "content/site/rnr-2-reward-and-excellence-1.webp",
+            "content/site/rnr-2-swagtags-recognition-event-april-2025.webp",
+            "content/site/rnr-2-swagtags-recognition.webp"
+          ]
+        },
+        {
+          "id": "rnr_3",
+          "title": "BrightStar Awards",
+          "body": "BrightStar Awards Q4 FY25 Celebrating the contributions of professionals who go above and beyond to cultivate a high-performing culture.\n\nAward nomination form for Coaches/TLs.\nPlease refer the below Playbook for award categories and their descriptions.\n\nBrightStar Awards stats, June 2023 - December 2024\nMarvelous Mentor: 2\nAstute Collaborator: 1\nPromising Rookie: 7\nTeam Terrific: 16\nKnowledge Enthusiast: 1\nProactive Stalwart: 2",
+          "image": "content/site/rnr-3-brightstar-bg-1.webp",
+          "links": [],
+          "status": "final"
+        }
+      ]
+    },
+    {
+      "id": "lnd",
+      "kind": "pillar",
+      "name": "V. L&D Campus",
+      "landmark": "Open-book amphitheatre",
+      "position": [
+        90.9,
+        0,
+        52.5
+      ],
+      "angleDeg": 120,
+      "color": "#7F5BA6",
+      "stampTrigger": "trigger_stamp_lnd",
+      "miniGame": null,
+      "stations": [
+        {
+          "id": "lnd_1",
+          "title": "What we did",
+          "body": "Leadership visit From November 3 to November 6, we embarked on a remarkable week dedicated to learning, growth, and meaningful connection. Curated training sessions sparked meaningful discussions and equipped participants with practical strategies for giving and receiving feedback, strengthening stakeholder relationships, and writing with impact. Lesli Hamilton, Annabell Lepe, Kandace Gallant, Vineet Arora, Rajat Mishra, and Ripunjay (RJ) Nandikonda facilitated workshops on ‘Culture of Feedback,’ ‘Master Delivery,’ and ‘Smart Brevity.’ These sessions provided attendees with valuable and actionable insights to elevate their impact and drive success together.\n\nNow, let’s hear directly from our participants about their experiences:\n\n“Effective communication isn’t about saying more—it’s about focusing on what matters most. In our recent training, I learned the value of the ‘10% effective message’: distilling feedback to the few most actionable and relevant insights, rather than overwhelming clients with excessive detail.”\n—\nRashmi Pandey, pursuit researcher “The sessions broadened my perspective, deepening my understanding of how a culture of collaboration, meaningful content, and constructive feedback drives growth and continuous improvement.”\n—Jyoshna Sree, designer, Pursuit Design Studio\n\nWe had concurrent sessions with the leaders, aligned to our work deliverables. This provided us with a bird's-eye view of work that includes stitching up the storytelling elements, understanding smart brevity closely, and placing the 10% messaging to make it memorable.”\n—Ayan Gupta, Tax pursuit manager “I really connected with the idea that ‘brevity is confidence’ — it reminded me to communicate with more clarity and impact. The concept of crafting my 10% also stood out, pushing me to focus on what truly adds value and makes my message unique.”\n—Mayoura Chatta, Audit pursuit manager",
+          "image": "content/site/lnd-1-1-l-d-peak.webp",
+          "links": [],
+          "status": "final",
+          "images": [
+            "content/site/lnd-1-1-l-d-peak.webp",
+            "content/site/lnd-1-leadership-visit.webp"
+          ]
+        },
+        {
+          "id": "lnd_2",
+          "title": "What's new",
+          "body": "Explore the world of design.\nOne book at a time.\nWe are excited to announce that we have added a selection of design books to our Pursuit design library ! If you have some free time and are eager to expand your knowledge in the world of design, we’ve got a fantastic list of books for you to explore.\nDiscover classics such as “Grid Systems' and 'Creating a Brand Identity”, along with many other insightful resources.\nConnect with Sateesh , Tripti or Akhila to borrow and return books.\n\nThe Science of Winning + Buyer's Brain\n\nCE Baseline Guide Your complete guide to provide a comprehensive view of what you can expect in the CE baseline test and tips to develop useful strategies.",
+          "image": "content/site/lnd-2-2-l-d-whatsnew.webp",
+          "links": [
+            {
+              "label": "CE Baseline Guide (PDF)",
+              "url": "content/docs/ce-training.pdf"
+            },
+            {
+              "label": "Click here",
+              "url": "https://engage.deloitte.com/science-of-winning"
+            }
+          ],
+          "status": "final"
+        },
+        {
+          "id": "lnd_3",
+          "title": "Metrics & Useful Links",
+          "body": "Metrics Learn. Achieve. Inspire.\n\nDriven by curiosity, powered by learning\n\nLearning hours completed: 870\nAI learning hours completed: 26\nHours of leadership training completed: 30",
+          "image": "content/site/lnd-3-3-l-d-metrics.webp",
+          "links": [
+            {
+              "label": "myCE",
+              "url": "https://sabacloud.deloitteresources.com/Saba/Web_spf/E103PRD0001/app/me/microapp/app8c70e2f5c1acad50e0532530630afdec"
+            },
+            {
+              "label": "Business Chemistry",
+              "url": "https://businesschemistry.deloitte.com/Login/Index?ReturnUrl=%2f#/"
+            },
+            {
+              "label": "Industry proficiency program",
+              "url": "https://talentdevelopment.deloitte.com/sites/SpecialProjects/ITD/SitePages/IPP/IPP_Home.aspx"
+            },
+            {
+              "label": "Cura",
+              "url": "https://becurious.edcast.eu/"
+            },
+            {
+              "label": "LinkedIn Learning",
+              "url": "https://www.linkedin.com/learning-login/?account=1504&authUUID=qVWSGuHaTOKMdA9xLGjW6w%3D%3D&redirect=https%3A%2F%2Fwww.linkedin.com%2Flearning%2Fonboarding%3Fdest%3D%252Flearning%252Fme%26u%3D1504"
+            },
+            {
+              "label": "Udemy",
+              "url": "https://deloittedevelopment.udemy.com/organization/home/"
+            },
+            {
+              "label": "GenAI wins",
+              "url": "https://americas.internal.deloitteonline.com/sites/pursuitscoe/genai/SitePages/index.html#"
+            },
+            {
+              "label": "Pursuit Management Onboarding",
+              "url": "https://americas.internal.deloitteonline.com/sites/MD/peX/builttowin/SitePages/Home.aspx"
+            },
+            {
+              "label": "DLHP",
+              "url": "https://amedeloitte.sharepoint.com/sites/DOL-c-US-DLHP/SitePages/LearningNexus.aspx?env=WebView"
+            }
+          ],
+          "status": "final"
+        }
+      ]
+    },
+    {
+      "id": "toolkit",
+      "kind": "pillar",
+      "name": "VI. Toolkit Depot",
+      "landmark": "Giant open toolbox",
+      "position": [
+        -90.9,
+        0,
+        52.5
+      ],
+      "angleDeg": 240,
+      "color": "#53565A",
+      "stampTrigger": "trigger_stamp_toolkit",
+      "miniGame": "red_tape_wall",
+      "stations": [
+        {
+          "id": "toolkit_1",
+          "title": "Time reporting guidance",
+          "body": "Latest Guidance on DTE , Horizon and Bare Minimum\n\n“You have all the tools and resources you need. What you do with them is up to you.”\nCherie Carter - Scott",
+          "image": "content/site/toolkit-1-6-toolkit-final-layout-for-the-bg-01.webp",
+          "links": [
+            {
+              "label": "USI PCoE Time Reporting guide (PDF)",
+              "url": "content/docs/time-reporting-fy25.pdf"
+            },
+            {
+              "label": "C,S&G Pursuit Management FY26 Time and Expense Guide (PDF)",
+              "url": "content/docs/g-p-pursuit-management-fy26-time-and-expense-guide-aug-2025.pdf"
+            },
+            {
+              "label": "FY27 Bare Minimum document (PDF)",
+              "url": "content/docs/py27-bare-minimum-guidelines.pdf"
+            },
+            {
+              "label": "USI PCoE Guidance, September 2026 (PDF)",
+              "url": "content/docs/pcoe-guidance-sep-2026.pdf"
+            }
+          ],
+          "status": "final"
+        },
+        {
+          "id": "toolkit_2",
+          "title": "Proposal writing guide",
+          "body": "The Ultimate Guide to Proposal Writing Get the help you need to write proposals that are clear, concise, and error-free. This style guide will help you with the basics of proposal writing, from grammar and punctuation to tone and structure.",
+          "image": "content/site/toolkit-2-6-toolkit-final-layout-for-the-bg-02.webp",
+          "links": [
+            {
+              "label": "USI Proposal Writing Style Guide (PDF)",
+              "url": "content/docs/usi-proposal-writing-style-guide-05262023.pdf"
+            }
+          ],
+          "status": "final"
+        },
+        {
+          "id": "toolkit_3",
+          "title": "Quick links",
+          "body": "Find it fast: the tools, function sites, communities of practice and mailboxes the Pursuits community uses every day.",
+          "image": "content/site/toolkit-3-6-toolkit-final-layout-for-the-bg-05.webp",
+          "links": [
+            {
+              "label": "WorkFront",
+              "url": "https://deloitte.my.workfront.com/"
+            },
+            {
+              "label": "Pursuit Vault",
+              "url": "https://internal.global.deloitteonline.com/sites/GlobalVault/SitePages/Home.aspx"
+            },
+            {
+              "label": "Pursuit Xchange",
+              "url": "https://americas.internal.deloitteonline.com/sites/MD/peX/SitePages/Home.aspx"
+            },
+            {
+              "label": "Pursuit Axis",
+              "url": "https://resources.deloitte.com/sites/global/resource/pursuits/Pages/Home.aspx"
+            },
+            {
+              "label": "Virtual Command Center",
+              "url": "https://americas.internal.deloitteonline.com/sites/MD/peX/Pages/PursuitsVCC.aspx"
+            },
+            {
+              "label": "Sales Success Center",
+              "url": "https://americas.internal.deloitteonline.com/sites/SSCOnDemand/SitePages/home.aspx"
+            },
+            {
+              "label": "iHUB",
+              "url": "https://americas.internal.deloitteonline.com/sites/InnovationHub/SitePages/Home.aspx"
+            },
+            {
+              "label": "Client and Engagement Search",
+              "url": "https://cps.deloitte.com/#/"
+            },
+            {
+              "label": "Qvidian",
+              "url": "https://qpalogin.qvidian.com/Login.aspx"
+            },
+            {
+              "label": "Answers to RFx",
+              "url": "https://resources.deloitte.com/sites/global/resource/pursuits/Pages/RFP_FAQ.aspx"
+            },
+            {
+              "label": "People of Pursuits",
+              "url": "https://engage.deloitte.com/people-of-pursuits"
+            },
+            {
+              "label": "eWOW",
+              "url": "https://americas.internal.deloitteonline.com/sites/MD_team_site/ROW/Well_Being/index.html"
+            },
+            {
+              "label": "Growth & Purpose",
+              "url": "https://resources.deloitte.com/sites/US/CMG/Pages/home.aspx"
+            },
+            {
+              "label": "Brandspace",
+              "url": "https://brandspace.deloitte.com/site/login"
+            },
+            {
+              "label": "US A&A Pursuit Bridge",
+              "url": "https://resources.deloitte.com/sites/global/resource/pursuits/Pages/AandA_Pursuit_Bridge.aspx"
+            },
+            {
+              "label": "Advisory Pursuit CoP",
+              "url": "https://americas.internal.deloitteonline.com/sites/MD/advisorycop/SitePages/Home.aspx"
+            },
+            {
+              "label": "DTE",
+              "url": "https://dte.deloitte.com/TE/ExpenseSummary.aspx"
+            },
+            {
+              "label": "Horizon Bolt",
+              "url": "https://pi.deloitte.com/HorizonBolt/home"
+            },
+            {
+              "label": "My compliance dashboard",
+              "url": "https://mcd.deloittenet.deloitte.com/Default.aspx"
+            },
+            {
+              "label": "ToD",
+              "url": "https://talentondemand.deloittenet.deloitte.com/#!/"
+            },
+            {
+              "label": "Enhance",
+              "url": "https://pi.deloitte.com/enhance/"
+            },
+            {
+              "label": "iRPM",
+              "url": "https://rpm.deloitteresources.com/web/dashboard"
+            },
+            {
+              "label": "USI Internal Mobility",
+              "url": "https://resources.deloitte.com/sites/US/PC/PracticeComm/regions/India/SS/Talent/Pages/InternalMobility.aspx"
+            },
+            {
+              "label": "Magnet - Room/Space Booking",
+              "url": "https://magnet.deloitte.com/TimeLine/Today"
+            },
+            {
+              "label": "ushydtrhelpdesk@deloitte.com",
+              "url": "mailto:ushydtrhelpdesk@DELOITTE.com"
+            },
+            {
+              "label": "Audit CoP (Community of Practice)",
+              "url": "mailto:usauditpursuitcop@deloitte.com"
+            },
+            {
+              "label": "Advisory CoP",
+              "url": "mailto:usadvisorypursuitcop@deloitte.com"
+            },
+            {
+              "label": "Tax CoP",
+              "url": "mailto:ustaxpursuitcoe@deloitte.com"
+            },
+            {
+              "label": "Consulting CoP",
+              "url": "mailto:USConsultingPursuitCOP@deloitte.com"
+            },
+            {
+              "label": "Writer’s Network",
+              "url": "mailto:uspursuitwritersnetwork@deloitte.com"
+            },
+            {
+              "label": "Pursuit Research",
+              "url": "mailto:usipursuitresearch@deloitte.com"
+            },
+            {
+              "label": "USI Advisory Research",
+              "url": "mailto:rfaresearch@deloitte.com"
+            }
+          ],
+          "status": "final"
+        },
+        {
+          "id": "toolkit_4",
+          "title": "Site contact",
+          "body": "Please click here to provide comments/suggestions to this site, or to notify of any updates, which are addressed quarterly.",
+          "image": "content/site/toolkit-4-6-toolkit-final-layout-for-the-bg-06.webp",
+          "links": [
+            {
+              "label": "click here",
+              "url": "mailto:ricsaxena@deloitte.com? Subject=People%20of%20Pursuits%20community%20updates/feedback"
+            }
+          ],
+          "status": "final"
+        }
+      ]
+    },
+    {
+      "id": "culture",
+      "kind": "pillar",
+      "name": "IV. Culture Commons",
+      "landmark": "Park + bandstand",
+      "position": [
+        -90.9,
+        0,
+        -52.5
+      ],
+      "angleDeg": 300,
+      "color": "#E86A5C",
+      "stampTrigger": "trigger_stamp_culture",
+      "miniGame": null,
+      "stations": [
+        {
+          "id": "culture_1",
+          "title": "Birthdays",
+          "body": "Birthday November 2025",
+          "image": "content/site/culture-1-2025-04-birthday-bg-02.webp",
+          "links": [],
+          "feed": "birthdays",
+          "status": "placeholder"
+        },
+        {
+          "id": "culture_2",
+          "title": "Service Anniversary",
+          "body": "Service Anniversary October 2025 We salute you!\nWe celebrate your passion, commitment and success",
+          "image": "content/site/culture-2-service-aniversary-bg.webp",
+          "links": [],
+          "feed": "serviceAwards",
+          "status": "placeholder"
+        },
+        {
+          "id": "culture_3",
+          "title": "Deloitte Chronicles",
+          "body": "Deloitte Chronicles: latest episode, Namrata Pathak Join us in celebrating our fellow Pursuit Champ, narrating their journey in another episode of Deloitte Chronicles!\n\nChampions featured so far include: Ahmed, Akhila, Arojit, Banij, Devavrat, Enayat, Karan, Nadeem, Namrata, Praful, Premshankar, Rajat, Ranjit, Ripunjay (RJ) Nandikonda, Sandeep, Sateesh, Shweta, Tripti Gupta, Tripti Rungta, Vaseem.",
+          "image": "content/site/culture-3-dec-2024-deloitte-chronicles.webp",
+          "links": [],
+          "status": "final",
+          "images": [
+            "content/site/culture-3-dec-2024-deloitte-chronicles.webp",
+            "content/site/culture-3-aug-2024-deloitte-chronicles.webp",
+            "content/site/culture-3-july-2024-deloitte-chronicles.webp"
+          ]
+        },
+        {
+          "id": "culture_4",
+          "title": "Insiders' Scoop",
+          "body": "Insiders' Scoop September 2025 Connecting Colleagues, Crafting Stories!\nCheck for the latest release!\n\nHere’s a whirlwind tour of our team’s latest leaps, cheers, and confetti-worthy news.\n\nOur culture?\nIt’s a vibrant patchwork. Respect and camaraderie aren’t just buzzwords; they’re the bedrock of what makes us unique.\n\nRespect, trust, and care for each other\n- That’s our way of life\n\nCreating memories: Team dinner, March 2025; Ethnic Day; Ethnic wear day; Annual Sports Day 2024-25; PCOE - Team Dinner; SwagTags Recognition Event, April 2025; DesignVerse 2025; Promotion Party, Hyderabad; Unplug, Play, Connect; Spirited game of golf-Hyderabad; Secret Santa; SwagTags Recognition; Suited up-Bengaluru; Camaraderie-Gurugram; Team Dinner, May 2025; Starry Night, July 2025; AHM Team Dinner - August 2025 @ Hardrock cafe, Hyderabad; Pratyasha's Farewell; ApperciateD; Potluck, May 2025; Team dinner - August 2025 @ BLR brewing Co; Team Potluck, May 2025; Smells like TEAM SPIRIT; Pursuits team dinner - August2025 @ Harajuku Tokyo Cafe, Gurugram; Art Gallery 2025; CreActivity — Potful of Fun; Team Lunch - Bengaluru.",
+          "image": "content/site/culture-4-is-oct-25.webp",
+          "links": [],
+          "status": "final",
+          "images": [
+            "content/site/culture-4-is-oct-25.webp",
+            "content/site/culture-4-is-fy26-june.webp",
+            "content/site/culture-4-team-dinner-march-2025.webp",
+            "content/site/culture-4-ethnic-day.webp",
+            "content/site/culture-4-ethnic-wear-day.webp",
+            "content/site/culture-4-annual-sports-day-2024-25.webp",
+            "content/site/culture-4-pcoe-team-dinner.webp",
+            "content/site/culture-4-swagtags-recognition-event-april-2025.webp",
+            "content/site/culture-4-designverse-2025.webp",
+            "content/site/culture-4-promotion-party-hyderabad.webp",
+            "content/site/culture-4-unplug-play-connect.webp",
+            "content/site/culture-4-spirited-game-of-golf-hyderabad.webp",
+            "content/site/culture-4-secret-santa.webp",
+            "content/site/culture-4-swagtags-recognition.webp"
+          ]
+        }
+      ]
+    }
+  ],
+  "feeds": {
+    "birthdays": [
+      {
+        "name": "Sample Person",
+        "date": "--10-24",
+        "status": "placeholder"
+      }
+    ],
+    "serviceAwards": [],
+    "events": []
+  },
+  "exhibits": {
+    "note": "Generated by tools/site-export/build-exhibits.mjs from docs/content-backup/data and the stations above. Positions live in src/config.js (rebuild.showcase).",
+    "mascots": {
+      "percy": {
+        "district": "rfp_gate",
+        "name": "Percy",
+        "greeting": "Hello, Percy here, your PursuitArena mascot! Welcome to our Pursuit community where we communicate, collaborate, and celebrate every step of the way.",
+        "station": "gate_how_to_drive"
+      },
+      "buddies": [
+        {
+          "id": "rnr",
+          "district": "rnr"
+        },
+        {
+          "id": "lnd",
+          "district": "lnd"
+        },
+        {
+          "id": "toolkit",
+          "district": "toolkit"
+        },
+        {
+          "id": "innovation",
+          "district": "innovation"
+        },
+        {
+          "id": "culture",
+          "district": "culture"
+        }
+      ]
+    },
+    "winsBoard": {
+      "district": "hq",
+      "station": "hq_org",
+      "heading": "Pursuit Wins",
+      "sets": [
+        {
+          "title": "FY26",
+          "caption": "site snapshot, Sep 2025",
+          "rows": [
+            {
+              "label": "Win revenue",
+              "value": "$47M"
+            },
+            {
+              "label": "Total TCV",
+              "value": "$260M"
+            },
+            {
+              "label": "Total Pursuit count",
+              "value": "240"
+            }
+          ]
+        },
+        {
+          "title": "FY25",
+          "caption": "site snapshot, Sep-Oct 2024",
+          "rows": [
+            {
+              "label": "Win revenue",
+              "value": "$35M"
+            },
+            {
+              "label": "Total TCV",
+              "value": "$310M"
+            },
+            {
+              "label": "Total Pursuit count",
+              "value": "275"
+            }
+          ]
+        }
+      ]
+    },
+    "thankItForward": {
+      "district": "rnr",
+      "station": "rnr_1",
+      "title": "Thank It Forward",
+      "period": "June 2023 – December 2024",
+      "awards": [
+        {
+          "id": "outstanding",
+          "label": "Outstanding Awards",
+          "count": 4
+        },
+        {
+          "id": "applause",
+          "label": "Applause Awards",
+          "count": 41
+        },
+        {
+          "id": "spot",
+          "label": "Spot Awards",
+          "count": 72
+        }
+      ]
+    },
+    "brightStar": {
+      "district": "rnr",
+      "station": "rnr_3",
+      "title": "BrightStar Awards",
+      "period": "June 2023 – December 2024",
+      "categories": [
+        {
+          "label": "Marvelous Mentor",
+          "count": 2
+        },
+        {
+          "label": "Astute Collaborator",
+          "count": 1
+        },
+        {
+          "label": "Promising Rookie",
+          "count": 7
+        },
+        {
+          "label": "Team Terrific",
+          "count": 16
+        },
+        {
+          "label": "Knowledge Enthusiast",
+          "count": 1
+        },
+        {
+          "label": "Proactive Stalwart",
+          "count": 2
+        }
+      ]
+    },
+    "memoryLane": {
+      "district": "culture",
+      "station": "culture_4",
+      "title": "Insiders' Scoop · Memory Lane",
+      "albums": [
+        {
+          "title": "Team dinner, March 2025",
+          "when": "March 2025",
+          "place": "Akan, Hyderabad",
+          "photos": 10,
+          "image": "content/site/culture-4-team-dinner-march-2025.webp"
+        },
+        {
+          "title": "Ethnic Day",
+          "when": null,
+          "place": null,
+          "photos": 2,
+          "image": "content/site/culture-4-ethnic-day.webp"
+        },
+        {
+          "title": "Ethnic wear day",
+          "when": null,
+          "place": "Deloitte Hyderabad",
+          "photos": 20,
+          "image": "content/site/culture-4-ethnic-wear-day.webp"
+        },
+        {
+          "title": "Annual Sports Day 2024-25",
+          "when": "February 2025",
+          "place": "PJR Sports Stadium, Hyderabad",
+          "photos": 6,
+          "image": "content/site/culture-4-annual-sports-day-2024-25.webp"
+        },
+        {
+          "title": "PCOE - Team Dinner",
+          "when": "November 2024",
+          "place": "The Fisherman's Wharf",
+          "photos": 4,
+          "image": "content/site/culture-4-pcoe-team-dinner.webp"
+        },
+        {
+          "title": "SwagTags Recognition Event, April 2025",
+          "when": "April 2025",
+          "place": null,
+          "photos": 8,
+          "image": "content/site/culture-4-swagtags-recognition-event-april-2025.webp"
+        },
+        {
+          "title": "DesignVerse 2025",
+          "when": "July 2025",
+          "place": null,
+          "photos": 8,
+          "image": "content/site/culture-4-designverse-2025.webp"
+        },
+        {
+          "title": "Promotion Party, Hyderabad",
+          "when": "July 2025",
+          "place": "Westin, Hyderabad",
+          "photos": 2,
+          "image": "content/site/culture-4-promotion-party-hyderabad.webp"
+        },
+        {
+          "title": "Unplug, Play, Connect",
+          "when": null,
+          "place": "Timezone, Gurugram",
+          "photos": 4,
+          "image": "content/site/culture-4-unplug-play-connect.webp"
+        },
+        {
+          "title": "Spirited game of golf-Hyderabad",
+          "when": null,
+          "place": null,
+          "photos": 1,
+          "image": "content/site/culture-4-spirited-game-of-golf-hyderabad.webp"
+        },
+        {
+          "title": "Secret Santa",
+          "when": "November 2024",
+          "place": "Deloitte Towers",
+          "photos": 1,
+          "image": "content/site/culture-4-secret-santa.webp"
+        },
+        {
+          "title": "SwagTags Recognition",
+          "when": "November 2024",
+          "place": "Deloitte Hyderabad",
+          "photos": 4,
+          "image": "content/site/culture-4-swagtags-recognition.webp"
+        },
+        {
+          "title": "Suited up-Bengaluru",
+          "when": null,
+          "place": null,
+          "photos": 1,
+          "image": null
+        },
+        {
+          "title": "Camaraderie-Gurugram",
+          "when": null,
+          "place": null,
+          "photos": 1,
+          "image": null
+        },
+        {
+          "title": "Team Dinner, May 2025",
+          "when": "May 2025",
+          "place": "Forge Breu-Hous, Hyderabad",
+          "photos": 3,
+          "image": null
+        },
+        {
+          "title": "Starry Night, July 2025",
+          "when": "July 2025",
+          "place": "Zero40 Brewing, Hyderabad",
+          "photos": 4,
+          "image": null
+        },
+        {
+          "title": "AHM Team Dinner - August 2025 @ Hardrock cafe, Hyderabad",
+          "when": "August 2025",
+          "place": "Hardrock cafe, Hyderabad",
+          "photos": 3,
+          "image": null
+        },
+        {
+          "title": "Pratyasha's Farewell",
+          "when": "June 2025",
+          "place": null,
+          "photos": 2,
+          "image": null
+        },
+        {
+          "title": "ApperciateD",
+          "when": "November 2024",
+          "place": "Deloitte Hyderabad",
+          "photos": 4,
+          "image": null
+        },
+        {
+          "title": "Potluck, May 2025",
+          "when": "May 2025",
+          "place": null,
+          "photos": 1,
+          "image": null
+        },
+        {
+          "title": "Team dinner - August 2025 @ BLR brewing Co",
+          "when": "August 2025",
+          "place": "BLR brewing Co",
+          "photos": 1,
+          "image": null
+        },
+        {
+          "title": "Team Potluck, May 2025",
+          "when": "May 2025",
+          "place": null,
+          "photos": 2,
+          "image": null
+        },
+        {
+          "title": "Smells like TEAM SPIRIT",
+          "when": null,
+          "place": "Deccan Trails, Vikarabad",
+          "photos": 22,
+          "image": null
+        },
+        {
+          "title": "Pursuits team dinner - August2025 @ Harajuku Tokyo Cafe, Gurugram",
+          "when": "August2025",
+          "place": "Harajuku Tokyo Cafe, Gurugram",
+          "photos": 1,
+          "image": null
+        },
+        {
+          "title": "Art Gallery 2025",
+          "when": "July 2025",
+          "place": null,
+          "photos": 12,
+          "image": null
+        },
+        {
+          "title": "CreActivity — Potful of Fun",
+          "when": null,
+          "place": "Amphitheater, Deloitte Tower",
+          "photos": 18,
+          "image": null
+        },
+        {
+          "title": "Team Lunch - Bengaluru",
+          "when": "August 2024",
+          "place": "Ironhill Bengaluru",
+          "photos": 4,
+          "image": null
+        }
+      ]
+    },
+    "newsstand": {
+      "district": "innovation",
+      "station": "innovation_2",
+      "title": "The Intelligence Update",
+      "issues": [
+        {
+          "label": "Jun 2025",
+          "url": "content/docs/intelligence-update-2025-06.pdf"
+        },
+        {
+          "label": "May 2025",
+          "url": "content/docs/intelligence-update-2025-05.pdf"
+        },
+        {
+          "label": "Apr 2025",
+          "url": "content/docs/intelligence-update-2025-04.pdf"
+        },
+        {
+          "label": "Mar 2025",
+          "url": "content/docs/intelligence-update-2025-03.pdf"
+        },
+        {
+          "label": "Feb 2025",
+          "url": "content/docs/intelligence-update-2025-02.pdf"
+        },
+        {
+          "label": "Jan 2025",
+          "url": "content/docs/intelligence-update-2025-01.pdf"
+        },
+        {
+          "label": "Dec 2024",
+          "url": "content/docs/intelligence-update-2024-12.pdf"
+        },
+        {
+          "label": "Nov 2024",
+          "url": "content/docs/intelligence-update-2024-11.pdf"
+        },
+        {
+          "label": "Oct 2024",
+          "url": "content/docs/intelligence-update-2024-10.pdf"
+        },
+        {
+          "label": "Sep 2024",
+          "url": "content/docs/intelligence-update-2024-09.pdf"
+        },
+        {
+          "label": "Aug 2024",
+          "url": "content/docs/intelligence-update-2024-08.pdf"
+        },
+        {
+          "label": "Jul 2024",
+          "url": "content/docs/intelligence-update-2024-07.pdf"
+        },
+        {
+          "label": "Jun 2024",
+          "url": "content/docs/intelligence-update-2024-06.pdf"
+        }
+      ]
+    },
+    "learningGarden": {
+      "district": "lnd",
+      "station": "lnd_3",
+      "bars": [
+        {
+          "label": "Learning hours completed",
+          "value": 870,
+          "unit": "hours"
+        },
+        {
+          "label": "AI learning hours completed",
+          "value": 26,
+          "unit": "hours"
+        },
+        {
+          "label": "Hours of leadership training completed",
+          "value": 30,
+          "unit": "hours"
+        }
+      ]
+    },
+    "signposts": {
+      "district": "toolkit",
+      "station": "toolkit_3",
+      "groups": [
+        {
+          "title": "Find it fast",
+          "links": [
+            {
+              "label": "WorkFront",
+              "url": "https://deloitte.my.workfront.com/"
+            },
+            {
+              "label": "Pursuit Vault",
+              "url": "https://internal.global.deloitteonline.com/sites/GlobalVault/SitePages/Home.aspx"
+            },
+            {
+              "label": "Pursuit Xchange",
+              "url": "https://americas.internal.deloitteonline.com/sites/MD/peX/SitePages/Home.aspx"
+            },
+            {
+              "label": "Pursuit Axis",
+              "url": "https://resources.deloitte.com/sites/global/resource/pursuits/Pages/Home.aspx"
+            },
+            {
+              "label": "Virtual Command Center",
+              "url": "https://americas.internal.deloitteonline.com/sites/MD/peX/Pages/PursuitsVCC.aspx"
+            },
+            {
+              "label": "Sales Success Center",
+              "url": "https://americas.internal.deloitteonline.com/sites/SSCOnDemand/SitePages/home.aspx"
+            },
+            {
+              "label": "iHUB",
+              "url": "https://americas.internal.deloitteonline.com/sites/InnovationHub/SitePages/Home.aspx"
+            },
+            {
+              "label": "Client and Engagement Search",
+              "url": "https://cps.deloitte.com/#/"
+            },
+            {
+              "label": "Qvidian",
+              "url": "https://qpalogin.qvidian.com/Login.aspx"
+            },
+            {
+              "label": "Answers to RFx",
+              "url": "https://resources.deloitte.com/sites/global/resource/pursuits/Pages/RFP_FAQ.aspx"
+            },
+            {
+              "label": "People of Pursuits",
+              "url": "https://engage.deloitte.com/people-of-pursuits"
+            },
+            {
+              "label": "eWOW",
+              "url": "https://americas.internal.deloitteonline.com/sites/MD_team_site/ROW/Well_Being/index.html"
+            }
+          ]
+        },
+        {
+          "title": "Function",
+          "links": [
+            {
+              "label": "Growth & Purpose",
+              "url": "https://resources.deloitte.com/sites/US/CMG/Pages/home.aspx"
+            },
+            {
+              "label": "Brandspace",
+              "url": "https://brandspace.deloitte.com/site/login"
+            },
+            {
+              "label": "US A&A Pursuit Bridge",
+              "url": "https://resources.deloitte.com/sites/global/resource/pursuits/Pages/AandA_Pursuit_Bridge.aspx"
+            },
+            {
+              "label": "Advisory Pursuit CoP",
+              "url": "https://americas.internal.deloitteonline.com/sites/MD/advisorycop/SitePages/Home.aspx"
+            },
+            {
+              "label": "DTE",
+              "url": "https://dte.deloitte.com/TE/ExpenseSummary.aspx"
+            },
+            {
+              "label": "Horizon Bolt",
+              "url": "https://pi.deloitte.com/HorizonBolt/home"
+            },
+            {
+              "label": "My compliance dashboard",
+              "url": "https://mcd.deloittenet.deloitte.com/Default.aspx"
+            },
+            {
+              "label": "ToD",
+              "url": "https://talentondemand.deloittenet.deloitte.com/#!/"
+            },
+            {
+              "label": "Enhance",
+              "url": "https://pi.deloitte.com/enhance/"
+            },
+            {
+              "label": "iRPM",
+              "url": "https://rpm.deloitteresources.com/web/dashboard"
+            },
+            {
+              "label": "USI Internal Mobility",
+              "url": "https://resources.deloitte.com/sites/US/PC/PracticeComm/regions/India/SS/Talent/Pages/InternalMobility.aspx"
+            }
+          ]
+        },
+        {
+          "title": "Others",
+          "links": [
+            {
+              "label": "Magnet - Room/Space Booking",
+              "url": "https://magnet.deloitte.com/TimeLine/Today"
+            },
+            {
+              "label": "ushydtrhelpdesk@deloitte.com",
+              "url": "mailto:ushydtrhelpdesk@DELOITTE.com"
+            },
+            {
+              "label": "Audit CoP (Community of Practice)",
+              "url": "mailto:usauditpursuitcop@deloitte.com"
+            },
+            {
+              "label": "Advisory CoP",
+              "url": "mailto:usadvisorypursuitcop@deloitte.com"
+            },
+            {
+              "label": "Tax CoP",
+              "url": "mailto:ustaxpursuitcoe@deloitte.com"
+            },
+            {
+              "label": "Consulting CoP",
+              "url": "mailto:USConsultingPursuitCOP@deloitte.com"
+            },
+            {
+              "label": "Writer’s Network",
+              "url": "mailto:uspursuitwritersnetwork@deloitte.com"
+            },
+            {
+              "label": "Pursuit Research",
+              "url": "mailto:usipursuitresearch@deloitte.com"
+            },
+            {
+              "label": "USI Advisory Research",
+              "url": "mailto:rfaresearch@deloitte.com"
+            }
+          ]
+        }
+      ]
+    },
+    "champions": {
+      "station": "culture_3",
+      "title": "Deloitte Chronicles",
+      "names": [
+        "Ripunjay (RJ) Nandikonda",
+        "Tripti Rungta",
+        "Shweta",
+        "Arojit",
+        "Nadeem",
+        "Premshankar",
+        "Devavrat",
+        "Sateesh",
+        "Tripti Gupta",
+        "Banij",
+        "Enayat",
+        "Vaseem",
+        "Rajat",
+        "Ahmed",
+        "Akhila",
+        "Namrata",
+        "Karan",
+        "Praful",
+        "Ranjit",
+        "Sandeep"
+      ]
+    }
+  },
+  "gamification": {
+    "ranks": [
+      [
+        "Bid Rookie",
+        0
+      ],
+      [
+        "Proposal Writer",
+        300
+      ],
+      [
+        "Solution Shaper",
+        800
+      ],
+      [
+        "Pursuit Lead",
+        1500
+      ],
+      [
+        "Win Strategist",
+        2500
+      ],
+      [
+        "Pursuit Legend",
+        "fullPassport"
+      ]
+    ],
+    "xp": {
+      "stamp": 100,
+      "panelFirstOpen": 20,
+      "dot": 5,
+      "goldenDot": 50,
+      "shuriken": 75,
+      "badge": 150
+    },
+    "collectibles": {
+      "dot": 100,
+      "golden": 10,
+      "shuriken": 8
+    },
+    "deadlineDash": {
+      "medals": {
+        "gold": 75,
+        "silver": 100,
+        "bronze": 130
+      },
+      "collisionPenaltySec": 2
+    },
+    "exhibitBadges": [
+      {
+        "id": "people_of_pursuits",
+        "counter": "territories",
+        "target": "all"
+      },
+      {
+        "id": "gen_ai_insider",
+        "counter": "issues",
+        "target": 3
+      },
+      {
+        "id": "chronicles_collector",
+        "counter": "champions",
+        "target": "all"
+      },
+      {
+        "id": "spot_on",
+        "counter": "trophies",
+        "target": "all"
+      },
+      {
+        "id": "memory_maker",
+        "counter": "albums",
+        "target": 10
+      }
+    ]
+  }
+}

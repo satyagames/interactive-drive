@@ -30,6 +30,12 @@ export function createShadowBlob({ scene, world, RAPIER, vehicle }) {
     // Written into the depth buffer it would punch a hole in anything drawn
     // after it, and it sits only centimetres off the ground.
     depthWrite: false,
+    // The quad sits 3 cm up, exactly where the road markings and plaza tops
+    // are: pull it towards the camera so it never z-fights with them (the nav
+    // test caught the car's shadow flickering over a lane marking).
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -2,
     fog: true,
   })
 
@@ -79,7 +85,10 @@ export function createShadowBlob({ scene, world, RAPIER, vehicle }) {
 
     // Height is measured from where the chassis sits when parked, so a car on
     // its wheels reads as zero rather than as one ride height in the air.
-    const height = Math.max(hit.timeOfImpact - s.groundClearance, 0)
+    // A vehicle preset can supply its own ride height and footprint scale.
+    const groundClearance = vehicle.shadow?.groundClearance ?? s.groundClearance
+    const footprint = vehicle.shadow?.scale ?? 1
+    const height = Math.max(hit.timeOfImpact - groundClearance, 0)
     const fade = 1 - Math.min(height / Math.max(s.fadeHeight, 1e-3), 1)
     if (fade <= 0) {
       mesh.visible = false
@@ -92,7 +101,7 @@ export function createShadowBlob({ scene, world, RAPIER, vehicle }) {
     material.opacity = s.maxOpacity * Math.pow(fade, 0.75)
     if (material.color.getHex() !== s.tint) material.color.setHex(s.tint)
 
-    const spread = 1 + height * s.growth
+    const spread = (1 + height * s.growth) * footprint
 
     // The ray points straight down, so the hit is simply that far below.
     contact.set(origin.x, origin.y - hit.timeOfImpact, origin.z)

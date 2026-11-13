@@ -21,6 +21,32 @@ function dropUnusedDracoBundleAssets() {
   }
 }
 
+/**
+ * File watching for the dev server.
+ *
+ * On Windows the native watcher sometimes misses an edit -- typically the
+ * second of two writes in quick succession -- and Vite then keeps serving the
+ * half-edited module until something else touches the file (this bit Phases
+ * 2, 5 and 6: a "not defined" error for code that was plainly on disk).
+ * Polling compares file stats on a timer instead, so every change is seen;
+ * `awaitWriteFinish` waits until a file stops changing before reloading, so a
+ * module is never picked up mid-write.
+ *
+ * On by default on Windows, off elsewhere; force it either way with
+ * VITE_WATCH_POLL=1 / VITE_WATCH_POLL=0. Generated and binary folders are
+ * ignored so polling stays cheap.
+ */
+const pollEnv = process.env.VITE_WATCH_POLL
+const usePolling = pollEnv === undefined ? process.platform === 'win32' : pollEnv === '1'
+
+const watch = {
+  usePolling,
+  interval: 100,
+  binaryInterval: 500,
+  awaitWriteFinish: usePolling ? { stabilityThreshold: 80, pollInterval: 20 } : false,
+  ignored: ['**/dist/**', '**/share/**', '**/blender/**', '**/.git/**'],
+}
+
 export default defineConfig({
   // Relative base so the built dist/ can be served from any sub-path.
   base: './',
@@ -31,6 +57,7 @@ export default defineConfig({
     // Respect an externally-assigned port (e.g. from a preview harness)
     // instead of always falling back to 5173/5174/....
     port: Number(process.env.PORT) || 5173,
+    watch,
   },
   preview: {
     host: true,

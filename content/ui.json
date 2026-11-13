@@ -1,0 +1,439 @@
+{
+  "$schema": "./ui.schema.json",
+  "version": 1,
+  "documentTitle": "Pursuit Arena — USI Pursuits COE · 10 Years",
+  "loadFailed": "The arena could not start: {message}",
+  "start": {
+    "tagline": "USI Pursuits COE · 10 Years",
+    "title": "Pursuit Arena",
+    "progressLabel": "Loading the arena",
+    "ready": "Ready",
+    "button": "Start",
+    "keyboard": "Keyboard: W A S D or arrows to drive, Shift to boost, Enter to open a station, Esc for the menu.",
+    "touch": "Touch: point the joystick where you want to go; tap ↵ to open a station.",
+    "sound": "Starting turns the sound on. Press M to mute."
+  },
+  "menu": {
+    "open": "Menu",
+    "openHint": "Esc",
+    "title": "Menu",
+    "paused": "Paused",
+    "resume": "Resume",
+    "explore": "Explore mode",
+    "passport": "Passport & badges",
+    "controls": "Controls",
+    "audio": "Audio",
+    "graphics": "Graphics",
+    "reset": "Reset progress",
+    "credits": "Credits",
+    "back": "Back",
+    "graphicsIntro": "Lower settings run faster on older laptops and phones.",
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "lowNote": "No bloom, lighter effects, simpler distant buildings",
+    "mediumNote": "Lighter anti-aliasing and effects",
+    "highNote": "Everything on",
+    "resetIntro": "This wipes your stamps, badges, XP, collectibles and records on this device. It cannot be undone.",
+    "resetConfirm": "Yes, reset everything",
+    "resetCancel": "Keep my progress"
+  },
+  "controls": {
+    "title": "Controls",
+    "action": "Action",
+    "keyboard": "Keyboard",
+    "gamepad": "Gamepad",
+    "touch": "Touch",
+    "rows": [
+      {
+        "action": "Drive",
+        "keyboard": "W / ↑",
+        "gamepad": "RT",
+        "touch": "Joystick"
+      },
+      {
+        "action": "Steer",
+        "keyboard": "A D / ← →",
+        "gamepad": "Left stick",
+        "touch": "Joystick"
+      },
+      {
+        "action": "Reverse",
+        "keyboard": "S / ↓",
+        "gamepad": "LT",
+        "touch": "▼"
+      },
+      {
+        "action": "Brake",
+        "keyboard": "Space",
+        "gamepad": "B",
+        "touch": "■"
+      },
+      {
+        "action": "Boost",
+        "keyboard": "Shift",
+        "gamepad": "X",
+        "touch": "»"
+      },
+      {
+        "action": "Drift",
+        "keyboard": "Q",
+        "gamepad": "RB",
+        "touch": "—"
+      },
+      {
+        "action": "Horn",
+        "keyboard": "H",
+        "gamepad": "LB",
+        "touch": "—"
+      },
+      {
+        "action": "Open a station",
+        "keyboard": "Enter",
+        "gamepad": "A",
+        "touch": "↵"
+      },
+      {
+        "action": "Camera",
+        "keyboard": "C",
+        "gamepad": "Y",
+        "touch": "—"
+      },
+      {
+        "action": "Respawn",
+        "keyboard": "R",
+        "gamepad": "View",
+        "touch": "⟲"
+      },
+      {
+        "action": "Zoom",
+        "keyboard": "Mouse wheel",
+        "gamepad": "—",
+        "touch": "Pinch"
+      },
+      {
+        "action": "Look around the map",
+        "keyboard": "Drag with the mouse · Alt + arrow keys · click the minimap",
+        "gamepad": "—",
+        "touch": "Drag one finger · tap the minimap"
+      },
+      {
+        "action": "Back to the car",
+        "keyboard": "F · double-click the floor · just drive",
+        "gamepad": "Drive",
+        "touch": "Double-tap the floor · Back to car"
+      },
+      {
+        "action": "Overview of the arena",
+        "keyboard": "O (again to return)",
+        "gamepad": "—",
+        "touch": "Pinch out"
+      },
+      {
+        "action": "Mute",
+        "keyboard": "M",
+        "gamepad": "—",
+        "touch": "Menu → Audio"
+      },
+      {
+        "action": "Passport",
+        "keyboard": "P",
+        "gamepad": "D-pad up",
+        "touch": "Menu"
+      },
+      {
+        "action": "Menu",
+        "keyboard": "Esc",
+        "gamepad": "Menu",
+        "touch": "Menu button"
+      }
+    ]
+  },
+  "credits": {
+    "title": "Credits",
+    "intro": "Pursuit Arena celebrates 10 years of the Deloitte USI Pursuits COE.",
+    "team": "Team credits to be supplied by the USI Pursuits COE team.",
+    "software": "Built with three.js (MIT), Rapier physics (Apache-2.0) and Vite (MIT).",
+    "reference": "Driving feel and camera inspired by Bruno Simon's 2019 folio (MIT), reimplemented from scratch.",
+    "audio": "All sounds and music are synthesised placeholders until the final audio is supplied.",
+    "placeholderTag": "coming soon"
+  },
+  "hud": {
+    "speedUnit": "km/h",
+    "found": "visited",
+    "hintDrive": "W A S D or arrow keys to drive · Shift boost · Space brake · Drag the map to look around",
+    "hintTouch": "Point the joystick where you want to go",
+    "hintFindStation": "Drive into a glowing square to open a station",
+    "hintEnter": "Enter: open {title}",
+    "hintTap": "Tap ↵: open {title}",
+    "hintAct": "Enter: {action}",
+    "hintActTap": "Tap ↵: {action}",
+    "hintPassport": "P: see your Passport",
+    "mapLabel": "Map. {objective}",
+    "objective": "Next stamp: {place}, {m} m",
+    "objectiveDash": "Dash: {place}, {m} m",
+    "objectiveDone": "Every stamp collected",
+    "backToCar": "Back to car",
+    "backToCarHint": "F",
+    "pannedAnnounce": "Looking around the map. Press F, or the Back to car button, to return to the car.",
+    "overviewAnnounce": "Overview of the whole arena. Press O or F to return to the car.",
+    "backAtCarAnnounce": "View back on the car."
+  },
+  "panel": {
+    "regionLabel": "Station details",
+    "close": "Close",
+    "placeholder": "Content coming soon",
+    "links": "Links",
+    "opensInNewTab": "(opens in a new tab)",
+    "gallery": "Gallery",
+    "imageAlt": "Image for {title}",
+    "birthdaysToday": "Birthdays today",
+    "birthdaysMonth": "Birthdays this month",
+    "birthdaysNone": "No birthdays this month yet.",
+    "serviceAwards": "Service awards",
+    "serviceYears": "{years} years",
+    "serviceNone": "No service awards listed yet.",
+    "events": "Upcoming events",
+    "eventsNone": "No upcoming events listed yet.",
+    "sample": "sample"
+  },
+  "explore": {
+    "open": "Explore",
+    "openHint": "Esc",
+    "title": "Explore the arena",
+    "intro": "Choose a place to fly there and open it. You can keep driving at any time.",
+    "close": "Close",
+    "backToCar": "Back to the car",
+    "start": "Start",
+    "ourTeam": "I. Our Team",
+    "timeline": "10 Years: Decade Drive",
+    "leader": "Welcome from our COE Lead",
+    "placeholderTag": "coming soon"
+  },
+  "areas": {
+    "enterHint": "ENTER",
+    "tapHint": "TAP ↵",
+    "resetPlate": "RESET",
+    "ready": "{title}. Press Enter, or wait, to open."
+  },
+  "game": {
+    "xp": "{xp} XP",
+    "xpGain": "+{xp} XP",
+    "rankLabel": "Rank",
+    "nextRank": "{xp} XP to {rank}",
+    "passportLabel": "Passport {count} / {total}",
+    "dots": "Dots",
+    "golden": "Golden Decade Dots",
+    "shuriken": "Shuriken",
+    "toastStamp": "Passport stamp: {district}",
+    "toastBadge": "Badge: {badge}",
+    "toastRank": "New rank: {rank}",
+    "toastSkin": "Skin unlocked: {skin}",
+    "toastCombo": "Dot combo ×{combo}",
+    "finale": "Full passport! You are a Pursuit Legend.",
+    "beacon": "The tower beacon flashes 1-0 in Morse.",
+    "konami": "Decade Edition unlocked.",
+    "trophy": "A trophy drops: v_final_FINAL_v10.pptx",
+    "coinRunStart": "Coin Run: knock every coin in {seconds} s!",
+    "coinRunFail": "Coin Run: {got} of {of}. The coins reset.",
+    "ideaSpark": "Idea Spark: {lit} of {of} bulbs lit",
+    "paceLap": "Pace Lap: {time} s",
+    "paceBest": "Pace Lap: {time} s, a personal best!",
+    "paint": "Paint Trail complete: paint-splash skin unlocked."
+  },
+  "dash": {
+    "title": "Deadline Dash",
+    "countdown": "{n}",
+    "go": "Go! Deliver the RFP.",
+    "step_qualify": "Qualify",
+    "step_write": "Write",
+    "step_review": "Review",
+    "step_submit": "Submit",
+    "next": "{step}: {place}",
+    "distance": "{m} m",
+    "penalty": "Scope creep +{seconds} s",
+    "finish": "SUBMITTED ✓ {time} s, {margin} s before the deadline",
+    "late": "Submitted in {time} s, after the deadline",
+    "medal_gold": "Gold medal",
+    "medal_silver": "Silver medal",
+    "medal_bronze": "Bronze medal",
+    "personalBest": "New personal best!",
+    "cancelled": "Deadline Dash abandoned.",
+    "compassLabel": "Direction to the next checkpoint",
+    "hq": "the Submission Portal"
+  },
+  "passport": {
+    "open": "Passport",
+    "openHint": "P",
+    "title": "Pursuit Passport",
+    "close": "Close",
+    "stamps": "Stamps",
+    "stamped": "stamped",
+    "notStamped": "not yet",
+    "badges": "Badges",
+    "locked": "locked",
+    "collectibles": "Collectibles",
+    "records": "Records",
+    "dashBest": "Deadline Dash best",
+    "paceBest": "Pace Lap best",
+    "none": "—",
+    "skins": "Skins",
+    "useSkin": "Use",
+    "inUse": "In use",
+    "reset": "Reset progress",
+    "resetConfirm": "Reset all progress? Stamps, badges, XP and collectibles will be cleared.",
+    "seconds": "{s} s"
+  },
+  "badges": {
+    "first_drive": {
+      "title": "First Drive",
+      "description": "Take the cart for a spin."
+    },
+    "decade_historian": {
+      "title": "Decade Historian",
+      "description": "Collect all 10 Golden Decade Dots on the Decade Drive."
+    },
+    "variance_found": {
+      "title": "Variance Found",
+      "description": "Knock over every bar-chart block in the Assurance Citadel."
+    },
+    "coin_collector": {
+      "title": "Coin Collector",
+      "description": "Knock over every coin at the Tax Terrace in 20 seconds."
+    },
+    "bright_idea": {
+      "title": "Bright Idea",
+      "description": "Hit all five hanging bulbs in the Consulting Skyline."
+    },
+    "pole_position": {
+      "title": "Pole Position",
+      "description": "Complete a lap of the PACE Speedway oval."
+    },
+    "across_time_zones": {
+      "title": "Across Time Zones",
+      "description": "Jump the gap on the Catalyst Bridge."
+    },
+    "bright_strike": {
+      "title": "Bright Strike",
+      "description": "Knock down all ten pins at the R&R Arena."
+    },
+    "red_tape_cutter": {
+      "title": "Red Tape Cutter",
+      "description": "Smash through the Red Tape Wall at the Toolkit Depot."
+    },
+    "proposal_ninja": {
+      "title": "Proposal Ninja",
+      "description": "Find all 8 hidden shuriken."
+    },
+    "social_butterfly": {
+      "title": "Social Butterfly",
+      "description": "Open every station in Culture Commons."
+    },
+    "lifelong_learner": {
+      "title": "Lifelong Learner",
+      "description": "Open every station on the L&D Campus."
+    },
+    "toolkit_pro": {
+      "title": "Toolkit Pro",
+      "description": "Open every station at the Toolkit Depot."
+    },
+    "loop_the_0": {
+      "title": "Loop the 0",
+      "description": "Drive through the 0 of the 10 at HQ."
+    },
+    "airtime": {
+      "title": "Airtime",
+      "description": "Stay in the air for a full second."
+    },
+    "deadline_hero": {
+      "title": "Deadline Hero",
+      "description": "Win gold in the Deadline Dash."
+    },
+    "pursuit_legend": {
+      "title": "Pursuit Legend",
+      "description": "Fill the whole Pursuit Passport."
+    },
+    "people_of_pursuits": {
+      "title": "People of Pursuits",
+      "description": "Open a roster station in all six team territories."
+    },
+    "gen_ai_insider": {
+      "title": "Gen AI Insider",
+      "description": "Read three issues of The Intelligence Update at the Innovation newsstand."
+    },
+    "chronicles_collector": {
+      "title": "Chronicles Collector",
+      "description": "Find every Deloitte Chronicles champion name plate hidden around the arena."
+    },
+    "spot_on": {
+      "title": "Spot On",
+      "description": "Knock over every Thank It Forward trophy at the R&R Arena."
+    },
+    "memory_maker": {
+      "title": "Memory Maker",
+      "description": "Visit ten photo albums along Memory Lane in Culture Commons."
+    }
+  },
+  "sound": {
+    "title": "Sound",
+    "close": "Close sound settings",
+    "mute": "Mute all sound",
+    "muteHint": "M",
+    "master": "Master",
+    "music": "Music",
+    "sfx": "Effects",
+    "ambience": "Ambience",
+    "muted": "Sound muted",
+    "unmuted": "Sound on",
+    "placeholder": "Placeholder sounds: synthesised until the final audio is supplied."
+  },
+  "skins": {
+    "default": "Original",
+    "ninja": "Ninja",
+    "golden": "Golden Decade",
+    "paint": "Studio Paint-splash"
+  },
+  "touch": {
+    "joystick": "Drive: point the stick where you want to go",
+    "boost": "Boost",
+    "brake": "Brake",
+    "reverse": "Reverse",
+    "interact": "Interact",
+    "respawn": "Respawn"
+  },
+  "showcase": {
+    "hotspotAnnounce": "{label}. Press Enter to open it.",
+    "buddyHint": "Next stamp: {place}",
+    "buddyDone": "Every stamp collected. See you at HQ!",
+    "winsSnapshot": "Site snapshot · not decade totals",
+    "openWins": "Pursuit Wins",
+    "wallTitle": "People of Pursuits",
+    "wallPending": "Roster awaiting confirmation",
+    "wallEmpty": "Roster coming soon",
+    "openWall": "the {team} roster",
+    "trophyBin": "{label} · {count}",
+    "openTrophies": "Thank It Forward",
+    "star": "{label} · {count}",
+    "openStars": "BrightStar Awards",
+    "albumKicker": "Memory Lane",
+    "albumOpen": "the {title} album",
+    "albumMeta": "Photos: {photos}",
+    "albumNoPhoto": "The full album lives on the PursuitArena site.",
+    "issueKicker": "The Intelligence Update",
+    "issueOpen": "the {label} issue",
+    "issueBody": "Generative AI news, industry updates and colleagues' stories: the {label} edition.",
+    "issueLink": "Read the {label} issue (PDF)",
+    "issueNew": "NEW",
+    "signpostKicker": "Toolkit Depot · {group}",
+    "signpostOpen": "{label}",
+    "signpostBody": "A quick link from the Toolkit Depot.",
+    "bar": "{value} {unit}",
+    "openGarden": "the learning metrics",
+    "resetWall": "rebuild the Red Tape Wall",
+    "resetPins": "set the Strike-a-Win pins back up",
+    "resetDone": "Resetting. They are dropping back into place.",
+    "actionAnnounce": "Reset pad. Press Enter to {action}.",
+    "championPlate": "Chronicles champion",
+    "championFound": "Champion found: {name} ({n} / {total})"
+  }
+}

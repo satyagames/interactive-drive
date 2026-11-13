@@ -113,11 +113,14 @@ async function timeGpu(gl, ext, count, renderN) {
     gl.beginQuery(ext.TIME_ELAPSED_EXT, query)
     renderN()
     gl.endQuery(ext.TIME_ELAPSED_EXT)
+    gl.flush()
 
     let available = false
     let disjoint = false
     while (!available) {
-      await new Promise((resolve) => requestAnimationFrame(resolve))
+      // A timer, not requestAnimationFrame: rAF stops in a hidden tab and the
+      // query is answered without it.
+      await new Promise((resolve) => setTimeout(resolve, 10))
       available = gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE)
       disjoint = gl.getParameter(ext.GPU_DISJOINT_EXT)
     }
@@ -194,4 +197,43 @@ async function benchmarkComposer({ renderer, gl, timerExt, scene, camera, width,
 
   composer.dispose()
   return ms
+}
+
+/**
+ * VFX cost (doc 06 Phase 7: under 1 ms a frame). Run it while effects are on
+ * screen -- `vfx.debug` can fill the pools first. GPU: the same frame rendered
+ * offscreen with the VFX group shown and hidden, timed by the same query as
+ * above; the difference is what the effects cost to draw. CPU: `vfx.update`
+ * itself, timed in the loop (`vfx.stats`, a moving average and a decaying peak).
+ *
+ *   await __proto.benchmark.vfx()
+ */
+export async function runVfxBenchmark({ renderer, scene, camera, vfx }, { width = 1600, height = 900, framesPerCase = 60 } = {}) {
+  const gl = renderer.getContext()
+  const timerExt = gl.getExtension('EXT_disjoint_timer_query_webgl2')
+  const target = new THREE.WebGLRenderTarget(width, height, { type: THREE.HalfFloatType })
+  const previous = renderer.getRenderTarget()
+  renderer.setRenderTarget(target)
+  const time = async (visible) => {
+    vfx.group.visible = visible
+    for (let i = 0; i < 5; i++) renderer.render(scene, camera)
+    return timeGpu(gl, timerExt, framesPerCase, () => {
+      for (let i = 0; i < framesPerCase; i++) renderer.render(scene, camera)
+    })
+  }
+  const without = await time(false)
+  const withVfx = await time(true)
+  renderer.setRenderTarget(previous)
+  target.dispose()
+  const result = {
+    resolution: `${width}x${height}`,
+    gpuWithMs: round(withVfx),
+    gpuWithoutMs: round(without),
+    gpuVfxMs: withVfx === null || without === null ? null : round(withVfx - without),
+    cpuMs: round(vfx.stats.cpuMs),
+    cpuPeakMs: round(vfx.stats.peakMs),
+    ...vfx.counts,
+  }
+  if (typeof console.table === 'function') console.table([result])
+  return result
 }

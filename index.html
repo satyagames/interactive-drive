@@ -4,48 +4,144 @@
     <meta charset="utf-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <title>Driving Prototype</title>
+    <title>Pursuit Arena</title>
+    <!-- Inline icon (a green disc with "10"; not the Deloitte logo), so the browser never asks for /favicon.ico. -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%2386BC25%27/%3E%3Ctext x=%2732%27 y=%2742%27 font-family=%27sans-serif%27 font-size=%2728%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23000%27%3E10%3C/text%3E%3C/svg%3E" />
   </head>
   <body>
-    <canvas id="app"></canvas>
+    <!-- The arena itself is the page's main content; its heading is for screen readers. -->
+    <main id="arena" aria-labelledby="arena-title">
+      <h1 id="arena-title" class="sr-only" data-ui="start.title"></h1>
+      <canvas id="app" tabindex="-1"></canvas>
+    </main>
 
-    <div id="loader"><span>loading physics…</span></div>
+    <!-- All visible copy is filled from content/ui.json at start-up (data-ui*). -->
+    <!-- Loading + Start (src/ui/startScreen.js): the "10" fills green as the
+         arena loads; Start is also the audio unlock. -->
+    <section id="start" class="start" aria-labelledby="start-title">
+      <svg class="start__ten" viewBox="0 0 200 140" aria-hidden="true">
+        <defs>
+          <clipPath id="start-ten-shape">
+            <path d="M28 34 L62 14 L82 14 L82 126 L58 126 L58 44 L36 56 Z" />
+            <path fill-rule="evenodd" d="M148 12 C178 12 196 36 196 70 C196 104 178 128 148 128 C118 128 100 104 100 70 C100 36 118 12 148 12 Z M148 36 C134 36 124 48 124 70 C124 92 134 104 148 104 C162 104 172 92 172 70 C172 48 162 36 148 36 Z" />
+          </clipPath>
+        </defs>
+        <g clip-path="url(#start-ten-shape)">
+          <rect class="start__ten-empty" x="0" y="0" width="200" height="140" />
+          <rect class="start__ten-fill" x="0" y="140" width="200" height="140" />
+        </g>
+      </svg>
+      <h2 id="start-title" class="start__title" data-ui="start.title"></h2>
+      <p class="start__tagline" data-ui="start.tagline"></p>
+      <div class="start__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-ui-aria-label="start.progressLabel">
+        <span class="start__bar"></span>
+      </div>
+      <p class="start__status" aria-live="polite"></p>
+      <button class="start__button" type="button" hidden data-ui="start.button"></button>
+      <div class="start__help">
+        <p data-ui="start.keyboard"></p>
+        <p data-ui="start.touch"></p>
+        <p data-ui="start.sound"></p>
+      </div>
+    </section>
+
+    <!-- Covers respawn teleports; see src/ui/screenFade.js. -->
+    <div id="fade" aria-hidden="true"></div>
 
     <div id="hud" aria-hidden="true">
-      <span id="hud-speed">0</span><small>km/h</small>
+      <span id="hud-speed">0</span><small data-ui="hud.speedUnit"></small>
       <span id="hud-fps" hidden></span>
     </div>
 
-    <div id="progress" aria-live="polite">
-      <span id="progress-count">0</span>&nbsp;/&nbsp;<span id="progress-total">4</span> found
+
+    <!-- Screen-reader announcements (Enter areas now; stamps and badges in Phase 6). -->
+    <div id="announcer" class="sr-only" aria-live="polite"></div>
+
+    <!-- HUD corners (src/ui/hud.js; doc 05 §5). Fades after 4 s of driving;
+         anything new, a stop, the pointer or keyboard focus brings it back. -->
+    <div id="hud-chrome" class="hud" hidden>
+      <!-- Top left: passport ring + rank (src/ui/gameHud.js). -->
+      <div id="game-hud"></div>
+      <!-- Top right: collectibles, stations visited, and the menu. -->
+      <div class="hud__top-right">
+        <p class="hud__counts">
+          <span id="hud-counts"></span>
+          <span id="progress"><span id="progress-count">0</span>&nbsp;/&nbsp;<span id="progress-total">0</span> <span data-ui="hud.found"></span></span>
+        </p>
+        <button id="menu-open" class="hud__menu" type="button" aria-haspopup="dialog" aria-controls="menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+          <span data-ui="menu.open"></span> <kbd data-ui="menu.openHint"></kbd>
+        </button>
+      </div>
+      <!-- Bottom centre: the contextual hint (visual; the announcer and the
+           Controls screen carry the same information for screen readers). -->
+      <p id="hint" class="hud__hint" aria-hidden="true"></p>
+      <!-- Shown while the view is panned away from the car (src/ui/panChip.js). -->
+      <button id="pan-home" class="hud__chip" type="button" hidden>
+        <span data-ui="hud.backToCar"></span> <kbd data-ui="hud.backToCarHint"></kbd>
+      </button>
+      <!-- Bottom right: compass / minimap (src/ui/minimap.js). -->
+      <figure id="minimap" class="hud__map">
+        <svg role="img" viewBox="-60 -60 120 120"></svg>
+        <figcaption></figcaption>
+      </figure>
     </div>
 
-    <!-- Exhibit info panel. Non-modal: shown while inside a `trigger_`
-         volume, dismissed on exit / close button / Escape. Driving keeps
-         working the whole time it's open. -->
-    <section id="exhibit-panel" hidden aria-label="Exhibit info">
-      <button id="exhibit-close" aria-label="Close">&times;</button>
-      <img id="exhibit-image" alt="" hidden />
-      <h2 id="exhibit-title"></h2>
-      <p id="exhibit-pitch"></p>
-      <p id="exhibit-description"></p>
-    </section>
+    <!-- Esc menu (src/ui/menu.js): a modal dialog; the game pauses behind it. -->
+    <div id="menu" class="menu" hidden>
+      <div class="menu__dialog" role="dialog" aria-modal="true" aria-labelledby="menu-title">
+        <header class="menu__header">
+          <h2 id="menu-title" tabindex="-1"></h2>
+          <p class="menu__paused" data-ui="menu.paused"></p>
+        </header>
+        <div class="menu__view" data-view="main">
+          <ul class="menu__list">
+            <li><button type="button" data-action="resume" data-ui="menu.resume"></button></li>
+            <li><button id="explore-open" type="button" aria-expanded="false" aria-controls="explore" data-ui="menu.explore"></button></li>
+            <li><button id="passport-open" type="button" aria-expanded="false" aria-controls="passport"><span data-ui="menu.passport"></span> <kbd data-ui="passport.openHint"></kbd></button></li>
+            <li><button type="button" data-view-open="controls" data-ui="menu.controls"></button></li>
+            <li><button id="sound-open" type="button" aria-expanded="false" aria-controls="sound"><span data-ui="menu.audio"></span> <span class="menu__state" data-sound-state></span></button></li>
+            <li><button type="button" data-view-open="graphics" data-ui="menu.graphics"></button></li>
+            <li><button type="button" data-view-open="reset" data-ui="menu.reset"></button></li>
+            <li><button type="button" data-view-open="credits" data-ui="menu.credits"></button></li>
+          </ul>
+        </div>
+        <div class="menu__view" data-view="controls" hidden></div>
+        <div class="menu__view" data-view="graphics" hidden></div>
+        <div class="menu__view" data-view="reset" hidden></div>
+        <div class="menu__view" data-view="credits" hidden></div>
+      </div>
+    </div>
+
+    <div id="explore" hidden></div>
+    <div id="passport" hidden></div>
+    <!-- Sound: mute + bus levels (src/ui/soundPanel.js); M mutes from anywhere. -->
+    <section id="sound" hidden></section>
+    <div id="vfx-floaters" aria-hidden="true"></div>
+    <p id="speech" class="speech" role="status" aria-live="polite" hidden></p>
+    <div id="dash-hud" hidden></div>
+    <div id="toasts" aria-live="polite" aria-atomic="false"></div>
+
+    <!-- Station panel (src/content/panel.js): right-hand drawer, bottom sheet
+         on narrow screens. Non-modal; driving keeps working while it's open. -->
+    <aside id="station-panel" hidden></aside>
 
     <!-- Touch controls. Hidden by default; shown on coarse-pointer devices
-         or when forced from the debug panel. -->
+         or when forced from the debug panel. The joystick points where you
+         want to drive (src/input/touch.js). -->
     <div id="touch" hidden>
-      <div class="touch-cluster touch-left">
-        <button class="touch-btn" data-action="steerLeft" aria-label="Steer left">&#9664;</button>
-        <button class="touch-btn" data-action="steerRight" aria-label="Steer right">&#9654;</button>
+      <div class="touch-joystick" data-joystick role="group" data-ui-aria-label="touch.joystick">
+        <div class="touch-joystick-knob"></div>
       </div>
       <div class="touch-cluster touch-right">
-        <button class="touch-btn" data-action="throttle" aria-label="Accelerate">&#9650;</button>
-        <button class="touch-btn" data-action="reverse" aria-label="Brake / reverse">&#9660;</button>
+        <button class="touch-btn" data-action="boost" data-ui-aria-label="touch.boost">&#187;</button>
+        <button class="touch-btn" data-action="brake" data-ui-aria-label="touch.brake">&#9632;</button>
+        <button class="touch-btn" data-action="reverse" data-ui-aria-label="touch.reverse">&#9660;</button>
       </div>
-      <button class="touch-btn touch-aux" data-action="handbrake" aria-label="Handbrake">H</button>
-      <button class="touch-btn touch-aux touch-respawn" data-action="respawn" aria-label="Respawn">&#10227;</button>
+      <button class="touch-btn touch-aux touch-interact" data-action="interact" data-ui-aria-label="touch.interact">&#8629;</button>
+      <button class="touch-btn touch-aux touch-respawn" data-action="respawn" data-ui-aria-label="touch.respawn">&#10227;</button>
     </div>
 
     <script type="module" src="/src/main.js"></script>

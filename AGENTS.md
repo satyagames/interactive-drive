@@ -18,13 +18,19 @@ npm run preview      # serve the production build
 npm run package:share
 ```
 
+Before a hand-over, run [`docs/pursuit-arena/QA-checklist.md`](docs/pursuit-arena/QA-checklist.md) and update its statuses. Content changes by the Pursuits team follow [`docs/content-editing-guide.md`](docs/content-editing-guide.md); keep that guide true when the content schema changes. `npm run package:share` writes `share/` + `pursuit-arena-share.zip` with bundled servers (`scripts/launchers/serve.py`, `serve.mjs`): keep them dependency-free and bound to 127.0.0.1.
+
 There is currently no automated test suite, lint configuration, or CI workflow. For runtime changes, validate with `npm run build` and manually exercise the affected browser workflow through a served page. Do not open the app from `file://`; ES modules and GLTF fetches need HTTP.
 
 ## Runtime conventions
 
 - Put tunable gameplay and rendering values in [`src/config.js`](src/config.js). Values under `settings` are live-tunable; values under `rebuild` require recreating or reloading the affected system.
 - Preserve the local vehicle axis convention: `-Z` forward, `+X` right, `+Y` up. Physics forces belong in the fixed-timestep update, not directly in the render loop.
-- Keep content data in [`content/projects.json`](content/projects.json). A Blender `trigger_<name>` maps directly to the content id `<name>`; there is no separate mapping table.
+- Keep arena content in [`content/arena.seed.json`](content/arena.seed.json) and interface copy in [`content/ui.json`](content/ui.json), each validated against its `*.schema.json` (`npm run content:check`, and automatically in `npm run dev`). A Blender `area_<id>` / `trigger_<id>` maps directly to the content id `<id>` (see `src/content/model.js`); there is no separate mapping table.
+- Gameplay lives in [`src/game/`](src/game/): systems talk through the event bus (`game.events`); VFX, SFX and UI subscribe rather than being called directly. Progress persists in `localStorage` (`src/game/store.js`, try/catch-wrapped, no network). With `#debug`, **Debug → Run badge test** earns every badge through the real detection paths.
+- Visual effects live in [`src/vfx/`](src/vfx/) and subscribe to `game.events` (collisions arrive as `impact` events from `src/world/impacts.js`). Keep them pooled (no per-frame allocation), honour `prefers-reduced-motion` / `settings.vfx.reducedMotion`, and draw anything that should bloom in HDR above `settings.post.bloom.threshold`: matcap surfaces never exceed 1.0, so the threshold is the bloom layer.
+- Sound lives in [`src/audio/`](src/audio/) and also subscribes to `game.events`. Never create or resume an AudioContext before a user gesture; route one-shots through `sounds.play` so the 12-voice limit holds. Until real files arrive every sound is synthesised: list any new sound in [`public/audio/MANIFEST.md`](public/audio/MANIFEST.md), and log any file you add in [`CREDITS.md`](CREDITS.md).
+- Screens and HUD live in [`src/ui/`](src/ui/) (start screen, HUD corners, minimap, Esc menu). New panels: native controls, copy from `content/ui.json`, `data-captures-keys` on anything that uses arrows/Space itself, focus moved in on open and returned on close (to the game canvas when the opener is gone), and Esc wired through the chain in `main.js`. Check new screens at 360 px wide. Keep Lighthouse accessibility at or above 95 on the menu screens.
 - Preserve relative asset paths and the `base: './'` setting in [`vite.config.js`](vite.config.js), which allows `dist/` to work from a sub-path.
 - Keep user-facing HTML behavior accessible: preserve labels, `aria-live`, keyboard controls, and touch controls when changing the HUD or exhibit panel.
 
@@ -34,7 +40,8 @@ Read [`docs/blender-conventions.md`](docs/blender-conventions.md) before editing
 
 - Keep visual meshes separate from `collision_` proxy meshes.
 - Keep metric 1:1 units and apply object scales before export.
-- Run the art pipeline in this order: `vehicle_details.py`, `bevel.py`, `bake_ao.py`, then `export.py`. The bake and export steps must remain a pair.
+- **Arena** (everything the car drives in): generated, not hand-modelled. Run `npm run art:build` (or `art:gen` → `art:polish` → `art:validate` → `art:export`), which drives Blender 5.x headless through `blender/scripts/` (`gen_kit.py`, `gen_base.py`, `gen_district.py --id <id>`, `polish.py`, `validate.py`, `export_arena.py`) and writes `blender/{kit,districts}/*.blend`, `public/models/{kit,district_*}.glb`, `public/models/arena.manifest.json` and the AO bakes in `public/textures/bake/`. `polish.py` bevels, adds `landmark_*_LOD1` twins and bakes AO; polish the base last (its ground bake links every district in). Blender is found via `BLENDER_BIN` (environment or `.env.local`) or the default install path. Change layouts and art in the generators, never in the `.blend` files (they are rebuilt from scratch). `art:validate` must pass (names, budgets, every content id has exactly one `area_`, no dynamic prop starting inside static geometry).
+- **Car**: the anniversary cart is generated by `npm run art:cart` (`blender/scripts/gen_cart.py` → `public/models/cart.glb` + `cart-ao.jpg`), in the physics body's space and size; `arcadeVehicle.js` reads its `cart_*`, `wheel_*`, `antenna` and `light_*` nodes by name. Keep the cart ≤ 4k triangles. The prototype car in `blender/scene.blend` is only for `?vehicle=sim` (`vehicle_details.py`, `bevel.py`, `bake_ao.py`, then `export.py`; bake and export stay a pair).
 - Do not reorder or rename the `bake` UV layer; runtime AO reads it from texture coordinate channel 1.
 - Set asymmetric trigger half-extents using the documented Blender Y/Z swap, and verify them by driving to an edge rather than only checking the trigger center.
 - After vehicle re-exports, visually verify that forward input moves the vehicle nose-first; the model yaw correction is intentional.

@@ -1,27 +1,69 @@
 import './styles.css'
 
-import projects from '../content/projects.json'
+import { DefaultLoadingManager } from 'three'
 
-import { createChaseCamera } from './camera/chaseCamera.js'
-import { rebuild, settings, world as worldConfig } from './config.js'
-import { createExhibitPanel } from './content/panel.js'
-import { runPostBenchmark } from './debug/benchmark.js'
+import arena from '../content/arena.seed.json'
+
+import { createAudio } from './audio/index.js'
+import { createCameraRig } from './camera/cameraRig.js'
+import { qualityTiers, rebuild, rendering, settings, world as worldConfig } from './config.js'
+import { createExploreMenu } from './content/explore.js'
+import { buildContentModel } from './content/model.js'
+import { createStationPanel } from './content/panel.js'
+import { applyUiStrings, t } from './content/ui.js'
+import { runPostBenchmark, runVfxBenchmark } from './debug/benchmark.js'
 import { createProgressTracker } from './content/progress.js'
 import { createLoop } from './core/loop.js'
 import { createPhysics, createStepper } from './core/physics.js'
 import { createRenderer } from './core/renderer.js'
 import { createDebugGui } from './debug/gui.js'
 import { createFpsMeter } from './debug/fps.js'
+import { runGameTest } from './debug/gameTest.js'
 import { createPhysicsDebug } from './debug/physicsDebug.js'
+import { createPropStress } from './debug/propStress.js'
 import { createInput } from './input/index.js'
+import { createBlobShadows } from './render/blobShadows.js'
+import { createFloorGradient } from './render/floorGradient.js'
 import { loadRenderAssets, syncRenderSettings, syncShaderEffects } from './render/materials.js'
 import { createPostProcessing } from './render/post.js'
 import { createShadowBlob } from './render/shadowBlob.js'
 import { createSky } from './render/sky.js'
-import { createVehicle } from './vehicle/vehicle.js'
+import { createShowcase } from './showcase/index.js'
+import { createGame } from './game/index.js'
+import { createGameHud } from './ui/gameHud.js'
+import { createHud } from './ui/hud.js'
+import { createMenu } from './ui/menu.js'
+import { createMinimap } from './ui/minimap.js'
+import { createPanChip } from './ui/panChip.js'
+import { createPassportScreen } from './ui/passportScreen.js'
+import { createScreenFade } from './ui/screenFade.js'
+import { createSoundPanel } from './ui/soundPanel.js'
+import { createStartScreen } from './ui/startScreen.js'
+import { createVehicle, vehiclePresets } from './vehicle/vehicle.js'
+import { createVfx } from './vfx/index.js'
 import { createLighting } from './world/lighting.js'
+import { createAreaMarkers } from './world/areaMarkers.js'
+import { createAreas } from './world/areas.js'
+import { createImpacts } from './world/impacts.js'
+import { createReveal } from './world/reveal.js'
 import { createTriggerWatcher } from './world/triggers.js'
 import { createWorld } from './world/world.js'
+
+/**
+ * Reveal centres and radii per district, from the content seed and the
+ * layout in docs/pursuit-arena/02 §2 (territories ~30 m across, pillars and
+ * the RFP Gate ~36 m, HQ plaza 22 m, the Decade Drive along the 180° spoke).
+ */
+function districtCentres(seed) {
+  const centres = {
+    hq: { x: 0, z: 0, radius: 22 },
+    rfp_gate: { x: seed.rfpGate.position[0], z: seed.rfpGate.position[2], radius: 18 },
+    decade_drive: { x: 0, z: 55, radius: 30 },
+  }
+  for (const d of seed.territories) centres[d.id] = { x: d.position[0], z: d.position[2], radius: 15 }
+  for (const d of seed.pillars) centres[d.id] = { x: d.position[0], z: d.position[2], radius: 18 }
+  return centres
+}
 
 /** A `trigger_foo` empty's content id is `foo` -- see docs/blender-conventions.md. */
 function contentIdForTrigger(trigger) {
@@ -30,9 +72,50 @@ function contentIdForTrigger(trigger) {
     : trigger.name
 }
 
+/** Closest `spawn_` point to `position`, or undefined if the world has none. */
+function nearestSpawn(spawns, position) {
+  let best
+  let bestDistance = Infinity
+  for (const spawn of Object.values(spawns)) {
+    const distance = spawn.position.distanceToSquared(position)
+    if (distance < bestDistance) {
+      best = spawn
+      bestDistance = distance
+    }
+  }
+  return best
+}
+
 async function bootstrap() {
+  // `?vehicle=sim` swaps the preset for this load (it rebuilds physics, so it
+  // can't be a live setting -- see `rebuild.vehicle.preset`).
+  const presetParam = new URLSearchParams(window.location.search).get('vehicle')
+  if (presetParam in vehiclePresets) rebuild.vehicle.preset = presetParam
+  // Graphics tier: `?quality=low|medium|high` for this load, else the
+  // visitor's choice from Menu → Graphics, else the default.
+  const qualityParam = new URLSearchParams(window.location.search).get('quality')
+  const quality = qualityParam in qualityTiers ? qualityParam : loadSavedQuality()
+  if (quality) applyQualityTier(quality)
+  const debugMode = window.location.hash === '#debug'
+
+  // Interface copy comes from content/ui.json; the arena tree from the seed.
+  applyUiStrings()
+  document.title = t('documentTitle')
+  // Loading: the "10" fills as files arrive (matcaps, district GLBs, the car).
+  const start = createStartScreen({ root: document.getElementById('start') })
+  DefaultLoadingManager.onProgress = (url, loaded, total) => start.setProgress(0.08 + 0.85 * (loaded / total))
+  start.setProgress(0.04)
+  const content = buildContentModel(arena, {
+    labels: {
+      start: t('explore.start'),
+      ourTeam: t('explore.ourTeam'),
+      timeline: t('explore.timeline'),
+      leader: t('explore.leader'),
+    },
+  })
+  if (import.meta.env.DEV) validateContentInDev(content)
+
   const canvas = document.getElementById('app')
-  const loaderEl = document.getElementById('loader')
   const hudEl = document.getElementById('hud')
   const hudSpeedEl = document.getElementById('hud-speed')
   const hudFpsEl = document.getElementById('hud-fps')
@@ -47,13 +130,24 @@ async function bootstrap() {
 
   // Rapier's wasm has to finish initialising before any world exists.
   const { RAPIER, world } = await createPhysics()
-  const step = createStepper(world)
+  // Contact-force events (collision impacts) are drained after every step.
+  const eventQueue = new RAPIER.EventQueue(true)
+  const step = createStepper(world, eventQueue)
 
-  const gameWorld = await createWorld({ scene, world, RAPIER, renderAssets })
+  // Prop blob shadows exist before the world: every dyn_ prop gets one.
+  const blobs = createBlobShadows({ scene, capacity: 1024 })
+  // The arena's core districts load now; the outer ring streams in after
+  // the first frame (see the loop below).
+  const gameWorld = await createWorld({ scene, world, RAPIER, renderAssets, blobs })
 
-  // The world's `spawn_` empty (if any) overrides the fallback in config.js;
-  // `createVehicle` reads `rebuild.chassis.spawn*` when it spawns the body.
-  const spawnPoint = Object.values(gameWorld.spawns)[0]
+  // The ground's colour becomes the world-space gradient, and an outer
+  // plane carries that gradient out into the fog.
+  const floor = createFloorGradient({ scene, ground: gameWorld.ground, fogColor: rendering.sky.fog })
+  const propStress = debugMode ? createPropStress({ scene, world, RAPIER, renderAssets, blobs }) : null
+
+  // The boot spawn is the one the content names (the RFP Gate); it overrides
+  // the fallback in config.js, which `createVehicle` reads.
+  const spawnPoint = gameWorld.spawns[arena.rfpGate.spawn] ?? Object.values(gameWorld.spawns)[0]
   if (spawnPoint) {
     const { position, quaternion } = spawnPoint
     rebuild.chassis.spawn = { x: position.x, y: position.y, z: position.z }
@@ -61,39 +155,131 @@ async function bootstrap() {
   }
 
   const vehicle = await createVehicle({ scene, world, RAPIER, renderAssets })
+  start.setProgress(0.95)
+  const screenFade = createScreenFade(document.getElementById('fade'))
   const shadowBlob = createShadowBlob({ scene, world, RAPIER, vehicle })
 
-  const projectsById = new Map(projects.map((entry) => [entry.id, entry]))
-  const exhibitPanel = createExhibitPanel({
-    root: document.getElementById('exhibit-panel'),
-    closeButton: document.getElementById('exhibit-close'),
-    image: document.getElementById('exhibit-image'),
-    title: document.getElementById('exhibit-title'),
-    pitch: document.getElementById('exhibit-pitch'),
-    description: document.getElementById('exhibit-description'),
-  })
-  const progress = createProgressTracker(projects.length, {
+  const stationPanel = createStationPanel(document.getElementById('station-panel'), { feeds: arena.feeds })
+  // "N / 43 visited": distinct stations opened, until the Phase 6 passport.
+  const progress = createProgressTracker(content.exploreIds().length, {
     countEl: document.getElementById('progress-count'),
     totalEl: document.getElementById('progress-total'),
   })
 
+  // Enter areas (doc 05 §4): drive in, the border fills, then Enter / wait
+  // opens the station. Areas of streamed districts are added as they load.
+  const announcer = document.getElementById('announcer')
+  // The fence and the ENTER / TAP floor label for whichever area or exhibit is active.
+  const motionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+  const areaMarkers = createAreaMarkers({
+    scene,
+    reducedMotion: () => (settings.vfx.reducedMotion === 'auto' ? Boolean(motionQuery?.matches) : Boolean(settings.vfx.reducedMotion)),
+  })
+  const areas = createAreas({
+    scene,
+    content,
+    markers: areaMarkers,
+    announce(text) {
+      announcer.textContent = text
+    },
+    onOpen(area, node) {
+      if (node) stationPanel.show(node)
+    },
+    onAutoClose() {
+      stationPanel.hide()
+    },
+    isShowing: (id) => stationPanel.currentId === id,
+  })
+  areas.add(gameWorld.areas)
+  gameWorld.onDistrictLoaded(() => areas.add(gameWorld.areas))
+
+  // The game layer (doc 03): passport, XP, collectibles, Deadline Dash,
+  // mini-games, badges. Every way a station opens (area, Explore, trigger)
+  // goes through the panel, so the panel is where the game hears about it.
+  const game = createGame({ seed: arena, content, gameWorld, vehicle, scene, world, RAPIER, renderAssets })
+  // Hard knocks -> `impact` events on the game bus (VFX now, SFX in Phase 8).
+  const impacts = createImpacts({ world, queue: eventQueue, props: gameWorld.props, vehicle, events: game.events })
+  for (const id of Object.keys(game.store.state.opened)) progress.markFound(id)
+  stationPanel.onChange((node) => {
+    if (!node) return
+    // Exhibit cards (an album, an issue, a signpost) aren't stations: they
+    // count only towards their exhibit's badge, never the "visited" tally.
+    if (node.kind === 'exhibit') {
+      if (node.exhibit) game.events.emit('exhibit', node.exhibit)
+      return
+    }
+    progress.markFound(node.id)
+    game.stationOpened(node.id)
+  })
+  const gameHud = createGameHud({
+    root: document.getElementById('game-hud'),
+    countsRoot: document.getElementById('hud-counts'),
+    dashRoot: document.getElementById('dash-hud'),
+    toastRoot: document.getElementById('toasts'),
+    game,
+    seed: arena,
+    camera,
+  })
+  const passportRoot = document.getElementById('passport')
+  passportRoot.dataset.capturesKeys = ''
+  // Explore, Passport and Sound open from the Esc menu (or P / M); when they
+  // close with their launcher tucked away in the menu, focus goes back to the
+  // game canvas so the driving keys keep working.
+  const menuButton = document.getElementById('menu-open')
+  const passport = createPassportScreen({ root: passportRoot, launcher: document.getElementById('passport-open'), returnFocus: canvas, game })
+  // Stamps, badges and dash results are announced through the toasts' own
+  // aria-live region; the area announcer stays for "you're in an area".
+
+  // `trigger_` volumes are passive: passport gateways (`trigger_stamp_<id>`)
+  // and the "0" loop counter feed the game; a trigger whose id is also
+  // content still opens it.
   const triggerWatcher = createTriggerWatcher(gameWorld.triggers, {
     onEnter(trigger) {
-      interactionTarget = 1
-      const id = contentIdForTrigger(trigger)
-      const entry = projectsById.get(id)
-      if (!entry) return
-      exhibitPanel.show(entry)
-      progress.markFound(id)
-    },
-    onExit(trigger) {
-      interactionTarget = 0
-      const id = contentIdForTrigger(trigger)
-      if (exhibitPanel.currentId === id) exhibitPanel.hide()
+      game.trigger(trigger.name)
+      const node = content.get(contentIdForTrigger(trigger))
+      if (node) stationPanel.show(node)
     },
   })
 
-  const chaseCamera = createChaseCamera(camera)
+  const cameraRig = createCameraRig(camera, canvas)
+
+  // Layer 2 (docs/content-backup/10 §2): exhibits shaped by the content.
+  // Created before the reveal so each district's exhibits hide and reveal
+  // with it.
+  const showcase = await createShowcase({
+    scene, world, RAPIER, seed: arena, gameWorld, renderAssets, blobs, game, content, vehicle, camera,
+    openNode: (node, options) => stationPanel.show(node, options),
+    announce(text) {
+      announcer.textContent = text
+    },
+    overlayRoot: document.getElementById('speech'),
+    markers: areaMarkers,
+  })
+
+  // District reveals; the opening (letters falling at the RFP Gate) plays below.
+  const reveal = createReveal({
+    gameWorld,
+    focusPoint: () => cameraRig.focusPoint,
+    centres: districtCentres(arena),
+  })
+
+  // Explore mode: fly the camera to a place and open it, without driving.
+  const explore = createExploreMenu({
+    root: document.getElementById('explore'),
+    launcher: document.getElementById('explore-open'),
+    returnFocus: canvas,
+    model: content,
+    onPickNode(node) {
+      if (node.position) cameraRig.focusOn(node.position)
+      stationPanel.show(node, { focus: true, returnFocus: document.activeElement })
+    },
+    onPickGroup(entry) {
+      if (entry.position) cameraRig.focusOn(entry.position)
+    },
+    onClose() {
+      cameraRig.clearFocus()
+    },
+  })
   const physicsDebug = createPhysicsDebug({ scene, world })
   const input = createInput()
   const fps = createFpsMeter(hudFpsEl)
@@ -101,25 +287,140 @@ async function bootstrap() {
   const post = createPostProcessing({ renderer, scene, camera, canvas })
   onResize(post.setSize)
 
-  createDebugGui({ vehicle, camera: chaseCamera, hud: hudEl, resize })
-  hudEl.hidden = !settings.debug.showHud
+  // Visual effects (doc 05 §2), all driven by the game's events and the car.
+  const vfx = createVfx({
+    scene, camera, cameraRig, renderer, renderAssets, vehicle, game, gameWorld, seed: arena,
+    floaterRoot: document.getElementById('vfx-floaters'),
+  })
+
+  // Sound (doc 05 §3): silent until the first click, tap or key press. Music
+  // ducks under the station panel and the Passport.
+  const audio = createAudio({
+    vehicle, camera, game, gameWorld, seed: arena,
+    isDucked: () => stationPanel.isOpen || passport.isOpen || menu.isOpen,
+  })
+  const soundPanel = createSoundPanel({
+    root: document.getElementById('sound'),
+    launcher: document.getElementById('sound-open'),
+    returnFocus: canvas,
+    audio,
+    announce(text) {
+      announcer.textContent = text
+    },
+  })
+
+  // The Esc menu (doc 05 §5). The game pauses while it is open.
+  const menu = createMenu({
+    root: document.getElementById('menu'),
+    launcher: menuButton,
+    gameFocus: canvas,
+    game,
+    getQuality: () => settings.quality,
+    setQuality(name) {
+      applyQualityTier(name)
+      saveQuality(name)
+      resize()
+    },
+  })
+
+  // HUD corners: auto-hide, the contextual hint, the compass / minimap.
+  const hudChrome = document.getElementById('hud-chrome')
+  const hud = createHud({
+    root: hudChrome,
+    hint: document.getElementById('hint'),
+    vehicle, areas, content, game, showcase,
+    isTouch: () => document.body.classList.contains('has-touch-pad'),
+  })
+  const minimap = createMinimap({
+    root: document.getElementById('minimap'), seed: arena, game, camera, vehicle,
+    // Click or tap the map: the view pans there (and the chip below offers the way back).
+    onPick: (point) => cameraRig.panTo(point.x, point.z),
+    getView: () => (cameraRig.panned ? cameraRig.viewPoint : null),
+  })
+  // "Back to car", while the view is away from it (drag, Alt + arrows, minimap, Overview).
+  const panChip = createPanChip({
+    button: document.getElementById('pan-home'),
+    gameFocus: canvas,
+    isPanned: () => cameraRig.panned,
+    isOverview: () => cameraRig.inOverview,
+    onHome: () => cameraRig.recenter(),
+    announce(text) {
+      announcer.textContent = text
+    },
+  })
+
+  /** R: fade out, drop back in at the nearest `spawn_`, fade in. */
+  const respawnVehicle = () => {
+    screenFade.run(() => {
+      vehicle.respawn(nearestSpawn(gameWorld.spawns, vehicle.position))
+      cameraRig.reset()
+    })
+  }
+
+  // Navigation checks (interpolation, pan, zone angles, flicker): development
+  // builds only, so the module never reaches the production bundle.
+  const navTest = import.meta.env.DEV
+    ? async (options) => (await import('./debug/navTest.js')).runNavTest({
+      loop, vehicle, cameraRig, camera, canvas, renderer, scene, post, world, RAPIER, gameWorld, reveal, menu, input,
+      panChip, announcer, areaMarkers, areas, showcase,
+      isReady: () => started && !menu.isOpen,
+      ...options,
+    })
+    : null
+
+  // Audio checks (doc 11 R2): engine progress, screech, impact table, clipping, mute.
+  const audioTest = import.meta.env.DEV
+    ? async (options) => (await import('./debug/audioTest.js')).runAudioTest({
+      loop, vehicle, input, audio, cameraRig, post, world, RAPIER, gameWorld,
+      isReady: () => started && !menu.isOpen,
+      ...options,
+    })
+    : null
+
+  // The tuning panel (and any tune saved from it) is a `#debug` tool, as in
+  // the reference; visitors get the clean HUD.
+  if (debugMode) {
+    createDebugGui({
+      vehicle, camera: cameraRig, hud: hudEl, resize, respawn: respawnVehicle, RAPIER, debugMode, propStress,
+      gameTest: () => runGameTest({ game, gameWorld, vehicle, reveal, stationPanel, content, seed: arena, showcase }),
+      navTest,
+      audioTest,
+    })
+  }
+  // Speed / fps readout: a development tool, so only with #debug.
+  hudEl.hidden = !(debugMode && settings.debug.showHud)
 
   vehicle.sync()
   shadowBlob.update()
-  chaseCamera.update(1 / 60, vehicle)
+  cameraRig.update(1 / 60, vehicle)
   sky.update(camera)
 
-  loaderEl.classList.add('hidden')
-  setTimeout(() => loaderEl.remove(), 500)
+  // Start (doc 05 §5): nothing moves until it's pressed. Then the opening:
+  // the camera starts close and eases out while the car drops in and
+  // PURSUIT ARENA + the golden "10" fall onto the RFP Gate. The click is
+  // also the first gesture the sound waits for.
+  let started = false
+  start.ready(() => {
+    started = true
+    hudChrome.hidden = false
+    canvas.focus() // the Start button is going away; keys go to the game
+    vehicle.respawn()
+    cameraRig.playIntro()
+    reveal.playIntro()
+  })
 
   // Handy from the devtools console while tuning:
-  //   __proto.vehicle.state, __proto.settings.vehicle.engineForce = 8000
+  //   __proto.vehicle.state, __proto.settings.arcade.engineForce = 300
   //   await __proto.benchmark.run()  -- post-processing frame-cost table
   if (import.meta.env.DEV) {
     window.__proto = {
-      vehicle, world, scene, camera, settings, input, exhibitPanel, progress, gameWorld,
-      renderer, renderAssets, post, shadowBlob, sky, fps,
-      benchmark: { run: (options) => runPostBenchmark({ renderer, scene, camera }, options) },
+      vehicle, world, scene, camera, settings, input, stationPanel, explore, content, progress, gameWorld,
+      renderer, renderAssets, post, shadowBlob, sky, fps, cameraRig, floor, blobs, propStress, areas, reveal,
+      game, passport, vfx, impacts, audio, soundPanel, menu, hud, minimap, showcase, panChip, areaMarkers,
+      benchmark: {
+        run: (options) => runPostBenchmark({ renderer, scene, camera }, options),
+        vfx: (options) => runVfxBenchmark({ renderer, scene, camera, vfx }, options),
+      },
     }
   }
 
@@ -128,30 +429,106 @@ async function bootstrap() {
   let interaction = 0
   let interactionTarget = 0
 
-  createLoop((delta) => {
+  let streamed = false
+  let dashHold = false
+  /** What the camera hears from the controls each frame (reused, never reallocated). */
+  const cameraInput = { driving: false, panX: 0, panY: 0 }
+  const loop = createLoop((delta) => {
     elapsed += delta
-    const inputState = input.update()
+    // The outer-ring districts load once the first frame is on screen.
+    if (!streamed) {
+      streamed = true
+      gameWorld.streamRest().catch((error) => console.error('[world] streaming failed', error))
+    }
+    const inputState = input.update({ camera, vehicle })
+    // The visitor's own driving input, read before the area and Dash holds add
+    // their brake: a hold must not count as "driving" and pull a panned view home.
+    cameraInput.driving = inputState.throttle !== 0 || inputState.steer !== 0 || Boolean(inputState.brake)
+    cameraInput.panX = inputState.panX
+    cameraInput.panY = inputState.panY
 
-    if (input.consumeRespawn()) {
-      vehicle.respawn()
-      chaseCamera.reset()
+    // Esc peels back one layer at a time: station panel, Sound, Passport,
+    // Explore, a menu sub-view, the menu; with nothing open it opens the menu.
+    if (input.consume('menu') && started) {
+      if (stationPanel.isOpen) stationPanel.hide()
+      else if (soundPanel.isOpen) soundPanel.hide()
+      else if (passport.isOpen) passport.hide()
+      else if (explore.isOpen) explore.hide()
+      else if (menu.isOpen) menu.back()
+      else menu.show()
+    }
+    // Before Start, and while the menu is open, the world holds still: no
+    // physics, no game clock, presses dropped. It still draws.
+    if (!started || menu.isOpen) {
+      post.render(delta)
+      return
     }
 
-    // Vehicle forces must be applied inside the fixed step, not per frame,
-    // or the feel changes with the display refresh rate.
-    step(delta, (fixedDelta) => vehicle.update(fixedDelta, inputState))
+    if (input.consume('respawn')) respawnVehicle()
+    if (input.consume('horn')) {
+      vehicle.horn()
+      game.horn()
+      audio.horn()
+    }
+    if (input.consume('mute')) audio.toggleMute()
+    if (input.consume('camera')) cameraRig.toggle()
+    if (input.consume('recenter')) cameraRig.recenter()
+    // The chip announces a pan once; entering the overview from an existing pan says so itself.
+    if (input.consume('overview') && cameraRig.toggleOverview()) announcer.textContent = t('hud.overviewAnnounce')
+    if (input.consume('passport')) passport.toggle()
+    // Explore's camera hold ends as soon as you drive off (driving keys only
+    // reach here when focus is outside the Explore list).
+    if (cameraRig.focused && (inputState.throttle !== 0 || inputState.steer !== 0)) {
+      cameraRig.clearFocus()
+    }
+    // Enter areas consume `interact`; unconsumed presses are dropped at the
+    // next update.
+    const { hold } = areas.update(delta, { vehicle, interact: () => input.consume('interact') })
+    // Exhibit hotspots get Enter only when no station area has it.
+    showcase.update(delta, { car: vehicle, interact: () => input.consume('interact'), blocked: Boolean(areas.active) })
+    areaMarkers.update(delta)
+    // Just opened a station: a soft brake holds the car unless you accelerate.
+    if (hold && inputState.throttle === 0) inputState.brake = true
+    // The Deadline Dash countdown holds the car outright.
+    if (dashHold) {
+      inputState.brake = true
+      inputState.throttle = 0
+    }
 
-    vehicle.sync()
+    // Vehicle and prop forces must be applied inside the fixed step, not per
+    // frame, or the feel changes with the display refresh rate.
+    step(delta, (fixedDelta) => {
+      gameWorld.props.fixedUpdate(fixedDelta)
+      vehicle.update(fixedDelta, inputState)
+    }, impacts.drain)
+
+    vehicle.sync(step.alpha)
     triggerWatcher(vehicle.position)
+    reveal.update(delta, vehicle.position)
+    gameWorld.animate(delta)
+    gameWorld.updateLod(camera.position)
+    interactionTarget = areas.active ? 1 : 0
     interaction += (interactionTarget - interaction) * (1 - Math.exp(-8 * delta))
-    chaseCamera.update(delta, vehicle)
+    cameraRig.update(delta, vehicle, cameraInput)
+    post.setTiltShiftScale(cameraRig.tiltShift)
+    panChip.update()
     sky.update(camera)
     shadowBlob.update()
+    gameWorld.props.update(delta, step.alpha)
+    dashHold = game.update(delta).hold
+    vfx.update(delta)
+    audio.update(delta, inputState)
+    hud.update(delta)
+    minimap.update(delta)
+    gameHud.update(vehicle.position)
+    propStress?.update()
+    blobs.update()
+    floor.update()
     physicsDebug.update()
     syncRenderSettings()
     syncShaderEffects({
       time: elapsed,
-      speed: Math.min(vehicle.state.speed / Math.max(settings.vehicle.topSpeed, 1), 1),
+      speed: Math.min(vehicle.state.speed / Math.max(vehicle.topSpeed, 1), 1),
       interaction,
     })
 
@@ -164,10 +541,68 @@ async function bootstrap() {
 
     post.render(delta)
   })
+  if (import.meta.env.DEV) {
+    window.__proto.loop = loop
+    window.__proto.navTest = navTest
+    window.__proto.audioTest = audioTest
+  }
+}
+
+const SETTINGS_KEY = 'pursuit-arena/settings'
+
+/** The visitor's saved graphics tier, if any (localStorage, try/catch like the progress store). */
+function loadSavedQuality() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null')
+    return saved?.quality in qualityTiers ? saved.quality : null
+  } catch {
+    return null
+  }
+}
+
+function saveQuality(name) {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ quality: name }))
+  } catch {
+    // Not saved; it still applies for this visit.
+  }
+}
+
+/** Apply a `qualityTiers` preset (the same fields the debug panel's preset sets). */
+function applyQualityTier(name) {
+  const tier = qualityTiers[name]
+  settings.quality = name
+  settings.render.pixelRatioCap = tier.pixelRatioCap
+  settings.post.aa.mode = tier.aaMode
+  settings.post.enabled = tier.postEnabled
+  settings.post.bloom.enabled = tier.bloom
+  settings.post.tiltShift.enabled = tier.tiltShift
+  settings.vfx.density = tier.vfxDensity
+  settings.lod.distance = tier.lodDistance
+}
+
+/**
+ * Development only: check content/*.json against their schemas and report
+ * problems loudly in the console. `npm run content:check` does the same (plus
+ * image paths) from the command line; neither ever runs in production.
+ */
+async function validateContentInDev(content) {
+  const [{ validate, formatErrors }, arenaSchema, uiSchema, ui] = await Promise.all([
+    import('./content/schema.js'),
+    import('../content/arena.schema.json'),
+    import('../content/ui.schema.json'),
+    import('../content/ui.json'),
+  ])
+  const report = [
+    formatErrors('content/arena.seed.json', validate(arenaSchema.default, arena)),
+    formatErrors('content/ui.json', validate(uiSchema.default, ui.default)),
+    ...content.issues.map((issue) => `content/arena.seed.json: ${issue}`),
+  ].filter(Boolean)
+  if (report.length) console.error(`Content problems:\n${report.join('\n')}`)
 }
 
 bootstrap().catch((error) => {
   console.error(error)
-  const loaderEl = document.getElementById('loader')
-  if (loaderEl) loaderEl.textContent = `failed to start: ${error.message}`
+  const status = document.querySelector('.start__status')
+  if (status) status.textContent = t('loadFailed', { message: error.message })
 })

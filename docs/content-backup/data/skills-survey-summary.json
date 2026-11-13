@@ -1,0 +1,18 @@
+{
+ "source": "Knowledge Ninja Aug2020 (xlsx)",
+ "people": 38,
+ "by_team": {
+  "Pursuit Manager": 11,
+  "Researcher/ Specialist": 11,
+  "Pursuit Designer - Studio": 8,
+  "Pursuit Designer - CoE": 8
+ },
+ "by_skill_category": {
+  "Consultant": 9,
+  "Technical skills": 23,
+  "Other hobbies": 16,
+  "Artist": 16,
+  "Sports & Recreation": 17,
+  "House Manager": 12
+ }
+}

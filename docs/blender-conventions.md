@@ -1,31 +1,60 @@
 # Blender authoring conventions
 
-How `blender/scene.blend` maps onto the game code in `src/`. Read this before
-touching the scene or adding new exhibit/vehicle content.
+How the Blender files map onto the game code in `src/`. Read this before
+touching any `.blend` or the loader.
+
+Two sources, two pipelines:
+
+- **The arena** -- `blender/kit/arena_kit.blend` and
+  `blender/districts/<id>.blend` (base + 14 districts) -- is *generated* by
+  `blender/scripts/` from `content/arena.seed.json` and
+  docs/pursuit-arena/02's layout (`npm run art:build`; see **Rebuilding the
+  arena** below). Until the Phase 10 art pass, change the generators, not the
+  `.blend` files: a regenerate overwrites them.
+- **The car** lives in `blender/scene.blend` ("Vehicle" collection) and keeps
+  its original four-pass pipeline (**Rebuilding the art**). That file's
+  "World" collection is the retired prototype lot; it is no longer exported.
 
 ## Naming convention
 
 Every object's **name** (not its mesh data name) decides its role at load
-time. `src/world/world.js` reads these prefixes off `world.glb`'s node names
-directly:
+time. `src/world/world.js` walks every node of every district GLB, at any
+depth, and reads these prefixes (docs/pursuit-arena/04 §2):
 
 | Prefix | Blender object type | Role |
 |---|---|---|
-| `collision_` | Mesh (box or cylinder primitive) | Not rendered. Its geometry's bounding box + world transform become a Rapier collider, then the node is discarded. |
-| `collision_*_cyl` | Mesh (cylinder primitive) | Same as above, but built as a `RAPIER.ColliderDesc.cylinder(...)` instead of a box. The `_cyl` suffix is the only thing that decides the shape -- geometry alone isn't inspected. |
-| `spawn_` | Empty | Not rendered. Position + rotation become a vehicle spawn point (`gameWorld.spawns['spawn_...']`). |
-| `trigger_` | Empty (display type `Cube`) | Not rendered. Position + rotation + half-extents (see below) become an entry in `gameWorld.triggers`, watched by `src/world/triggers.js`, which fires `onEnter`/`onExit` for the content layer (see **Trigger -> content id** below). |
-| anything else | Mesh | Visual-only geometry. Left in the scene as-is. |
+| `collision_` | Mesh (primitive) | Not rendered. Its geometry's bounding box + world transform become a fixed Rapier collider (`src/world/colliders.js`). Under a `dyn_` root it becomes part of that prop's compound instead. |
+| `collision_*_cyl` / `collision_*_sph` | Mesh | Same, built as a cylinder (upright in its own frame) / sphere. The suffix alone decides the shape. |
+| `dyn_<type>_<n>` | Empty | A **dynamic prop**: one Rapier body at the empty (its centre of mass), compound of its `collision_` children, drawn from its **one** visual mesh child (instanced per look, per district). Custom properties (exported as glTF extras): `type`, `mass`, `friction`, `restitution`, `sfx` (`paper`/`wood`/`metal`/`plastic`/`brick`/`rubber`). Starts asleep. |
+| `inst_<type>_<n>` | Empty | Place an instance of kit piece `kit_<type>` here (trees, lamps). Custom property `type`. Kit pieces may carry `collision_` children (trunks, poles); every instance gets them. |
+| `area_<contentId>` | Empty (`Cube`) | An **Enter area**: driving in opens content `<contentId>` from `arena.seed.json`. Half extents from scale, with the Y/Z swap below. Exactly one per content id (`art:validate` checks). |
+| `trigger_<id>` | Empty (`Cube`) | A passive trigger -- passport stamps (`trigger_stamp_<district>`), the "0" loop counter. Same half-extent rule. |
+| `collect_<kind>_<n>` | Empty | A collectible spot, `dot` / `golden` / `shuriken`; drawn from `kit_<kind>`. Pickup logic is Phase 6. |
+| `spawn_<id>` | Empty | A respawn point (`R` takes the nearest); the car faces the empty's -Z. The boot spawn is the one `arena.seed.json` names (`rfpGate.spawn`). |
+| `sfx_<id>` | Empty (`Sphere`) | An ambient sound emitter for Phase 8; radius = scale. |
+| `decal_<id>` | Mesh (flat plate) | Floor typography / boards. Visual only. |
+| `anim_<id>` | Mesh | A kinematic visual the runtime turns about its own origin: custom props `spin` (rad/s) and `axis` (`x`/`y`/`z`, local). Kept out of the static merge. Put the origin where it should pivot (the portal ring's centre). |
+
+Optional `dyn_` behaviour properties (src/world/dynamicProps.js):
+
+| Properties | Behaviour |
+|---|---|
+| `hang`, `springK`, `springDamp` | Hangs on a spring from a point `hang` m above where it was authored; the rest length is set so its weight stretches the spring to exactly the authored height (the Idea Spark bulbs). |
+| `buoyancy`, `tether` | Floats with `buoyancy` x its weight on a rope `tether` m long to the floor below it (the Culture balloons). Author it at the top of its tether. |
+| anything else | Mesh | Static visual. Merged per material per district at load. The mesh named `ground` stays separate: `render/floorGradient.js` repaints it. |
+
+**Materials** decide shading by name: `mc_<matcap>` or
+`mc_<matcap>__<RRGGBB>` (a tint multiplied into the matcap), where
+`<matcap>` is one of `rendering.matcaps` in `src/config.js`. Objects whose
+material isn't named that way (the car) fall back to the object-name prefix
+rules in `rendering.matcapRules`.
 
 A `collision_` proxy is a **separate object** from its visual mesh, not the
-same mesh reused -- e.g. `exhibit_a` (visual) and `collision_exhibit_a`
-(proxy) are two objects at the same transform. Keeping them separate is what
-lets the collision proxy stay a cheap box/cylinder even when the visual mesh
-gets more detailed later.
-
-Only the first path segment matters for the prefix check
-(`node.name.startsWith('collision_')` etc. in `world.js`), so nested
-grouping under a prefixed name still works if you ever need it.
+same mesh reused -- e.g. `pod_audit_managers` (visual) and
+`collision_pod_audit_managers` (proxy) are two objects at the same transform.
+Keeping them separate is what lets the proxy stay a cheap primitive even when
+the visual gets detailed later. Keep dynamic-prop colliders about 10% inside
+the visual (doc 04 §3) so props look like they touch the ground.
 
 ## Units, scale, and pivots
 
@@ -104,24 +133,30 @@ anything more complex than a flat ramp anyway.
 ## Trigger -> content id
 
 A `trigger_` empty's name, minus the `trigger_` prefix, **is the id** it
-looks up in [`content/projects.json`](../content/projects.json). `main.js`'s
+looks up in the content model (`src/content/model.js`), which is built from
+[`content/arena.seed.json`](../content/arena.seed.json) -- every station,
+milestone and leader block has an `id` there. `main.js`'s
 `contentIdForTrigger()` does the stripping:
 
 ```
-trigger_exhibit_a  ->  id "exhibit_a"  ->  content/projects.json entry with "id": "exhibit_a"
+trigger_audit_managers  ->  id "audit_managers"  ->  arena.seed.json station with "id": "audit_managers"
 ```
 
 There's no separate mapping table to keep in sync -- the Blender empty's name
 *is* the key. To point an existing trigger at a different piece of content,
-edit `content/projects.json`'s `id` field to match (pure data edit, matches
-whatever `trigger_<name>` already exports). To add a whole new exhibit, add a
-`trigger_<name>` empty in Blender (+ a `collision_`/visual pair for the
-structure itself) and a matching `{ "id": "<name>", ... }` entry in
-`content/projects.json` -- order doesn't matter on either side, and a trigger
-with no matching content id is simply ignored (logged on enter, no panel).
+edit the `id` in `content/arena.seed.json` to match (pure data edit; run
+`npm run content:check` afterwards). To add a whole new station, add a
+`trigger_<id>` empty in Blender (+ a `collision_`/visual pair for the
+structure itself) and a matching station in the seed -- order doesn't matter
+on either side, and a trigger with no matching content id is simply ignored
+(logged on enter, no panel). The Phase 4 `area_<id>` empties use the same ids.
+
+The prototype world's `trigger_exhibit_a` ... `_d` still resolve, to the four
+entries in [`content/projects.json`](../content/projects.json), until the
+Phase 4 arena replaces that world.
 
 Renaming a `trigger_` empty means a re-export (see **Export settings**
-below); editing `content/projects.json` does not.
+below); editing the content JSON does not.
 
 ## Collision proxy shape
 
@@ -135,9 +170,87 @@ below); editing `content/projects.json` does not.
   suffix convention and a matching branch in `addColliderFromNode()` in
   `src/world/world.js`.
 
-## Rebuilding the art
+## Rebuilding the arena
 
-Four headless passes, in this order:
+```bash
+npm run art:build      # = art:gen, art:polish, art:validate, art:export, art:cart
+node tools/blender.mjs gen --only audit      # one district (or kit / base)
+node tools/blender.mjs polish --only audit   # its art pass (base last: it needs every district)
+```
+
+`tools/blender.mjs` runs Blender 5.x headless (`BLENDER_BIN` from the
+environment or `.env.local`, else the default install path):
+
+1. **`gen_kit.py`** → `blender/kit/arena_kit.blend`: trees, lamps, and the
+   dot / golden / shuriken collectible shapes.
+2. **`gen_base.py`** → `blender/districts/base.blend`: ground, ring roads and
+   spokes, the boundary berm + invisible wall, four Outer Loop ramps, the
+   junction fingerposts, scattered trees and lamps, the 100 green dots.
+3. **`gen_district.py --id <id>`** → `blender/districts/<id>.blend` for HQ,
+   the RFP Gate, the Decade Drive and the 11 territories / pillars, at the
+   seed's coordinates: plaza, gateway + `trigger_stamp_<id>`, landmark, one
+   pod + `area_` per station, the themed playground, trees, spawn, ambience.
+   Shared helpers live in `_common.py`; the arena's radii in `arena_layout.py`.
+4. **`polish.py`** per file (the Phase 10 art pass, shared code in
+   `polish_lib.py`):
+   - **LOD1**: each `landmark_*` visual gets a twin `<name>_LOD1`, copied
+     *before* the bevel (the plain blockout, roughly a third of the bevelled
+     triangles). The runtime merges LOD0 and LOD1 landmarks into two sets and
+     shows one by camera distance (`settings.lod.distance`, set by the
+     quality tier).
+   - **Bevel**: every static visual (2 segments, 5–6 cm), dynamic-prop visual
+     and kit piece (1 segment, 3 cm) gets a rounded, smooth-shaded edge,
+     written into the mesh with bmesh. Props of one look share a mesh, and
+     that sharing is what the runtime batches them by, so the bevel goes on
+     the shared mesh, once. Floors, roads, plazas, decals and kit trees are
+     left alone.
+   - **AO**: the district's static visuals share one atlas on the `bake` UV
+     layer (TEXCOORD_1), 1024² (HQ 2048²), baked against each other and a
+     temporary ground plane. Downward faces and LOD1 twins sample the
+     atlas's reserved white corner. Collision proxies and dynamic props are
+     hidden from the bake: proxies would occlude their own visuals, and props
+     would leave a shadow where they started.
+   - **Ground (base)**: the ground alone is baked, AO times a soft sun shadow
+     at 2048², through a planar top-down projection, with every district's
+     statics linked in as occluders. Roads and kerbs share the projection but
+     are hidden during the bake, so they inherit the ground's shadows instead
+     of baking the floor beneath them into their own texels.
+   - Bakes are written as greyscale JPEG to `public/textures/bake/district_<id>.jpg`.
+     Save them with the Standard view transform: Blender 5's default AgX maps
+     1.0 to about 0.77.
+5. **`validate.py`** per file → `blender/reports/<file>.json` (git-ignored),
+   then cross-file checks: naming, applied scale, budgets (district 25k tris,
+   landmark 6k, pod 1.2k, prop 300, letter 400, tree 250), every content id
+   with exactly one `area_`, and **no dynamic prop starting inside static
+   geometry** (it would be shot out on the first physics step). Any error
+   fails the build. `_LOD1` twins are counted apart (`lod1Triangles`), not
+   in the district total, since they never draw alongside LOD0.
+6. **`export_arena.py`** per file → `public/models/kit.glb`,
+   `public/models/district_<id>.glb`, and `public/models/arena.manifest.json`
+   (core districts load before the first frame; the outer ring streams). A
+   district with a bake gets `"bake": "district_<id>.jpg"` in the manifest.
+
+All generators work in game space (metres, -Z north) and convert to Blender
+on object creation, so their numbers read like docs/pursuit-arena/02.
+
+## The anniversary cart
+
+`npm run art:cart` runs `blender/scripts/gen_cart.py`, which builds the cart
+(docs/pursuit-arena/04 §5), bevels it, bakes its AO and exports it in one
+pass: `blender/vehicle/cart.blend`, `public/models/cart.glb` (≤ 4k tris; about
+3.1k) and `public/textures/bake/cart-ao.jpg`. It is authored in the physics
+body's own space and size (the arcade preset at worldScale 1.6), nose towards
+Blender −Y, so the runtime only turns it π (`rebuild.cart.yawOffset`). Node
+names are the contract with `src/vehicle/arcadeVehicle.js`: `cart_*` body
+parts (`cart_body` takes skins), `wheel_FL/FR/BL/BR` (origin at the hub;
+wheel_FL's look is cloned for all four), `antenna` (an empty at the spring's
+pivot) and `light_brake_L/R`, `light_reverse_L/R`. After changing it, drive it:
+the nose must lead.
+
+## Rebuilding the art (the prototype car, `?vehicle=sim` only)
+
+The `sim` preset still uses the prototype's `blender/scene.blend` car. Four
+headless passes, in this order:
 
 ```bash
 blender --background blender/scene.blend --python blender/vehicle_details.py
@@ -269,9 +382,12 @@ blender --background blender/scene.blend --python blender/export.py
 
 ## Current object manifest
 
-**World.** Ground plane, four exhibit stand-ins (box/box/box/cylinder, for
-shape and collider variety), two ramp obstacles (one with a landing platform),
-one spawn point, and one trigger per exhibit.
+**Arena.** Generated -- see `blender/reports/*.json` after `npm run
+art:validate` for the per-file counts (Phase 4: about 21k authored
+triangles, 246 dynamic props, 118 collectibles, 43 areas across 16 files).
+
+**World (retired).** `scene.blend`'s prototype lot: ground plane, four exhibit
+stand-ins, two ramps, one spawn, four triggers. No longer exported or loaded.
 
 **Vehicle.** `vehicle_hull`, `vehicle_cabin`, `vehicle_nose_accent`, plus
 `vehicle_lamp_l` / `vehicle_lamp_r` (round nose lamps) and `vehicle_spoiler`

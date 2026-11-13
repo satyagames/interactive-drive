@@ -1,0 +1,362 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Pursuit Arena UI strings",
+  "description": "Every piece of interface copy (HUD, panel, Explore menu, touch labels). Placeholders in {braces} are filled at runtime.",
+  "type": "object",
+  "required": [
+    "version",
+    "documentTitle",
+    "loadFailed",
+    "start",
+    "menu",
+    "controls",
+    "credits",
+    "hud",
+    "panel",
+    "explore",
+    "areas",
+    "touch",
+    "game",
+    "dash",
+    "passport",
+    "sound",
+    "badges",
+    "skins"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "documentTitle": {
+      "$ref": "#/$defs/text"
+    },
+    "loadFailed": {
+      "$ref": "#/$defs/text"
+    },
+    "start": {
+      "$ref": "#/$defs/strings",
+      "required": [
+        "tagline",
+        "title",
+        "progressLabel",
+        "ready",
+        "button",
+        "keyboard",
+        "touch",
+        "sound"
+      ]
+    },
+    "menu": {
+      "$ref": "#/$defs/strings",
+      "required": [
+        "open",
+        "openHint",
+        "title",
+        "paused",
+        "resume",
+        "explore",
+        "passport",
+        "controls",
+        "audio",
+        "graphics",
+        "reset",
+        "credits",
+        "back",
+        "graphicsIntro",
+        "low",
+        "medium",
+        "high",
+        "lowNote",
+        "mediumNote",
+        "highNote",
+        "resetIntro",
+        "resetConfirm",
+        "resetCancel"
+      ]
+    },
+    "controls": {
+      "type": "object",
+      "description": "The Controls table in the Esc menu.",
+      "required": [
+        "title",
+        "action",
+        "keyboard",
+        "gamepad",
+        "touch",
+        "rows"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/text"
+        },
+        "action": {
+          "$ref": "#/$defs/text"
+        },
+        "keyboard": {
+          "$ref": "#/$defs/text"
+        },
+        "gamepad": {
+          "$ref": "#/$defs/text"
+        },
+        "touch": {
+          "$ref": "#/$defs/text"
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "action",
+              "keyboard",
+              "gamepad",
+              "touch"
+            ],
+            "properties": {
+              "action": {
+                "$ref": "#/$defs/text"
+              },
+              "keyboard": {
+                "$ref": "#/$defs/text"
+              },
+              "gamepad": {
+                "$ref": "#/$defs/text"
+              },
+              "touch": {
+                "$ref": "#/$defs/text"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "credits": {
+      "$ref": "#/$defs/strings",
+      "required": [
+        "title",
+        "intro",
+        "team",
+        "software",
+        "reference",
+        "audio",
+        "placeholderTag"
+      ]
+    },
+    "hud": {
+      "$ref": "#/$defs/strings",
+      "required": [
+        "speedUnit",
+        "found",
+        "hintDrive",
+        "hintTouch",
+        "hintFindStation",
+        "hintEnter",
+        "hintTap",
+        "hintAct",
+        "hintActTap",
+        "hintPassport",
+        "mapLabel",
+        "objective",
+        "objectiveDash",
+        "objectiveDone",
+        "backToCar",
+        "backToCarHint",
+        "pannedAnnounce",
+        "overviewAnnounce",
+        "backAtCarAnnounce"
+      ]
+    },
+    "panel": {
+      "$ref": "#/$defs/strings",
+      "required": [
+        "regionLabel",
+        "close",
+        "placeholder",
+        "links",
+        "opensInNewTab",
+        "gallery",
+        "imageAlt",
+        "birthdaysToday",
+        "birthdaysMonth",
+        "birthdaysNone",
+        "serviceAwards",
+        "serviceYears",
+        "serviceNone",
+        "events",
+        "eventsNone",
+        "sample"
+      ]
+    },
+    "explore": {
+      "$ref": "#/$defs/strings",
+      "required": [
+        "open",
+        "openHint",
+        "title",
+        "intro",
+        "close",
+        "backToCar",
+        "start",
+        "ourTeam",
+        "timeline",
+        "leader",
+        "placeholderTag"
+      ]
+    },
+    "areas": {
+      "$ref": "#/$defs/strings",
+      "required": [
+        "enterHint",
+        "tapHint",
+        "resetPlate",
+        "ready"
+      ]
+    },
+    "touch": {
+      "$ref": "#/$defs/strings",
+      "required": [
+        "joystick",
+        "boost",
+        "brake",
+        "reverse",
+        "interact",
+        "respawn"
+      ]
+    },
+    "game": {
+      "$ref": "#/$defs/strings"
+    },
+    "dash": {
+      "$ref": "#/$defs/strings"
+    },
+    "passport": {
+      "$ref": "#/$defs/strings"
+    },
+    "sound": {
+      "$ref": "#/$defs/strings",
+      "required": [
+        "title",
+        "close",
+        "mute",
+        "muteHint",
+        "master",
+        "music",
+        "sfx",
+        "ambience",
+        "muted",
+        "unmuted",
+        "placeholder"
+      ]
+    },
+    "skins": {
+      "$ref": "#/$defs/strings",
+      "required": [
+        "default",
+        "ninja",
+        "golden",
+        "paint"
+      ]
+    },
+    "badges": {
+      "type": "object",
+      "description": "One entry per badge id: src/game/progression.js BADGES plus content/arena.seed.json gamification.exhibitBadges.",
+      "required": [
+        "first_drive",
+        "decade_historian",
+        "variance_found",
+        "coin_collector",
+        "bright_idea",
+        "pole_position",
+        "across_time_zones",
+        "bright_strike",
+        "red_tape_cutter",
+        "proposal_ninja",
+        "social_butterfly",
+        "lifelong_learner",
+        "toolkit_pro",
+        "loop_the_0",
+        "airtime",
+        "deadline_hero",
+        "pursuit_legend",
+        "people_of_pursuits",
+        "gen_ai_insider",
+        "chronicles_collector",
+        "spot_on",
+        "memory_maker"
+      ],
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "title",
+          "description"
+        ],
+        "properties": {
+          "title": {
+            "$ref": "#/$defs/text"
+          },
+          "description": {
+            "$ref": "#/$defs/text"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "showcase": {
+      "$ref": "#/$defs/strings",
+      "description": "Labels on and around the content-driven exhibits (src/showcase/).",
+      "required": [
+        "hotspotAnnounce",
+        "buddyHint",
+        "buddyDone",
+        "winsSnapshot",
+        "openWins",
+        "wallTitle",
+        "wallPending",
+        "wallEmpty",
+        "openWall",
+        "trophyBin",
+        "openTrophies",
+        "star",
+        "openStars",
+        "albumKicker",
+        "albumOpen",
+        "albumMeta",
+        "albumNoPhoto",
+        "issueKicker",
+        "issueOpen",
+        "issueBody",
+        "issueLink",
+        "issueNew",
+        "signpostKicker",
+        "signpostOpen",
+        "signpostBody",
+        "bar",
+        "openGarden",
+        "resetWall",
+        "resetPins",
+        "resetDone",
+        "actionAnnounce",
+        "championPlate",
+        "championFound"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "strings": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/text"
+      }
+    }
+  }
+}

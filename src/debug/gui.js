@@ -1,8 +1,11 @@
 import GUI from 'lil-gui'
 
-import { defaultSettings, qualityTiers, settings } from '../config.js'
+import { defaultSettings, qualityTiers, rebuild, settings } from '../config.js'
+import { cameraModes } from '../camera/cameraRig.js'
+import { runFeelProbe } from './feelProbe.js'
 
 const STORAGE_KEY = 'driving-prototype/tuning'
+const PRESETS = ['arcade2019', 'sim']
 
 /**
  * Live tuning panel. Everything here writes straight into `settings`, which the
@@ -11,12 +14,55 @@ const STORAGE_KEY = 'driving-prototype/tuning'
  * Tuned values can be stashed in localStorage so a good feel survives a
  * refresh, and dumped as JSON to paste back into `src/config.js`.
  */
-export function createDebugGui({ vehicle, camera, hud, resize }) {
+export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, debugMode, propStress, gameTest, navTest, audioTest }) {
   const gui = new GUI({ title: 'Tuning', width: Math.min(300, window.innerWidth - 30) })
   // On a phone the panel would cover most of the screen, so start it shut.
   if (window.matchMedia?.('(pointer: coarse)').matches) gui.close()
 
-  // ---- vehicle ------------------------------------------------------------
+  // ---- preset -------------------------------------------------------------
+  // A reload, not a live switch: the preset owns the body and world gravity.
+  const preset = { value: rebuild.vehicle.preset }
+  gui
+    .add(preset, 'value', PRESETS)
+    .name('vehicle preset (reloads)')
+    .onChange((value) => {
+      const url = new URL(window.location.href)
+      url.searchParams.set('vehicle', value)
+      window.location.assign(url)
+    })
+  const isSim = rebuild.vehicle.preset === 'sim'
+
+  // ---- arcade 2019 --------------------------------------------------------
+  // Reference units (doc 01 §7); the preset scales them by worldScale.
+  const arcadeFolder = gui.addFolder(`Arcade 2019 (ref units, x${rebuild.worldScale})`)
+  const a = settings.arcade
+  arcadeFolder.add(a, 'engineForce', 0, 1000, 1).name('engine force')
+  arcadeFolder.add(a, 'boostEngineForce', 0, 1500, 1).name('boost engine force')
+  arcadeFolder.add(a, 'maxSpeed', 1, 40, 0.01).name('speed cap (u/s)')
+  arcadeFolder.add(a, 'boostMaxSpeed', 1, 60, 0.01).name('boost speed cap (u/s)')
+  arcadeFolder.add(a, 'brakeForce', 0, 5, 0.01).name('brake')
+  arcadeFolder.add(a, 'coastImpulse', 0, 0.5, 0.005).name('coast drag')
+  arcadeFolder.add(a, 'steerRate', 1, 40, 0.5).name('steer rate (rad/s)')
+  arcadeFolder.add(a, 'maxSteer', 0.1, 1, 0.001).name('max steer (rad)')
+  const wheelFolder = arcadeFolder.addFolder('Suspension & tyres').close()
+  wheelFolder.add(a, 'suspensionStiffness', 5, 300, 1).name('stiffness (x mass)')
+  wheelFolder.add(a, 'dampingRelaxation', 0, 10, 0.05).name('damping relaxation')
+  wheelFolder.add(a, 'dampingCompression', 0, 10, 0.05).name('damping compression')
+  wheelFolder.add(a, 'maxSuspensionTravel', 0, 1, 0.01).name('max travel')
+  wheelFolder.add(a, 'frictionSlip', 0, 30, 0.1).name('friction slip')
+  wheelFolder.add(a, 'sideFrictionStiffness', 0, 3, 0.01).name('side friction')
+  wheelFolder.add(a, 'handbrakeSideFriction', 0, 1, 0.01).name('handbrake (Q) rear grip')
+  const extrasFolder = arcadeFolder.addFolder('Flip, hop & antenna').close()
+  extrasFolder.add(a, 'flipDelay', 0, 5, 0.1).name('flip delay (s)')
+  extrasFolder.add(a, 'flipImpulse', 0, 500, 1).name('flip impulse')
+  extrasFolder.add(a, 'hopImpulse', 0, 500, 1).name('horn hop impulse')
+  extrasFolder.add(a, 'respawnDrop', 0, 30, 0.5).name('respawn drop (u)')
+  extrasFolder.add(a, 'antennaStrength', 0, 50, 0.5).name('antenna kick')
+  extrasFolder.add(a, 'antennaDamping', 0, 0.2, 0.001).name('antenna damping')
+  extrasFolder.add(a, 'antennaPullBack', 0, 0.1, 0.001).name('antenna spring')
+  if (isSim) arcadeFolder.hide()
+
+  // ---- sim vehicle --------------------------------------------------------
   const vehicleFolder = gui.addFolder('Vehicle')
   const v = settings.vehicle
   vehicleFolder.add(v, 'engineForce', 0, 12000, 50).name('engine force (N/wheel)')
@@ -55,9 +101,72 @@ export function createDebugGui({ vehicle, camera, hud, resize }) {
   bodyFolder.add(settings.body, 'linearDamping', 0, 2, 0.01).name('linear damping')
   bodyFolder.add(settings.body, 'angularDamping', 0, 5, 0.01).name('angular damping')
   bodyFolder.add(settings.body, 'airRighting', 0, 20000, 100).name('air self-righting')
+  if (!isSim) for (const folder of [vehicleFolder, suspFolder, bodyFolder]) folder.hide()
 
   // ---- camera -------------------------------------------------------------
-  const cameraFolder = gui.addFolder('Camera')
+  gui.add(settings, 'cameraMode', cameraModes).name('camera (C)').listen()
+
+  // Reference camera; distances in reference units x worldScale (doc 07 §2).
+  const isoFolder = gui.addFolder('Iso camera')
+  const iso = settings.isoCamera
+  isoFolder.add(iso, 'fov', 15, 80, 0.5).name('fov')
+  isoFolder.add(iso, 'pitch', 10, 89, 0.1).name('pitch (deg down)')
+  isoFolder.add(iso, 'azimuth', -180, 180, 0.5).name('azimuth (deg E of S)')
+  isoFolder.add(iso, 'minDistance', 2, 40, 0.5).name('min distance (u)')
+  isoFolder.add(iso, 'zoomRange', 0, 40, 0.5).name('zoom range (u)')
+  isoFolder.add(iso, 'followRate', 0.5, 30, 0.05).name('follow rate (1/s)')
+  isoFolder.add(iso, 'zoomRate', 0.5, 30, 0.05).name('zoom rate (1/s)')
+  isoFolder.add(iso, 'lookAhead', 0, 1, 0.01).name('look-ahead (s)')
+  isoFolder.add(iso, 'portraitFraming').name('portrait framing fix')
+  isoFolder.add(iso, 'near', 0.05, 5, 0.05).name('near plane (m)')
+  // Map look (doc 11 R1): drag, Alt + arrows, minimap, Overview (O), F to return.
+  const panFolder = isoFolder.addFolder('Map look').close()
+  panFolder.add(iso.pan, 'enabled').name('enabled')
+  panFolder.add(iso.pan, 'maxRadius', 40, 200, 1).name('arena limit (m)')
+  panFolder.add(iso.pan, 'returnDuration', 0, 2, 0.05).name('return: base (s)')
+  panFolder.add(iso.pan, 'returnPerMetre', 0, 0.03, 0.001).name('return: per metre (s)')
+  panFolder.add(iso.pan, 'returnMaxDuration', 0.2, 3, 0.05).name('return: cap (s)')
+  panFolder.add(iso.pan, 'keySpeed', 0.1, 3, 0.05).name('Alt + arrows speed')
+  panFolder.add(iso.pan, 'dragThreshold', 0, 30, 1).name('drag threshold (px)')
+  panFolder.add(iso.pan, 'doubleTapMs', 100, 600, 10).name('double-tap window (ms)')
+  panFolder.add(iso.pan, 'joystickMargin', 0, 80, 1).name('joystick guard (px)')
+  panFolder.add(iso, 'maxZoom', 1, 2.5, 0.05).name('max zoom (overview)')
+  panFolder.add(iso, 'zoneRate', 0.2, 6, 0.1).name('zone ease rate (1/s)')
+  panFolder.add({ overview: () => camera.toggleOverview() }, 'overview').name('Toggle overview (O)')
+  panFolder.add({ home: () => camera.recenter() }, 'home').name('Back to car (F)')
+  isoFolder.add({ intro: () => camera.playIntro() }, 'intro').name('Replay intro dolly')
+
+  // ---- car sound (doc 11 R2) -----------------------------------------------
+  const soundFolder = gui.addFolder('Car sound').close()
+  const eng = settings.audio.engine
+  soundFolder.add(eng, 'speedMultiplier', 0, 5, 0.05).name('progress: speed x')
+  soundFolder.add(eng, 'accelMultiplier', 0, 2, 0.05).name('progress: throttle x')
+  soundFolder.add(eng, 'easeUp', 0.01, 1, 0.01).name('progress: ease up')
+  soundFolder.add(eng, 'easeDown', 0.01, 1, 0.01).name('progress: ease down')
+  soundFolder.add(eng, 'pitchMin', 0.2, 2, 0.05).name('pitch min')
+  soundFolder.add(eng, 'pitchMax', 0.5, 4, 0.05).name('pitch max')
+  soundFolder.add(eng, 'gain', 0, 1, 0.01).name('engine level')
+  soundFolder.add(eng, 'volumeMin', 0, 1, 0.01).name('level at progress 0')
+  const scr = settings.audio.screech
+  soundFolder.add(scr, 'enabled').name('screech')
+  soundFolder.add(scr, 'accel', 5, 60, 0.5).name('screech: launch (m/s²)')
+  soundFolder.add(scr, 'launchMaxSpeed', 0, 30, 0.5).name('screech: below (m/s)')
+  soundFolder.add(scr, 'handbrakeSlip', 0.5, 10, 0.1).name('screech: slide (m/s)')
+  soundFolder.add(scr, 'cooldown', 0, 10, 0.5).name('screech: cooldown (s)')
+  soundFolder.add(scr, 'gain', 0, 1, 0.01).name('screech level')
+  const impactFolder = soundFolder.addFolder('Impact table').close()
+  for (const [name, r] of Object.entries(settings.audio.impacts)) {
+    const f = impactFolder.addFolder(name).close()
+    f.add(r, 'minDelta', 0, 500, 5).name('repeat delay (ms)')
+    f.add(r, 'velocityMin', 0, 10, 0.1).name('speed floor (m/s)')
+    f.add(r, 'velocityMultiplier', 0, 2, 0.01).name('speed x')
+    f.add(r, 'volumeMin', 0, 1, 0.01).name('volume min')
+    f.add(r, 'volumeMax', 0, 1, 0.01).name('volume max')
+    f.add(r, 'rateMin', 0.1, 2, 0.01).name('rate min')
+    f.add(r, 'rateMax', 0.1, 3, 0.01).name('rate max')
+  }
+
+  const cameraFolder = gui.addFolder('Chase camera').close()
   const c = settings.camera
   cameraFolder.add(c, 'distance', 2, 30, 0.1).name('follow distance')
   cameraFolder.add(c, 'height', 0.5, 20, 0.1).name('height')
@@ -76,9 +185,10 @@ export function createDebugGui({ vehicle, camera, hud, resize }) {
   // 0 and both post passes off is the pre-polish look, for A/B comparison.
   const renderFolder = gui.addFolder('Rendering')
   renderFolder.add(settings.render, 'bakedAo', 0, 1, 0.01).name('baked AO strength')
+  renderFolder.add(settings.render, 'interpolate').name('render interpolation')
 
   // A preset that just assigns `render.pixelRatioCap` / `post.aa.mode` /
-  // `post.enabled` and resizes -- picking one and then hand-tuning a field
+  // `post.enabled` / bloom / `vfx.density` / `lod.distance` and resizes -- picking one and then hand-tuning a field
   // below it is completely fine, see `qualityTiers` in config.js.
   renderFolder
     .add(settings, 'quality', Object.keys(qualityTiers))
@@ -88,6 +198,10 @@ export function createDebugGui({ vehicle, camera, hud, resize }) {
       settings.render.pixelRatioCap = tier.pixelRatioCap
       settings.post.aa.mode = tier.aaMode
       settings.post.enabled = tier.postEnabled
+      settings.post.bloom.enabled = tier.bloom
+      settings.post.tiltShift.enabled = tier.tiltShift
+      settings.vfx.density = tier.vfxDensity
+      settings.lod.distance = tier.lodDistance
       resize()
       refresh()
     })
@@ -97,7 +211,27 @@ export function createDebugGui({ vehicle, camera, hud, resize }) {
     .name('pixel ratio cap')
     .onChange(() => resize())
 
-  const shadowFolder = renderFolder.addFolder('Shadow blob').close()
+  const floorFolder = renderFolder.addFolder('Floor gradient').close()
+  const fl = settings.floor
+  floorFolder.addColor(fl, 'northWest').name('NW')
+  floorFolder.addColor(fl, 'northEast').name('NE')
+  floorFolder.addColor(fl, 'southEast').name('SE')
+  floorFolder.addColor(fl, 'southWest').name('SW')
+  floorFolder.add(fl, 'halfExtent', 20, 400, 1).name('half extent (m)')
+  floorFolder.add(fl, 'boundaryRadius', 20, 400, 1).name('boundary radius (m)')
+  floorFolder.add(fl, 'fadeWidth', 1, 200, 1).name('fade width (m)')
+
+  const blobFolder = renderFolder.addFolder('Prop blob shadows').close()
+  const bl = settings.blobShadows
+  blobFolder.add(bl, 'enabled').name('enabled')
+  blobFolder.add(bl, 'opacity', 0, 1, 0.01).name('opacity')
+  blobFolder.addColor(bl, 'tint').name('tint')
+  blobFolder.add(bl, 'sunOffsetX', -2, 2, 0.01).name('sun offset x / m height')
+  blobFolder.add(bl, 'sunOffsetZ', -2, 2, 0.01).name('sun offset z / m height')
+  blobFolder.add(bl, 'fadeHeight', 0.5, 20, 0.1).name('fade height (m)')
+  blobFolder.add(bl, 'fadePower', 0.5, 4, 0.1).name('fade power')
+
+  const shadowFolder = renderFolder.addFolder('Car shadow blob').close()
   const sh = settings.shadow
   shadowFolder.add(sh, 'enabled').name('enabled')
   shadowFolder.add(sh, 'maxOpacity', 0, 1, 0.01).name('opacity (grounded)')
@@ -122,6 +256,18 @@ export function createDebugGui({ vehicle, camera, hud, resize }) {
   bloomFolder.add(settings.post.bloom, 'strength', 0, 1.5, 0.01).name('strength')
   bloomFolder.add(settings.post.bloom, 'radius', 0, 1.5, 0.01).name('radius')
   bloomFolder.add(settings.post.bloom, 'threshold', 0, 1.5, 0.01).name('threshold')
+  const tiltFolder = postFolder.addFolder('Tilt-shift (reference depth)').close()
+  tiltFolder.add(settings.post.tiltShift, 'enabled').name('enabled')
+  tiltFolder.add(settings.post.tiltShift, 'strength', 0, 4, 0.05).name('strength (px)')
+  tiltFolder.add(settings.post.tiltShift, 'falloff', 0.25, 4, 0.05).name('falloff')
+  tiltFolder.add(settings.post.tiltShift, 'onTouch').name('on touch screens')
+  const glowFolder = postFolder.addFolder('Glow (reference)').close()
+  glowFolder.add(settings.post.glow, 'enabled').name('enabled')
+  glowFolder.addColor(settings.post.glow, 'color').name('color')
+  glowFolder.add(settings.post.glow, 'x', -1, 2, 0.01).name('position x')
+  glowFolder.add(settings.post.glow, 'y', -1, 2, 0.01).name('position y')
+  glowFolder.add(settings.post.glow, 'radius', 0, 2, 0.01).name('radius')
+  glowFolder.add(settings.post.glow, 'alpha', 0, 1, 0.01).name('alpha')
   const vignetteFolder = postFolder.addFolder('Vignette').close()
   vignetteFolder.add(settings.post.vignette, 'enabled').name('enabled')
   vignetteFolder.add(settings.post.vignette, 'offset', 0, 3, 0.01).name('offset')
@@ -135,12 +281,66 @@ export function createDebugGui({ vehicle, camera, hud, resize }) {
     hud.hidden = !value
   })
   debugFolder.add(settings.debug, 'showFps').name('frame rate')
+  if (gameTest) {
+    // Phase 6 acceptance: every badge through the real detection paths.
+    debugFolder.add({
+      async run() {
+        const report = await gameTest()
+        console.table(report.results)
+        console.log(report.passed ? 'Badge test: all badges unlocked.' : 'Badge test: some badges did not unlock.', report)
+      },
+    }, 'run').name('Run badge test (console)')
+  }
+  if (import.meta.env.DEV && navTest) {
+    // Doc 11 R0: interpolation, pan, zone angles and the flicker sweep (dev builds only).
+    debugFolder.add({
+      async run() {
+        const report = await navTest()
+        console.table(report.rows)
+        for (const note of report.notes) console.log(note)
+        console.log(report.passed ? 'Nav test: all checks passed.' : 'Nav test: some checks failed.', report)
+      },
+    }, 'run').name('Run nav test (console)')
+  }
+  if (import.meta.env.DEV && audioTest) {
+    // Doc 11 R2: engine progress, tyre screech, impact table, clipping and mute (dev builds only).
+    debugFolder.add({
+      async run() {
+        const report = await audioTest()
+        console.table(report.rows)
+        for (const note of report.notes) console.log(note)
+        console.log(report.passed ? 'Audio test: all checks passed.' : 'Audio test: some checks failed.', report)
+      },
+    }, 'run').name('Run audio test (console)')
+  }
+  if (propStress) {
+    // Phase 2 budget check: 300 blob shadows under 0.3 ms (see stats in the console).
+    const stress = {
+      spawn300: () => propStress.spawn(300, vehicle.position),
+      clear: () => propStress.clear(),
+      stats: () => console.table(propStress.stats()),
+    }
+    debugFolder.add(stress, 'spawn300').name('Drop 300 test props')
+    debugFolder.add(stress, 'stats').name('Prop + blob cost (console)')
+    debugFolder.add(stress, 'clear').name('Clear test props')
+  }
 
   // ---- actions ------------------------------------------------------------
   const actions = {
     respawn() {
-      vehicle.respawn()
-      camera.reset()
+      if (respawn) {
+        respawn()
+      } else {
+        vehicle.respawn()
+        camera.reset()
+      }
+    },
+    /** docs/pursuit-arena/07 targets, in a throwaway world; results in the console. */
+    feelProbe() {
+      const { rows, sanity, passed } = runFeelProbe({ RAPIER })
+      console.table(rows)
+      for (const [label, ok] of sanity) console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}`)
+      console.log(passed ? 'Feel probe: all targets within tolerance.' : 'Feel probe: some targets out of tolerance.')
     },
     resetTuning() {
       deepAssign(settings, defaultSettings)
@@ -165,6 +365,7 @@ export function createDebugGui({ vehicle, camera, hud, resize }) {
   }
 
   gui.add(actions, 'respawn').name('Respawn (R)')
+  if (debugMode && !isSim) debugFolder.add(actions, 'feelProbe').name('Run feel probe (console)')
   const ioFolder = gui.addFolder('Tuning I/O').close()
   ioFolder.add(actions, 'save').name('Save to localStorage')
   ioFolder.add(actions, 'load').name('Load from localStorage')

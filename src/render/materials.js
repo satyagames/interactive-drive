@@ -50,6 +50,8 @@ export async function loadRenderAssets() {
     rendering.wheelMatcap,
     rendering.hubMatcap,
     ...rendering.matcapRules.map((rule) => rule.matcap),
+    // Blender-authored arena materials name their matcap directly (mc_*).
+    ...rendering.matcaps,
   ])
   const bakeFiles = new Set(rendering.bakeRules.map((rule) => rule.file))
 
@@ -64,21 +66,7 @@ export async function loadRenderAssets() {
         return [name, texture]
       }),
     ),
-    Promise.all(
-      [...bakeFiles].map(async (file) => {
-        const texture = await loader.loadAsync(`${rendering.bakePath}${file}`)
-        texture.channel = rendering.bakeChannel
-        texture.flipY = false
-        // Cycles wrote linear occlusion into an sRGB-encoded PNG, so decoding
-        // it as sRGB is what hands the shader the original linear multiplier.
-        texture.colorSpace = THREE.SRGBColorSpace
-        // The bake fills the whole 0..1 square; clamping stops the ground's
-        // outermost texel row wrapping to the opposite edge.
-        texture.wrapS = THREE.ClampToEdgeWrapping
-        texture.wrapT = THREE.ClampToEdgeWrapping
-        return [file, texture]
-      }),
-    ),
+    Promise.all([...bakeFiles].map(async (file) => [file, await loadBakeTexture(loader, file)])),
   ])
 
   return {
@@ -89,13 +77,33 @@ export async function loadRenderAssets() {
   }
 }
 
+async function loadBakeTexture(loader, file) {
+  const texture = await loader.loadAsync(`${rendering.bakePath}${file}`)
+  texture.channel = rendering.bakeChannel
+  texture.flipY = false
+  // Cycles wrote linear occlusion into an sRGB-encoded image, so decoding
+  // it as sRGB is what hands the shader the original linear multiplier.
+  texture.colorSpace = THREE.SRGBColorSpace
+  // The bake fills the whole 0..1 square; clamping stops the ground's
+  // outermost texel row wrapping to the opposite edge.
+  texture.wrapS = THREE.ClampToEdgeWrapping
+  texture.wrapT = THREE.ClampToEdgeWrapping
+  return texture
+}
+
+/** Load an AO bake on demand (a district's, as it streams in) into `assets.bakes`. */
+export async function loadBake(assets, file) {
+  if (!assets.bakes.has(file)) assets.bakes.set(file, await loadBakeTexture(new THREE.TextureLoader(), file))
+  return assets.bakes.get(file)
+}
+
 /**
  * Replaces the material on every mesh under `root` with its matcap equivalent.
  *
  * Matching is on the object's own name, falling back to its ancestors', so a
  * glTF node that got wrapped in a group on import still resolves.
  */
-export function applyMatcapMaterials(root, assets) {
+export function applyMatcapMaterials(root, assets, { bakeFor = null } = {}) {
   // Two meshes can share one glTF material, so collect first and dispose
   // once -- every mesh under `root` is being re-materialled anyway, so
   // nothing can still be using them afterwards.
@@ -105,11 +113,15 @@ export function applyMatcapMaterials(root, assets) {
     if (!object.isMesh) return
 
     const name = resolveName(object)
-    const matcapName = matchRule(rendering.matcapRules, name)?.matcap ?? rendering.defaultMatcap
-    const bakeFile = matchRule(rendering.bakeRules, name)?.file ?? null
+    // A caller's own bake (a district's atlas) first, then the name rules.
+    const bakeFile = bakeFor?.(object) ?? matchRule(rendering.bakeRules, name)?.file ?? null
+    // An explicit `mc_<matcap>[__<RRGGBB>]` material name (the arena
+    // generators) wins; otherwise the object-name prefix rules decide.
+    const named = parseMatcapMaterialName(object.material?.name)
+    const matcapName = named?.matcap ?? matchRule(rendering.matcapRules, name)?.matcap ?? rendering.defaultMatcap
 
     if (object.material) replaced.add(object.material)
-    object.material = getMaterial(assets, matcapName, bakeFile, effectProfile(name))
+    object.material = getMaterial(assets, matcapName, bakeFile, effectProfile(name), named?.tint ?? null)
   })
 
   // Skip anything from the shared cache -- calling this twice (world, then
@@ -120,19 +132,36 @@ export function applyMatcapMaterials(root, assets) {
   }
 }
 
-/** Builds a matcap material directly, for geometry that never came from glTF. */
-export function createMatcapMaterial(assets, matcapName) {
-  return getMaterial(assets, matcapName, null)
+/**
+ * Builds a matcap material directly, for geometry that never came from glTF.
+ * `tint` multiplies the matcap like an `mc_<matcap>__<RRGGBB>` material name;
+ * the result is shared through the same cache as the arena's materials.
+ */
+export function createMatcapMaterial(assets, matcapName, tint = null) {
+  return getMaterial(assets, matcapName, null, effectProfile(matcapName), tint)
 }
 
-function getMaterial(assets, matcapName, bakeFile, profile = effectProfile(matcapName)) {
-  const key = `${matcapName}|${bakeFile ?? ''}|${profile.name}`
+/**
+ * `mc_ivory__86BC25` -> { matcap: 'ivory', tint: '#86BC25' }; `mc_stone` -> { matcap: 'stone' }.
+ * Unknown matcap names fall back to the default so a typo can't blank a mesh.
+ */
+export function parseMatcapMaterialName(name) {
+  const match = /^mc_([a-z0-9-]+)(?:__([0-9A-Fa-f]{6}))?/.exec(name ?? '')
+  if (!match) return null
+  const matcap = rendering.matcaps.includes(match[1]) ? match[1] : rendering.defaultMatcap
+  return { matcap, tint: match[2] ? `#${match[2].toUpperCase()}` : null }
+}
+
+function getMaterial(assets, matcapName, bakeFile, profile = effectProfile(matcapName), tint = null) {
+  const key = `${matcapName}|${bakeFile ?? ''}|${profile.name}|${tint ?? ''}`
   const cached = assets.cache.get(key)
   if (cached) return cached
 
   const material = new THREE.MeshMatcapMaterial({
     matcap: assets.matcaps.get(matcapName) ?? null,
     map: bakeFile ? assets.bakes.get(bakeFile) ?? null : null,
+    // A tint multiplies the matcap (authored sRGB, like every hex here).
+    color: tint ?? 0xffffff,
     fog: true,
   })
   material.name = `matcap:${key}`
@@ -166,15 +195,17 @@ function patchMaterial(material, profile) {
         #endif
         `,
       )
+      // three r154+ renamed output_fragment to opaque_fragment; the old name
+      // matched nothing, so until Phase 7 the rims and accents never rendered.
       .replace(
-        '#include <output_fragment>',
+        '#include <opaque_fragment>',
         `
-        float fresnel = pow( 1.0 - max( dot( normalize( vNormal ), normalize( -vViewPosition ) ), 0.0 ), uFresnelPower );
+        float fresnel = pow( 1.0 - max( dot( normal, normalize( -vViewPosition ) ), 0.0 ), uFresnelPower );
         float pulse = 0.5 + 0.5 * sin( uTime * 2.2 + dot( vViewPosition, vec3( 0.17, 0.11, 0.07 ) ) );
         float animatedAccent = mix( 0.35, 1.0, pulse ) * ( 0.35 + 0.65 * uInteraction );
         outgoingLight += uAccentColor * fresnel * uFresnelStrength;
         outgoingLight += uAccentColor * animatedAccent * uEmissionStrength * ( 0.25 + 0.75 * uSpeed );
-        #include <output_fragment>
+        #include <opaque_fragment>
         `,
       )
   }
