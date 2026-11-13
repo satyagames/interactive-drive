@@ -27,6 +27,7 @@ npm run preview    # serve the built dist/ at http://localhost:4173
 npm run serve:dist # same thing, spelled out for anyone just here to demo it
 npm run probe:feel # arcade car vs docs/pursuit-arena/07-feel-targets.md (Node, no browser)
 npm run content:check # validate content/*.json against their schemas
+npm run content:exhibits # rebuild the seed's `exhibits` from docs/content-backup/data (after a site re-import)
 ```
 
 On Windows the dev server **polls** for file changes (`vite.config.js`):
@@ -144,6 +145,7 @@ blender/
   scripts/              arena + cart generators, polish (bevel/LOD/AO), validate, export (npm run art:*)
   kit/, districts/      generated arena .blend files (edit the generators)
   vehicle/cart.blend    the generated anniversary cart (npm run art:cart)
+  characters/mascots.blend  Percy and the blob family (npm run art:mascots)
   scene.blend           the prototype car (?vehicle=sim); "World" is the retired prototype lot
   vehicle_details.py    adds the car's lamps + tail lip (idempotent)
   bevel.py              rounds every visible edge, destructively (idempotent)
@@ -155,6 +157,7 @@ tools/
   feel-probe.mjs        npm run probe:feel -- runs src/debug/feelProbe.js in Node
   blender.mjs           npm run art:* -- the headless arena pipeline
   content-check.mjs     npm run content:check -- schema + image-path checks
+  site-export/          the 2D-site importer (Python) + build-exhibits.mjs (npm run content:exhibits)
 scripts/
   package-share.mjs    npm run package:share -> share/ + pursuit-arena-share.zip (own zip writer)
   launchers/           the double-click launchers + serve.py / serve.mjs it
@@ -162,7 +165,7 @@ scripts/
 docs/
   blender-conventions.md   naming convention, axis notes, export settings
 public/
-  models/             cart.glb, kit.glb, district_*.glb, arena.manifest.json (vehicle.glb: sim preset)
+  models/             cart.glb, mascots.glb, kit.glb, district_*.glb, arena.manifest.json (vehicle.glb: sim preset)
   textures/
     matcaps/          generated matcap spheres (tools/generate-matcaps.mjs)
     bake/             AO bakes: district_*.jpg (art:polish), cart-ao.jpg (art:cart)
@@ -222,6 +225,16 @@ src/
     dash.js           Deadline Dash: chain, countdown, penalties, medals
     minigames.js      the 8 district mini-games
     achievements.js   driving badges + easter eggs
+    exhibitBadges.js  the exhibit badges (rules: gamification.exhibitBadges)
+  showcase/           Layer 2: exhibits shaped by the content (seed `exhibits`)
+    index.js          builds each exhibit as its district loads; hotspots; checkPlacement()
+    hotspots.js       "drive up, press Enter" for exhibits (station areas keep priority)
+    labels.js         canvas atlases + the aRect label material
+    builder.js        merged static pieces + colliders per exhibit
+    frame.js          a district's local layout frame (twin of _common.py Frame)
+    mascots.js        Percy + blob buddies (models/mascots.glb), speech bubble
+    winsBoard.js, peopleWalls.js, rnr.js, memoryLane.js, newsstand.js,
+    learningGarden.js, signposts.js, champions.js   one exhibit each
     morse.js          the beacon's Morse "10", shared by its light and its beeps
     triggers.js       enter/exit watcher for area_ and trigger_ volumes
     lighting.js       a single fallback ambient; matcaps need no lights
@@ -513,6 +526,7 @@ before the first frame; the outer ring streams in right after.
 
 ```bash
 npm run art:cart       # blender/scripts/gen_cart.py -> public/models/cart.glb + its AO
+npm run art:mascots    # blender/scripts/gen_mascots.py -> public/models/mascots.glb (Percy + 5 buddies, <= 1.5k tris each)
 ```
 
 It is a toy-like open-top buggy in Deloitte green with a white roll bar and

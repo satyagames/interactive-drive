@@ -2,6 +2,35 @@
 
 Pursuit Arena build log. One entry per phase (see `docs/pursuit-arena/06-phased-prompts.md`).
 
+## LD-C — Layer 2: the content shapes the world (2026-11-13)
+
+Plan: `docs/content-backup/10-3d-integration-plan.md` §2–3. One commit per district (LD-C 1–9).
+
+- **Showcase layer** (`src/showcase/`): exhibits build per district as it loads (streamed ones too) into its
+  static group, so the reveal scales them in. Shared canvas-atlas labels (one texture and one draw per label set),
+  a merged static builder, and **Enter hotspots** that yield to station areas (HUD hint, one screen-reader
+  announcement). `showcase.checkPlacement()` tests every exhibit collider against the arena: all clean.
+- **Content**: `exhibits` in `arena.seed.json` (with schema), generated from the backup by
+  `npm run content:exhibits`; layout in `src/config.js` → `rebuild.showcase`; labels in `ui.json → showcase`.
+- **Percy and five blob buddies**: original low-poly characters (`npm run art:mascots`, 712–980 tris each). Idle
+  squash, watch and wave at the car, speech bubble (Percy's greeting; buddies give the next stamp). Konami: a hop.
+  Decade Finale: they gather at HQ. Drawn through instanced batches (~10 draw calls for all six).
+- **HQ**: split-flap Pursuit Wins board flipping FY26 / FY25 ("site snapshot, not decade totals").
+- **Team territories**: People of Pursuits gateway wings, one name tile per roster member on both faces, one lamp
+  per person; "Roster awaiting confirmation" in amber while rosters are placeholders.
+- **R&R**: 117 knockable Thank It Forward trophies (real dynamic props) in three trays; BrightStar stars sized by count.
+- **Culture**: Memory Lane, 27 album frames; the 12 highlight photos stream in within 40 m.
+- **Innovation**: The Intelligence Update newsstand (13 covers on a carousel, NEW pulse on the unread newest).
+- **L&D**: log-scaled learning bar garden. **Toolkit**: signpost forest, one arm per quick link (32).
+- **Chronicles champion hunt**: 20 name plates on the verges between spokes.
+- **Badges** (rules in `gamification.exhibitBadges`): People of Pursuits, Gen AI Insider, Chronicles Collector,
+  Spot On, Memory Maker. Exhibit cards (albums, issues, links) never count as stations; links never earn XP.
+- **Checks**: Debug → Run badge test earns all 22 badges from a clean store; `probe:feel` all within tolerance;
+  `content:check` OK; build OK. Per-district draw calls and GPU time: `docs/memory/progress.md`.
+- **Drive test (this pass, dev server, 800×600)**: Percy greets at spawn; every exhibit visited by teleport and
+  opened with Enter; trophies knocked; a plate collected; the finale gathering seen at HQ. Not yet done: a
+  continuous hand-driven lap, a touch-device check, the speech bubble at 360 px.
+
 ## 2D site import — PursuitArena content into the 3D arena (2026-11-12)
 
 - **Backup** of the whole 2D PursuitArena site in `docs/content-backup/` (site map, people directory, metrics, 27 photo

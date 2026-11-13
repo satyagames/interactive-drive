@@ -123,6 +123,27 @@ freely; the panels and effects update themselves.
   need to delete them straight away.
 - `time`, `place` and `link` are optional.
 
+## 4b. The exhibits in the world (`exhibits`)
+
+Some numbers and names are not only in panels: the world itself is built from them (the HQ wins board, the
+R&R trophies and stars, the L&D garden, Memory Lane, the newsstand, the Toolkit signposts, the champion
+plates). They live in `exhibits` in `content/arena.seed.json`:
+
+| To change | Edit | What happens |
+|---|---|---|
+| Win numbers on the HQ board | `exhibits.winsBoard.sets[].rows[].value` | The board flips to the new value |
+| Thank It Forward counts | `exhibits.thankItForward.awards[].count` | One trophy per award (at most 200 per award) |
+| BrightStar counts | `exhibits.brightStar.categories[].count` | Star heights change |
+| Learning hours | `exhibits.learningGarden.bars[].value` | Bar heights change |
+| A new photo album | add to `exhibits.memoryLane.albums` | A new frame appears on Memory Lane |
+| A new Intelligence Update | add the PDF under `public/content/docs/`, then put it first in `exhibits.newsstand.issues` | It becomes the cover with the NEW ribbon |
+| Quick links | `exhibits.signposts.groups[].links` | Signpost arms change |
+| Chronicles champions | `exhibits.champions.names` | One hidden plate per name |
+
+Rosters on the team gateway walls come from the stations' `roles`, exactly as the panels do. If the 2D site is
+re-imported, `npm run content:exhibits` rebuilds `exhibits` from the backup and overwrites hand edits, so make
+lasting changes in the backup data or tell a developer.
+
 ## 5. Interface wording (`content/ui.json`)
 
 Menu items, hints, badge names and descriptions, messages. Change the text in

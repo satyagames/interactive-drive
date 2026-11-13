@@ -36,7 +36,7 @@ How to re-run the automated parts: see "Re-running" at the end.
 
 | Check | Status | Evidence |
 |---|---|---|
-| All 17 badges earnable through the real detection paths | ✅ | `runGameTest` from a clean store: 17/17, 11 stamps, rank Pursuit Legend, 5,175 XP |
+| All 22 badges earnable through the real detection paths | ✅ | `runGameTest` from a clean store (LD-C, 2026-11-13): 22/22 (17 + 5 exhibit badges), 11 stamps, rank Pursuit Legend |
 | Progress persists; two-step reset | ✅ | Verified in Phase 6; this run backed up and restored a store across reloads |
 | Deadline Dash start → finish | ✅ | Covered by the badge test (Deadline Hero) |
 | Props settle and sleep, nothing falls through the floor | ✅ | Phase 7: every district visited, all props asleep within 3 s, none below the floor |
@@ -78,7 +78,7 @@ How to re-run the automated parts: see "Re-running" at the end.
 | Check | Status | Evidence |
 |---|---|---|
 | First load < 10 MB | ✅ | 7.8 MB raw, 5.3 MB gzipped; the outer ring streams 1.2 MB later |
-| < 150 draw calls, < 250k triangles in view | ✅ | Worst 117 calls, 85k triangles over 101 positions |
+| < 150 draw calls, < 250k triangles in view | ✅ | Phase 11: worst 117 calls, 85k triangles over 101 positions. LD-C (exhibits added; 13 district views, not the full sweep): worst 142 calls (L&D), 105k triangles. Re-run the 101-position sweep |
 | VFX < 1 ms, no GC spikes > 2 ms | ✅ | Phase 7 measurements |
 | Dynamic bodies sleep when idle | ✅ | Phase 7 |
 
