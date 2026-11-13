@@ -5,6 +5,7 @@ import { districtFrames } from './frame.js'
 import { createHotspots } from './hotspots.js'
 import { createMascots } from './mascots.js'
 import { createPeopleWalls } from './peopleWalls.js'
+import { createLearningGarden } from './learningGarden.js'
 import { createMemoryLane } from './memoryLane.js'
 import { createNewsstand } from './newsstand.js'
 import { createRnr } from './rnr.js'
@@ -93,7 +94,7 @@ export async function createShowcase({ scene, world, RAPIER, seed, gameWorld, re
     },
   }
 
-  const modules = (await Promise.all([createMascots(ctx), createWinsBoard(ctx), createPeopleWalls(ctx), createRnr(ctx), createMemoryLane(ctx), createNewsstand(ctx)])).filter(Boolean)
+  const modules = (await Promise.all([createMascots(ctx), createWinsBoard(ctx), createPeopleWalls(ctx), createRnr(ctx), createMemoryLane(ctx), createNewsstand(ctx), createLearningGarden(ctx)])).filter(Boolean)
 
   const built = new Set()
   const stats = new Map()
