@@ -67,6 +67,50 @@ export function createAtlas({ cols, rows, cellWidth, cellHeight, background = nu
   }
 }
 
+/**
+ * An atlas of mixed-size regions (a board's title strip, its row labels and
+ * its flap glyphs in one texture), packed in shelves. `add(w, h, paint)`
+ * returns the region's rect.
+ */
+export function createPackedAtlas({ width = 1024, height = 1024 } = {}) {
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.anisotropy = 4
+  texture.name = 'showcase-packed-atlas'
+  let x = 0
+  let y = 0
+  let shelf = 0
+  const PAD = 2
+  return {
+    canvas,
+    texture,
+    add(w, h, paint) {
+      if (x + w > width) {
+        x = 0
+        y += shelf + PAD
+        shelf = 0
+      }
+      if (y + h > height) throw new Error(`showcase atlas full (${width}x${height})`)
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(x, y, w, h)
+      ctx.clip()
+      ctx.translate(x, y)
+      paint(ctx, w, h)
+      ctx.restore()
+      const rect = [x / width, 1 - (y + h) / height, w / width, h / height]
+      x += w + PAD
+      shelf = Math.max(shelf, h)
+      texture.needsUpdate = true
+      return rect
+    },
+  }
+}
+
 /** Set a font that makes `text` fit `maxWidth`, starting at `size` px; returns the size used. */
 export function fitFont(ctx, text, maxWidth, size, weight = 600, min = 8) {
   let px = size
