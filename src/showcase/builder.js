@@ -3,6 +3,9 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 
 import { createMatcapMaterial } from '../render/materials.js'
 
+/** Every fixed body the showcase made, for the placement check (index.js). */
+export const showcaseBodies = new Set()
+
 /**
  * Static exhibit geometry, built the way the arena's statics are: pieces are
  * collected per material and merged into one world-space mesh each, so an
@@ -18,6 +21,8 @@ import { createMatcapMaterial } from '../render/materials.js'
 export function createBuilder({ world, RAPIER, renderAssets, name }) {
   const byMaterial = new Map()
   const body = world.createRigidBody(RAPIER.RigidBodyDesc.fixed())
+  body.userData = { showcase: name }
+  showcaseBodies.add(body)
   let colliders = 0
   const m = new THREE.Matrix4()
   const q = new THREE.Quaternion()

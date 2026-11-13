@@ -862,9 +862,9 @@ export const rebuild = {
     learningGarden: { lx: 7.4, lz: 2.6, spacing: 2.6, base: 0.5, perDecade: 1.45 },
     /** Signpost forest: one fingerpost per quick-link group; drive round a post to browse its arms. */
     signposts: [
-      { lx: -12, lz: -0.6 },
-      { lx: -7.2, lz: 3.2 },
-      { lx: -12.4, lz: 6.4 },
+      { lx: -12.5, lz: -1.5 },
+      { lx: -7.5, lz: 1.5 },
+      { lx: -13, lz: 4.5 },
     ],
   },
   physics: {

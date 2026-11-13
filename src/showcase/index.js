@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 
 import { rebuild } from '../config.js'
+import { showcaseBodies } from './builder.js'
 import { districtFrames } from './frame.js'
 import { createHotspots } from './hotspots.js'
 import { createMascots } from './mascots.js'
@@ -9,6 +10,7 @@ import { createLearningGarden } from './learningGarden.js'
 import { createMemoryLane } from './memoryLane.js'
 import { createNewsstand } from './newsstand.js'
 import { createRnr } from './rnr.js'
+import { createSignposts } from './signposts.js'
 import { createWinsBoard } from './winsBoard.js'
 
 /**
@@ -94,7 +96,7 @@ export async function createShowcase({ scene, world, RAPIER, seed, gameWorld, re
     },
   }
 
-  const modules = (await Promise.all([createMascots(ctx), createWinsBoard(ctx), createPeopleWalls(ctx), createRnr(ctx), createMemoryLane(ctx), createNewsstand(ctx), createLearningGarden(ctx)])).filter(Boolean)
+  const modules = (await Promise.all([createMascots(ctx), createWinsBoard(ctx), createPeopleWalls(ctx), createRnr(ctx), createMemoryLane(ctx), createNewsstand(ctx), createLearningGarden(ctx), createSignposts(ctx)])).filter(Boolean)
 
   const built = new Set()
   const stats = new Map()
@@ -133,6 +135,25 @@ export async function createShowcase({ scene, world, RAPIER, seed, gameWorld, re
     /** The hotspot in reach, `{ label }` or null (the HUD hint reads it). */
     get activeHotspot() {
       return hotspots.active
+    },
+    /**
+     * `#debug` / console: every exhibit collider tested against the arena's
+     * fixed colliders (lifted 6 cm so resting on the floor doesn't count).
+     * Returns [{ exhibit, at: [x, y, z] }] for each overlap; empty is clean.
+     */
+    checkPlacement() {
+      const hits = []
+      world.colliders.forEach((collider) => {
+        const body = collider.parent()
+        if (!body || !showcaseBodies.has(body)) return
+        const t = collider.translation()
+        world.intersectionsWithShape({ x: t.x, y: t.y + 0.06, z: t.z }, collider.rotation(), collider.shape, (other) => {
+          const ob = other.parent()
+          if (ob && !showcaseBodies.has(ob) && ob.isFixed()) hits.push({ exhibit: body.userData.showcase, at: [t.x, t.y, t.z].map((v) => +v.toFixed(1)) })
+          return true
+        })
+      })
+      return hits
     },
     /** Per-district exhibit draw calls added (`#debug`; recorded in docs/memory/progress.md). */
     stats: () => [...stats.values()],
