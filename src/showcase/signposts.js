@@ -117,6 +117,7 @@ export function createSignposts(ctx) {
         return best
       },
       label: ({ entry }) => t('showcase.signpostOpen', { label: entry.link.label }),
+      anchor: ({ pole }) => ({ x: pole.centre.x, z: pole.centre.z, size: 2.4 }),
       highlight(item) {
         for (const pole of poles) {
           for (const entry of pole.entries) {

@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { settings } from '../config.js'
 import { t } from '../content/ui.js'
 import { createBuilder } from './builder.js'
+import { createBoardReveal } from './boardReveal.js'
 import { createAtlas, createAtlasMaterial, createLabelQuads, fitFont, FONT, roundRect, wrap } from './labels.js'
 
 /**
@@ -32,6 +33,7 @@ export function createMemoryLane(ctx) {
   let frames = []
   let streamed = false
   let lane = null
+  let reveal = null
   const white = new THREE.Color(1, 1, 1)
   const glow = new THREE.Color(1.9, 1.9, 1.9)
 
@@ -136,9 +138,12 @@ export function createMemoryLane(ctx) {
       b.box('ivory', colour, [p.x, 0.15, p.z], [len, 0.3, 0.4], frame.yaw((-am * 180) / Math.PI), { collide: true })
     }
     for (const mesh of b.finish()) info.staticGroup.add(mesh)
-    pictures = createLabelQuads({ items, material: createAtlasMaterial(atlas.texture), name: 'culture:memory-lane:pictures' })
+    // The pictures fade in from blank cards as the car comes up the lane.
+    const material = createAtlasMaterial(atlas.texture, { blank: '#E4DFD4' })
+    pictures = createLabelQuads({ items, material, name: 'culture:memory-lane:pictures' })
     info.staticGroup.add(pictures)
     lane = frame.toWorld(L.radius * Math.sin((((L.from + L.to) / 2) * Math.PI) / 180), -L.radius * Math.cos((((L.from + L.to) / 2) * Math.PI) / 180))
+    reveal = createBoardReveal(material, lane)
 
     ctx.hotspots.add({
       test(car) {
@@ -154,6 +159,10 @@ export function createMemoryLane(ctx) {
         return best === null ? null : { score: bestD, item: best }
       },
       label: (i) => t('showcase.albumOpen', { title: albums[i].title }),
+      anchor(i) {
+        const f = frames.find((entry) => entry.index === i)
+        return f ? { x: f.position.x, z: f.position.z, size: 2.6, color: colour } : null
+      },
       highlight(i) {
         for (let k = 0; k < count; k++) {
           const c = k === i ? glow : white
@@ -187,7 +196,11 @@ export function createMemoryLane(ctx) {
     get frames() {
       return frames
     },
+    get reveal() {
+      return reveal
+    },
     update(dt, car) {
+      reveal?.update(dt, car)
       if (streamed || !lane) return
       if (Math.hypot(car.position.x - lane.x, car.position.z - lane.z) < settings.showcase.streamRadius) stream()
     },

@@ -42,6 +42,7 @@ import { createStartScreen } from './ui/startScreen.js'
 import { createVehicle, vehiclePresets } from './vehicle/vehicle.js'
 import { createVfx } from './vfx/index.js'
 import { createLighting } from './world/lighting.js'
+import { createAreaMarkers } from './world/areaMarkers.js'
 import { createAreas } from './world/areas.js'
 import { createImpacts } from './world/impacts.js'
 import { createReveal } from './world/reveal.js'
@@ -168,9 +169,16 @@ async function bootstrap() {
   // Enter areas (doc 05 §4): drive in, the border fills, then Enter / wait
   // opens the station. Areas of streamed districts are added as they load.
   const announcer = document.getElementById('announcer')
+  // The fence and the ENTER / TAP floor label for whichever area or exhibit is active.
+  const motionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+  const areaMarkers = createAreaMarkers({
+    scene,
+    reducedMotion: () => (settings.vfx.reducedMotion === 'auto' ? Boolean(motionQuery?.matches) : Boolean(settings.vfx.reducedMotion)),
+  })
   const areas = createAreas({
     scene,
     content,
+    markers: areaMarkers,
     announce(text) {
       announcer.textContent = text
     },
@@ -245,6 +253,7 @@ async function bootstrap() {
       announcer.textContent = text
     },
     overlayRoot: document.getElementById('speech'),
+    markers: areaMarkers,
   })
 
   // District reveals; the opening (letters falling at the RFP Gate) plays below.
@@ -353,7 +362,7 @@ async function bootstrap() {
   const navTest = import.meta.env.DEV
     ? async (options) => (await import('./debug/navTest.js')).runNavTest({
       loop, vehicle, cameraRig, camera, canvas, renderer, scene, post, world, RAPIER, gameWorld, reveal, menu, input,
-      panChip, announcer,
+      panChip, announcer, areaMarkers, areas, showcase,
       isReady: () => started && !menu.isOpen,
       ...options,
     })
@@ -407,7 +416,7 @@ async function bootstrap() {
     window.__proto = {
       vehicle, world, scene, camera, settings, input, stationPanel, explore, content, progress, gameWorld,
       renderer, renderAssets, post, shadowBlob, sky, fps, cameraRig, floor, blobs, propStress, areas, reveal,
-      game, passport, vfx, impacts, audio, soundPanel, menu, hud, minimap, showcase, panChip,
+      game, passport, vfx, impacts, audio, soundPanel, menu, hud, minimap, showcase, panChip, areaMarkers,
       benchmark: {
         run: (options) => runPostBenchmark({ renderer, scene, camera }, options),
         vfx: (options) => runVfxBenchmark({ renderer, scene, camera, vfx }, options),
@@ -477,6 +486,7 @@ async function bootstrap() {
     const { hold } = areas.update(delta, { vehicle, interact: () => input.consume('interact') })
     // Exhibit hotspots get Enter only when no station area has it.
     showcase.update(delta, { car: vehicle, interact: () => input.consume('interact'), blocked: Boolean(areas.active) })
+    areaMarkers.update(delta)
     // Just opened a station: a soft brake holds the car unless you accelerate.
     if (hold && inputState.throttle === 0) inputState.brake = true
     // The Deadline Dash countdown holds the car outright.

@@ -539,6 +539,39 @@ export const settings = {
     holdTime: 0.6,
     /** Leaving the area closes the panel it opened after this delay, s. */
     closeDelay: 1.0,
+    /**
+     * The fence that pops up round an active area or exhibit hotspot
+     * (`world/areaMarkers.js`; the reference's Area fence: 0.5 units high,
+     * back.out(2), 250 ms; 0.5 units x worldScale = 0.8 m here).
+     */
+    fence: {
+      enabled: true,
+      height: 0.8,
+      riseTime: 0.25,
+      dropTime: 0.18,
+      overshoot: 2,
+      /** Raised this far off the floor so its foot never fights the area's own border, m. */
+      lift: 0.1,
+      /** Wall opacity at the floor, and what the stripes add (the reference: 0.5 and 0.25). */
+      borderAlpha: 0.5,
+      strikeAlpha: 0.25,
+      /** Stripe period, m, and how many periods pass per second. */
+      strikeWidth: 0.9,
+      strikeSpeed: 0.35,
+      /** Side of the fence round an exhibit hotspot that gives no size of its own, m. */
+      hotspotSize: 3,
+    },
+    /** ENTER / TAP written on the floor beside the active area, on the camera's side. */
+    label: {
+      enabled: true,
+      /** Width on the floor, m (the height follows the plate's shape). */
+      width: 2.6,
+      /** Gap between the area's edge and the label, m. */
+      gap: 0.35,
+      lift: 0.09,
+      /** Fade rate, 1/s. */
+      fadeRate: 12,
+    },
   },
 
   /**
@@ -548,6 +581,18 @@ export const settings = {
   showcase: {
     /** A point hotspot (a board, a wall, a garden) is in reach within this, m. */
     hotspotRadius: 4.5,
+    /**
+     * Boards with pictures on them (Memory Lane, the newsstand, the wins
+     * board) fade their images in as the car comes within `boardRevealRadius`
+     * m, over `boardRevealTime` s (power4 in/out, as the reference's project
+     * boards do), and back out when it leaves. Instant under reduced motion.
+     */
+    boardRevealRadius: 24,
+    boardRevealTime: 1,
+    /** A reset pad is in reach within this, m; the rebuilt props drop from `resetDropHeight` m. */
+    resetPadRadius: 2.2,
+    resetDropHeight: 5,
+    resetStagger: 0.035,
     /** Galleries pick the item nearest the car within this, m (Memory Lane). */
     galleryReach: 4,
     /** Mascots turn to watch the car inside this radius, m. */
@@ -1035,6 +1080,17 @@ export const rebuild = {
     },
     /** Memory Lane: frames on an arc round the Culture plaza (degrees from the gateway, clockwise seen from above). */
     memoryLane: { radius: 16.3, from: -66, to: -162, frame: 0.86, lift: 0.95 },
+    /**
+     * Reset pads (the reference's playground has them): a floor pad beside a
+     * knock-down set that rebuilds it. District-local (lx, lz); `type` is the
+     * prop type it rebuilds, `label` a key under showcase.* in ui.json.
+     */
+    resetPads: [
+      // In front of the wall (bricks span lx 6..12.7 at lz -1), a car's length clear of it and of area toolkit_4.
+      { district: 'toolkit', type: 'brick', lx: 10.6, lz: -4.8, label: 'resetWall' },
+      // In front of the pin triangle (pins span lx 12.2..15.8, lz -1..2.3; the stars start at lz 4.6).
+      { district: 'rnr', type: 'pin', lx: 14, lz: -4.4, label: 'resetPins' },
+    ],
     /** The Intelligence Update newsstand: a carousel kiosk you drive round. */
     newsstand: { lx: 10.5, lz: 2, radius: 1.5, height: 3.4 },
     /** The learning bar garden: one planted bar per metric, along local X. */

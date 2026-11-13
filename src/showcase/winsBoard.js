@@ -4,6 +4,7 @@ import { settings } from '../config.js'
 import { t } from '../content/ui.js'
 import { createBuilder } from './builder.js'
 import { near } from './hotspots.js'
+import { createBoardReveal } from './boardReveal.js'
 import { createAtlasMaterial, createLabelQuads, createPackedAtlas, fitFont, FONT, quadMatrix } from './labels.js'
 
 /**
@@ -28,6 +29,7 @@ export function createWinsBoard(ctx) {
   const DARK = '#15171C'
 
   let board = null
+  let reveal = null
   let cells = []
   let current = 0
   let timer = 0
@@ -130,7 +132,9 @@ export function createWinsBoard(ctx) {
     group.name = 'hq:wins-board'
     group.position.set(at.x, 0, at.z)
     group.rotation.y = yaw
-    const material = createAtlasMaterial(atlas.texture)
+    // The figures fade in from a dark board as the car approaches.
+    const material = createAtlasMaterial(atlas.texture, { blank: DARK })
+    reveal = createBoardReveal(material, at)
     const labelMesh = createLabelQuads({ items, material, name: 'hq:wins:labels' })
     const flapMesh = createLabelQuads({ items: flapItems, material, name: 'hq:wins:flaps' })
     flapMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
@@ -180,7 +184,11 @@ export function createWinsBoard(ctx) {
     name: 'winsBoard',
     district: data.district,
     build,
+    get reveal() {
+      return reveal
+    },
     update(dt, car) {
+      reveal?.update(dt, car)
       if (!board) return
       board.clock += dt
       // Only worth flipping when someone could see it.

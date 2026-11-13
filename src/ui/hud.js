@@ -46,7 +46,11 @@ export function createHud({ root, hint, vehicle, areas, content, game, showcase 
     }
     // An exhibit in reach (src/showcase/hotspots.js).
     const spot = showcase?.activeHotspot
-    if (spot && !active) return t(touch ? 'hud.hintTap' : 'hud.hintEnter', { title: spot.label })
+    if (spot && !active) {
+      return spot.action
+        ? t(touch ? 'hud.hintActTap' : 'hud.hintAct', { action: spot.action })
+        : t(touch ? 'hud.hintTap' : 'hud.hintEnter', { title: spot.label })
+    }
     const state = game.store.state
     if ((state.counters.distance ?? 0) < settings.game.firstDriveDistance) return t(touch ? 'hud.hintTouch' : 'hud.hintDrive')
     if (Object.keys(state.opened).length === 0) return t('hud.hintFindStation')

@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { settings } from '../config.js'
 import { t } from '../content/ui.js'
 import { createBuilder } from './builder.js'
+import { createBoardReveal } from './boardReveal.js'
 import { createAtlas, createAtlasMaterial, createLabelQuads, fitFont, FONT, viewYaw, wrap } from './labels.js'
 
 /**
@@ -30,6 +31,7 @@ export function createNewsstand(ctx) {
   let baseYaw = 0
   let active = null
   let clock = 0
+  let reveal = null
 
   const read = () => ctx.game.store.state.exhibits?.issues ?? {}
 
@@ -104,8 +106,11 @@ export function createNewsstand(ctx) {
         color: white,
       }
     })
-    covers = createLabelQuads({ items, material: createAtlasMaterial(atlas.texture), name: 'innovation:newsstand:covers' })
+    // The covers fade in from dark blanks as the car approaches the kiosk.
+    const material = createAtlasMaterial(atlas.texture, { blank: '#1B242A' })
+    covers = createLabelQuads({ items, material, name: 'innovation:newsstand:covers' })
     info.staticGroup.add(covers)
+    reveal = createBoardReveal(material, centre)
 
     ctx.hotspots.add({
       test(car) {
@@ -118,6 +123,7 @@ export function createNewsstand(ctx) {
         return { score: d, item: i }
       },
       label: (i) => t('showcase.issueOpen', { label: issues[i].label }),
+      anchor: () => ({ x: centre.x, z: centre.z, size: (r + 1) * 2, color: colour }),
       highlight(i) {
         active = i
         paint()
@@ -154,7 +160,11 @@ export function createNewsstand(ctx) {
     name: 'newsstand',
     district: data.district,
     build,
-    update(dt) {
+    get reveal() {
+      return reveal
+    },
+    update(dt, car) {
+      reveal?.update(dt, car)
       clock += dt
       // Only the newest cover animates (its NEW pulse), and only while unread.
       if (covers && active !== 0 && !read()[issues[0].url]) paint()

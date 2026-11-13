@@ -13,6 +13,9 @@ import { settings } from '../config.js'
  *   E  map-look UX (R1)       HUD / minimap / joystick guards, pinch, double-click,
  *                             the Back to car chip, minimap click, Alt + arrows,
  *                             Overview, reduced motion
+ *   F  interaction areas (R3) the fence and the ENTER floor label at stations and
+ *                             exhibits, the reset pads, board pictures fading in,
+ *                             and the draw calls all of that costs
  *   C  camera zones           pitch and tilt-shift ease in and out, never snap
  *   D  flicker sweep          3 renders with 4 mm camera nudges at every gateway
  *
@@ -30,8 +33,8 @@ import { settings } from '../config.js'
  */
 export async function runNavTest({
   loop, vehicle, cameraRig, camera, canvas, renderer, scene, post, world, RAPIER, gameWorld, reveal,
-  menu = null, panChip = null, announcer = null,
-  isReady = () => true, sections = 'ABECD', restart = true, captureFlicker = false,
+  menu = null, panChip = null, announcer = null, areaMarkers = null, areas = null, showcase = null,
+  isReady = () => true, sections = 'ABEFCD', restart = true, captureFlicker = false,
 }) {
   const rows = []
   const notes = []
@@ -630,6 +633,204 @@ export async function runNavTest({
           afterF < 0.25 && overviewMiss < 0.5 && Math.abs(overviewZoom - iso.maxZoom) < 1e-6 && backMiss < 0.25 && zoomBack < 0.001)
         home()
       }
+      await pause()
+    }
+
+    // ---- F: interaction areas (doc 11 R3) -------------------------------------
+    if (sections.includes('F') && areaMarkers && areas && showcase) {
+      const fence = settings.areas.fence
+      const label = settings.areas.label
+      const park = (x, z) => {
+        place(x, z)
+        cameraRig.recenter()
+        cameraRig.reset()
+      }
+      const awayFrom = () => park(base.x, base.z)
+      /** Esc closes a station panel; with none open it opens the menu (which pauses), so shut that again. */
+      const closePanel = () => {
+        key('keydown', 'Escape')
+        key('keyup', 'Escape')
+        loop.step(1 / 60)
+        if (menu?.isOpen) menu.hide()
+      }
+      const keyCell = document.body.classList.contains('has-touch-pad') ? 'touch' : 'key'
+
+      // A station area the car can sit in the middle of.
+      const station = gameWorld.areas.find((area) => !world.intersectionWithShape(
+        { x: area.position.x, y: 0.9, z: area.position.z }, identity, shape, RAPIER.QueryFilterFlags.EXCLUDE_SENSORS, undefined, undefined, vehicle.body,
+      ))
+      if (station) {
+        const id = `area:${station.id}`
+        awayFrom()
+        stepFor(0.5, 60)
+        const before = areaMarkers.fences
+        park(station.position.x, station.position.z)
+        // F1: the fence rises with an overshoot and settles at its height.
+        let peak = 0
+        let riseDone = Infinity
+        let t = 0
+        const next = frameTimes(144)
+        while (t < 0.6) {
+          const dt = next()
+          loop.step(dt)
+          t += dt
+          const s = areaMarkers.state(id)
+          if (s) {
+            peak = Math.max(peak, s.height)
+            if (s.rise >= 1 && riseDone === Infinity) riseDone = t
+          }
+        }
+        const settled = areaMarkers.state(id)?.height ?? 0
+        row('F1', 'Station fence: fences before, peak height (m), settled height (m), time to full rise (s)',
+          `${before}, ${round(peak, 3)}, ${round(settled, 3)}, ${round(riseDone, 2)}`,
+          `0, > ${fence.height} (overshoot), ${fence.height}, <= ${round(fence.riseTime + 0.04, 2)}`,
+          before === 0 && peak > fence.height * 1.02 && Math.abs(settled - fence.height) < 0.005 && riseDone <= fence.riseTime + 0.04)
+
+        // F2: the key label shows once Enter would do something, on the camera's side of the area.
+        stepFor(settings.areas.fillTime + 0.5, 60)
+        const ready = areaMarkers.state(id)
+        const spot = areaMarkers.labelSpot(id)
+        const azimuth = THREE.MathUtils.degToRad(iso.azimuth)
+        const towardCamera = spot ? (spot.x - station.position.x) * Math.sin(azimuth) + (spot.z - station.position.z) * Math.cos(azimuth) : 0
+        const outside = towardCamera > Math.min(station.halfExtents.x, station.halfExtents.z)
+        row('F2', 'ENTER on the floor once the area is ready: shown, alpha, cell, metres towards the camera from the centre',
+          `${Boolean(ready?.key)}, ${round(ready?.keyAlpha ?? 0, 2)}, ${ready?.cell}, ${round(towardCamera, 2)}`,
+          `true, > 0.95, ${keyCell}, outside the area`, Boolean(ready?.key) && ready.keyAlpha > 0.95 && ready.cell === keyCell && outside)
+
+        // F3: Enter opens the station; the label goes, the fence stays while you are inside.
+        key('keydown', 'Enter')
+        key('keyup', 'Enter')
+        stepFor(0.6, 60)
+        const opened = areaMarkers.state(id)
+        const phase = areas.active?.phase
+        row('F3', 'After Enter: area phase, key label shown, fence still up', `${phase}, ${Boolean(opened?.key)}, ${opened ? round(opened.height, 2) : '-'}`,
+          `open, false, ${fence.height}`, phase === 'open' && opened && !opened.key && opened.keyAlpha < 0.05 && Math.abs(opened.height - fence.height) < 0.005)
+        closePanel()
+
+        // F4: leaving drops it.
+        awayFrom()
+        stepFor(fence.dropTime + 0.25, 60)
+        row('F4', 'Leaving the area: fences and labels left after the drop', `${areaMarkers.fences}, ${areaMarkers.labels - areaMarkers.plates.filter((p) => p.alpha >= 0.01).length}`, '0, 0',
+          areaMarkers.fences === 0 && areaMarkers.state(id) === null)
+
+        // F5: reduced motion: full height at once.
+        settings.vfx.reducedMotion = true
+        park(station.position.x, station.position.z)
+        loop.step(1 / 60)
+        loop.step(1 / 60)
+        const calm = areaMarkers.state(id)
+        settings.vfx.reducedMotion = saved.reducedMotion
+        row('F5', 'Reduced motion: fence height after two frames (m)', calm ? round(calm.height, 3) : '-', `${fence.height}`, Boolean(calm) && Math.abs(calm.height - fence.height) < 1e-6)
+        closePanel()
+        awayFrom()
+        stepFor(0.6, 60)
+      } else {
+        row('F1', 'Station fence', 'no clear station area found', '-', false)
+      }
+
+      // F6 / F7: the reset pads.
+      await gameWorld.streamRest()
+      for (const id of reveal.pending) reveal.revealDistrict(id)
+      stepFor(5, 30)
+      const pads = showcase.modules.find((m) => m.name === 'resetPads')?.pads ?? []
+      const hint = document.getElementById('hint')
+      for (const pad of pads) {
+        const props = pad.props()
+        park(pad.at.x, pad.at.z)
+        stepFor(0.8, 60)
+        const marker = areaMarkers.state('hotspot')
+        const plate = areaMarkers.plates.find((p) => p.x === pad.at.x && p.z === pad.at.z)
+        const hot = showcase.activeHotspot
+        const said = hint.textContent
+        // Knock the set about: throw every prop a few metres and let it land.
+        for (const [i, p] of props.entries()) {
+          const h = p.home.position
+          p.body.setTranslation({ x: h.x + 3 + (i % 5), y: h.y + 1.5, z: h.z + 3 + (i % 3) }, true)
+          p.body.setAngvel({ x: 3, y: 1, z: 2 }, true)
+        }
+        stepFor(2, 60)
+        const off = (p) => {
+          const tr = p.body.translation()
+          return Math.hypot(tr.x - p.home.position.x, tr.y - p.home.position.y, tr.z - p.home.position.z)
+        }
+        const scattered = props.filter((p) => off(p) > 1).length
+        key('keydown', 'Enter')
+        key('keyup', 'Enter')
+        loop.step(1 / 60)
+        loop.step(1 / 60)
+        const dropping = props.filter((p) => p.body.isKinematic()).length
+        stepFor(4, 60)
+        const worst = Math.max(...props.map(off))
+        const asleep = props.filter((p) => p.body.isSleeping() && !p.body.isKinematic()).length
+        row(`F6:${pad.district}`, `Reset pad (${props.length} ${pad.type}s): fence + key up, plate drawn, hint names the action`,
+          `${Boolean(marker?.active && marker.key)}, ${round(plate?.alpha ?? 0, 2)}, "${said}"`, 'true, > 0.9, contains the action',
+          Boolean(marker?.active && marker.key) && (plate?.alpha ?? 0) > 0.9 && Boolean(hot?.action) && said.includes(hot.action))
+        row(`F7:${pad.district}`, 'Enter on the pad: props scattered, dropping in (kinematic), then back home (worst miss, m) and asleep',
+          `${scattered}, ${dropping}, ${round(worst, 3)}, ${asleep}`, `${props.length}, ${props.length}, < 0.05, ${props.length}`,
+          scattered === props.length && dropping === props.length && worst < 0.05 && asleep === props.length)
+        awayFrom()
+        stepFor(0.5, 60)
+      }
+      if (!pads.length) row('F6', 'Reset pads', 'none built', '-', false)
+
+      // F8: board pictures fade in on approach and out on leaving.
+      for (const name of ['winsBoard', 'memoryLane', 'newsstand']) {
+        const board = showcase.modules.find((m) => m.name === name)?.reveal
+        if (!board) {
+          row(`F8:${name}`, 'Board pictures fade in', 'no board built', '-', false)
+          continue
+        }
+        const s = settings.showcase
+        awayFrom()
+        stepFor(s.boardRevealTime + 0.3, 60)
+        const far = board.value
+        const spot = findSpot(board.centre.x, board.centre.z, s.boardRevealRadius - 6) ?? board.centre
+        park(spot.x, spot.z)
+        let monotonic = true
+        let last = board.value
+        let half = null
+        let full = Infinity
+        let t = 0
+        while (t < s.boardRevealTime + 0.3) {
+          loop.step(1 / 60)
+          t += 1 / 60
+          if (board.value < last - 1e-9) monotonic = false
+          last = board.value
+          if (half === null && t >= s.boardRevealTime / 2) half = board.value
+          if (board.value >= 1 && full === Infinity) full = t
+        }
+        awayFrom()
+        stepFor(s.boardRevealTime + 0.3, 60)
+        const gone = board.value
+        row(`F8:${name}`, 'Pictures: far, at half time, time to full (s), monotonic, after leaving',
+          `${round(far, 2)}, ${round(half ?? 0, 2)}, ${round(full, 2)}, ${monotonic}, ${round(gone, 2)}`,
+          `0, 0.5 +- 0.1, ${s.boardRevealTime} +- 0.05, true, 0`,
+          far === 0 && Math.abs((half ?? 0) - 0.5) < 0.1 && Math.abs(full - s.boardRevealTime) < 0.05 && monotonic && gone === 0)
+      }
+
+      // F9: what it costs. Two meshes in all, and at most two draw calls with a fence and a label up.
+      if (station) {
+        park(station.position.x, station.position.z)
+        stepFor(settings.areas.fillTime + 0.6, 60)
+        const count = () => {
+          renderer.info.reset()
+          renderer.render(scene, camera)
+          return renderer.info.render.calls
+        }
+        const auto = renderer.info.autoReset
+        renderer.info.autoReset = false
+        const withMarkers = count()
+        areaMarkers.group.visible = false
+        const without = count()
+        areaMarkers.group.visible = true
+        renderer.info.autoReset = auto
+        row('F9', 'Markers: meshes in the batch group; draw calls with a fence and ENTER up, minus without', `${areaMarkers.group.children.length}, ${withMarkers - without}`,
+          '2, <= 2', areaMarkers.group.children.length === 2 && withMarkers - without <= 2 && withMarkers - without >= 1)
+        closePanel()
+        awayFrom()
+        stepFor(0.5, 60)
+      }
+      void label
       await pause()
     }
 

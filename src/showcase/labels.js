@@ -193,8 +193,12 @@ export function drawPlate(ctx, w, h, { title, sub = null, bg = '#FFFFFF', fg = '
  * labels. Unlit on purpose -- printed graphics, not shaded surfaces -- and
  * fogged like everything else. `hdr` scales the colour past the bloom
  * threshold for glowing signs.
+ *
+ * With `blank` (a colour) the material can fade between that colour and its
+ * picture: `material.userData.reveal.value` 0 = blank, 1 = the picture
+ * (`boardReveal.js` drives it as the car approaches).
  */
-export function createAtlasMaterial(texture, { transparent = false, color = 0xffffff, hdr = 1, side = THREE.FrontSide } = {}) {
+export function createAtlasMaterial(texture, { transparent = false, color = 0xffffff, hdr = 1, side = THREE.FrontSide, blank = null } = {}) {
   const material = new THREE.MeshBasicMaterial({
     map: texture, transparent, side, fog: true,
     // Label quads sit flush on plates, walls and the floor. A depth offset
@@ -204,12 +208,21 @@ export function createAtlasMaterial(texture, { transparent = false, color = 0xff
   })
   material.color.set(color).multiplyScalar(hdr)
   material.name = 'showcase:atlas'
+  if (blank !== null) material.userData.reveal = { value: 1, blank: new THREE.Color(blank) }
   material.onBeforeCompile = (shader) => {
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nattribute vec4 aRect;')
       .replace('#include <uv_vertex>', '#include <uv_vertex>\n#ifdef USE_MAP\n  vMapUv = aRect.xy + uv * aRect.zw;\n#endif')
+    const reveal = material.userData.reveal
+    if (reveal) {
+      shader.uniforms.uReveal = reveal
+      shader.uniforms.uBlank = { value: reveal.blank }
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <common>', '#include <common>\nuniform float uReveal;\nuniform vec3 uBlank;')
+        .replace('#include <map_fragment>', '#include <map_fragment>\n  diffuseColor.rgb = mix( uBlank, diffuseColor.rgb, uReveal );')
+    }
   }
-  material.customProgramCacheKey = () => 'showcase-atlas-rect'
+  material.customProgramCacheKey = () => (blank !== null ? 'showcase-atlas-rect-reveal' : 'showcase-atlas-rect')
   return material
 }
 

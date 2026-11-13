@@ -6,9 +6,11 @@ import { t } from '../content/ui.js'
 /**
  * Enter areas (doc 05 §4, reference pattern docs/pursuit-arena/01 §4.3):
  *
- *   drive in  -> the border draws itself round the square (fillTime)
- *             -> an ENTER (or TAP on touch) hint rises over it, and screen
- *                readers hear what's there
+ *   drive in  -> a fence pops up round the square and the border draws
+ *                itself (fillTime)
+ *             -> ENTER (or TAP on touch) appears on the floor beside it, and
+ *                screen readers hear what's there (`areaMarkers.js` draws the
+ *                fence and the label; the HUD hint is their HTML mirror)
  *   Enter / E / gamepad A / the touch ↵ button, or stand still (dwellTime)
  *             -> the station opens; the car is held by a soft brake for
  *                holdTime unless you accelerate
@@ -63,7 +65,7 @@ const FRAGMENT = /* glsl */ `
   }
 `
 
-export function createAreas({ scene, content, announce, onOpen, onAutoClose, isShowing }) {
+export function createAreas({ scene, content, markers, announce, onOpen, onAutoClose, isShowing }) {
   const group = new THREE.Group()
   group.name = 'areas'
   scene.add(group)
@@ -71,9 +73,8 @@ export function createAreas({ scene, content, announce, onOpen, onAutoClose, isS
   const entries = []
   const local = new THREE.Vector3()
   const invQuat = new THREE.Quaternion()
-
-  const hint = createHint()
-  group.add(hint.sprite)
+  const euler = new THREE.Euler()
+  const markerId = (entry) => `area:${entry.area.id}`
 
   let active = null
   let holdUntil = 0
@@ -147,7 +148,6 @@ export function createAreas({ scene, content, announce, onOpen, onAutoClose, isS
         entry.progress = Math.min(entry.progress + dt / Math.max(a.fillTime, 1e-3), 1)
         if (entry.progress >= 1) {
           entry.phase = 'ready'
-          hint.show(entry)
           if (entry.node) announce(t('areas.ready', { title: entry.node.title }))
         }
       }
@@ -170,7 +170,8 @@ export function createAreas({ scene, content, announce, onOpen, onAutoClose, isS
       const target = entry === active ? 1 : 0
       u.uActive.value += (target - u.uActive.value) * (1 - Math.exp(-10 * dt))
     }
-    hint.update(dt, clock)
+    // The key to press shows while pressing it would do something.
+    if (active) markers.key(markerId(active), active.phase === 'ready' || active.phase === 'closed')
     return { hold: clock < holdUntil }
   }
 
@@ -180,6 +181,15 @@ export function createAreas({ scene, content, announce, onOpen, onAutoClose, isS
     entry.phase = isShowing(entry.area.id) ? 'open' : 'filling'
     entry.progress = entry.phase === 'open' ? 1 : 0
     entry.dwell = 0
+    const { area } = entry
+    markers.set(markerId(entry), {
+      x: area.position.x,
+      z: area.position.z,
+      yaw: euler.setFromQuaternion(area.quaternion, 'YXZ').y,
+      sizeX: area.halfExtents.x * 2,
+      sizeZ: area.halfExtents.z * 2,
+      color: entry.mesh.material.uniforms.uColor.value,
+    })
   }
 
   function leave(entry) {
@@ -189,13 +199,12 @@ export function createAreas({ scene, content, announce, onOpen, onAutoClose, isS
     entry.phase = 'idle'
     entry.progress = 0
     entry.dwell = 0
-    hint.hide()
+    markers.clear(markerId(entry))
   }
 
   function open(entry) {
     entry.phase = 'open'
     entry.dwell = 0
-    hint.hide()
     holdUntil = clock + settings.areas.holdTime
     onOpen(entry.area, entry.node)
   }
@@ -209,68 +218,4 @@ export function createAreas({ scene, content, announce, onOpen, onAutoClose, isS
       return active ? { id: active.area.id, phase: active.phase } : null
     },
   }
-}
-
-/** The floating ENTER / TAP label: one sprite, moved to whichever area is ready. */
-function createHint() {
-  const make = (text) => {
-    const canvas = document.createElement('canvas')
-    canvas.width = 512
-    canvas.height = 160
-    const ctx = canvas.getContext('2d')
-    ctx.fillStyle = 'rgba(14, 16, 22, 0.86)'
-    roundRect(ctx, 8, 8, 496, 144, 36)
-    ctx.fill()
-    ctx.strokeStyle = '#86BC25'
-    ctx.lineWidth = 8
-    ctx.stroke()
-    ctx.fillStyle = '#ffffff'
-    ctx.font = '700 84px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(text, 256, 84)
-    const texture = new THREE.CanvasTexture(canvas)
-    texture.colorSpace = THREE.SRGBColorSpace
-    return texture
-  }
-  const textures = { key: make(t('areas.enterHint')), touch: make(t('areas.tapHint')) }
-  const material = new THREE.SpriteMaterial({ map: textures.key, transparent: true, depthTest: false, opacity: 0 })
-  const sprite = new THREE.Sprite(material)
-  sprite.name = 'area-hint'
-  sprite.scale.set(2.6, 0.81, 1)
-  sprite.renderOrder = 10
-  sprite.visible = false
-
-  let target = 0
-  let base = new THREE.Vector3()
-  const bob = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 0.12
-
-  return {
-    sprite,
-    show(entry) {
-      material.map = document.body.classList.contains('has-touch-pad') ? textures.touch : textures.key
-      base = new THREE.Vector3(entry.area.position.x, 2.6, entry.area.position.z)
-      sprite.position.copy(base)
-      sprite.visible = true
-      target = 1
-    },
-    hide() {
-      target = 0
-    },
-    update(dt, clock) {
-      material.opacity += (target - material.opacity) * (1 - Math.exp(-12 * dt))
-      if (material.opacity < 0.01 && target === 0) sprite.visible = false
-      if (sprite.visible) sprite.position.y = base.y + Math.sin(clock * 3) * bob
-    },
-  }
-}
-
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath()
-  ctx.moveTo(x + r, y)
-  ctx.arcTo(x + w, y, x + w, y + h, r)
-  ctx.arcTo(x + w, y + h, x, y + h, r)
-  ctx.arcTo(x, y + h, x, y, r)
-  ctx.arcTo(x, y, x + w, y, r)
-  ctx.closePath()
 }

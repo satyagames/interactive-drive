@@ -215,14 +215,20 @@ export function createDynamicProps({ world, RAPIER, blobs }) {
   /**
    * Kinematic drop-in from `height` above home, starting after `delay` s and
    * lasting `duration` s with a bounce; then dynamic again, asleep.
+   *
+   * With a `group` (any object shared by several drops) each prop waits at
+   * home, still kinematic, until the whole group has landed, and they all go
+   * dynamic and asleep in the same step. A stack rebuilt one prop at a time
+   * otherwise wakes its early arrivals as the later ones come down beside
+   * them, and they settle or topple before the set is complete.
    */
-  function dropIn(prop, { height, delay, duration }) {
+  function dropIn(prop, { height, delay, duration, group = null }) {
     prop.body.setBodyType(RAPIER.RigidBodyType.KinematicPositionBased, true)
     const p = prop.home.position
     prop.body.setTranslation({ x: p.x, y: p.y + height, z: p.z }, true)
     prop.body.setRotation(prop.home.quaternion, true)
     prop.hasPrev = false
-    dropping.push({ prop, height, delay, duration, time: 0 })
+    dropping.push({ prop, height, delay, duration, time: 0, group, landed: false })
   }
 
   /** Put a prop back where it was authored, asleep (mini-game resets). Never blended. */
@@ -256,18 +262,34 @@ export function createDynamicProps({ world, RAPIER, blobs }) {
       const t = Math.min(Math.max((drop.time - drop.delay) / drop.duration, 0), 1)
       const p = drop.prop.home.position
       drop.prop.body.setNextKinematicTranslation({ x: p.x, y: p.y + drop.height * (1 - easeOutBounce(t)), z: p.z })
-      if (t >= 1) {
-        const body = drop.prop.body
-        body.setBodyType(RAPIER.RigidBodyType.Dynamic, true)
-        body.setTranslation({ x: p.x, y: p.y, z: p.z }, true)
-        body.setLinvel({ x: 0, y: 0, z: 0 }, true)
-        body.setAngvel({ x: 0, y: 0, z: 0 }, true)
-        body.sleep()
-        drop.prop.hasPrev = false
-        drop.prop.awake = true // one last sync at the resting pose
-        dropping.splice(i, 1)
-      }
+      if (t < 1) continue
+      drop.landed = true
+      // In a group: wait at home until every member has landed.
+      if (drop.group && dropping.some((other) => other.group === drop.group && !other.landed)) continue
+      settle(drop)
+      dropping.splice(i, 1)
     }
+    // The last member of a group landing releases the ones that were waiting.
+    for (let i = dropping.length - 1; i >= 0; i--) {
+      const drop = dropping[i]
+      if (!drop.landed || dropping.some((other) => other.group === drop.group && !other.landed)) continue
+      settle(drop)
+      dropping.splice(i, 1)
+    }
+  }
+
+  /** A finished drop: dynamic again, exactly at home, asleep. */
+  function settle(drop) {
+    const p = drop.prop.home.position
+    const body = drop.prop.body
+    body.setBodyType(RAPIER.RigidBodyType.Dynamic, true)
+    body.setTranslation({ x: p.x, y: p.y, z: p.z }, true)
+    body.setRotation(drop.prop.home.quaternion, true)
+    body.setLinvel({ x: 0, y: 0, z: 0 }, true)
+    body.setAngvel({ x: 0, y: 0, z: 0 }, true)
+    body.sleep()
+    drop.prop.hasPrev = false
+    drop.prop.awake = true // one last sync at the resting pose
   }
 
   /**

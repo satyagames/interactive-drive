@@ -166,6 +166,8 @@
     "hintFindStation": "Drive into a glowing square to open a station",
     "hintEnter": "Enter: open {title}",
     "hintTap": "Tap ↵: open {title}",
+    "hintAct": "Enter: {action}",
+    "hintActTap": "Tap ↵: {action}",
     "hintPassport": "P: see your Passport",
     "mapLabel": "Map. {objective}",
     "objective": "Next stamp: {place}, {m} m",
@@ -211,6 +213,7 @@
   "areas": {
     "enterHint": "ENTER",
     "tapHint": "TAP ↵",
+    "resetPlate": "RESET",
     "ready": "{title}. Press Enter, or wait, to open."
   },
   "game": {
@@ -426,6 +429,10 @@
     "signpostBody": "A quick link from the Toolkit Depot.",
     "bar": "{value} {unit}",
     "openGarden": "the learning metrics",
+    "resetWall": "rebuild the Red Tape Wall",
+    "resetPins": "set the Strike-a-Win pins back up",
+    "resetDone": "Resetting. They are dropping back into place.",
+    "actionAnnounce": "Reset pad. Press Enter to {action}.",
     "championPlate": "Chronicles champion",
     "championFound": "Champion found: {name} ({n} / {total})"
   }

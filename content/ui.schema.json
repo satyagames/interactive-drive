@@ -157,6 +157,8 @@
         "hintFindStation",
         "hintEnter",
         "hintTap",
+        "hintAct",
+        "hintActTap",
         "hintPassport",
         "mapLabel",
         "objective",
@@ -211,6 +213,7 @@
       "required": [
         "enterHint",
         "tapHint",
+        "resetPlate",
         "ready"
       ]
     },
@@ -334,6 +337,10 @@
         "signpostBody",
         "bar",
         "openGarden",
+        "resetWall",
+        "resetPins",
+        "resetDone",
+        "actionAnnounce",
         "championPlate",
         "championFound"
       ]
