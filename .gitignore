@@ -18,3 +18,9 @@ blender/reports/
 # Python bytecode from the Blender scripts
 __pycache__/
 *.pyc
+
+# 2D site import: colleague emails stay out of git by default (docs/memory/decisions.md, 2026-11-12)
+docs/content-backup/02-people-directory.md
+docs/content-backup/data/people.csv
+docs/content-backup/data/people.json
+_to_delete/

@@ -18,7 +18,12 @@ Driving feel, camera and world-interaction mechanics must match **https://2019.b
 - `docs/pursuit-arena/04-blender-pipeline.md`: Blender 5.x modelling plus export rules, asset list and budgets
 - `docs/pursuit-arena/05-vfx-sfx-ui.md`: VFX, SFX, IxD, UI, IA and the visual language
 - `docs/pursuit-arena/06-phased-prompts.md`: the phase-by-phase build plan with acceptance criteria
+- `docs/pursuit-arena/08-reference-deep-dive.md`: every micro-feature of the 2019 reference, what the 2025 site adds, and parity status
+- `docs/pursuit-arena/09-codebase-audit.md`: current stack/look audit and the gaps against the project instructions
+- `docs/pursuit-arena/10-aaa-lookdev-prompt.md`: the AAA look-dev master prompt and phases LD0–LD11
 - `content/arena.seed.json`: all arena content (IA) and the trigger-id mapping
+- `docs/content-backup/`: backup of the 2D PursuitArena site (people, metrics, albums, publications, links) and the 3D integration plan; regenerate with `tools/site-export/import_site_export.py`
+- `docs/memory/`: progress, decisions and learnings (update at the end of every session)
 
 ## Hard rules
 1. **Reimplement, never copy.** You may read the open-source folio-2019 repo to understand mechanics

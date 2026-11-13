@@ -373,7 +373,8 @@
         },
         "url": {
           "type": "string",
-          "pattern": "^(https://|mailto:)"
+          "pattern": "^(https://|mailto:|content/docs/[A-Za-z0-9_.-]+\\.pdf$)",
+          "description": "https:// or mailto: link, or a PDF bundled under public/content/docs/."
         }
       },
       "additionalProperties": false

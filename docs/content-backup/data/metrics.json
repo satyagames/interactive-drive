@@ -1,0 +1,99 @@
+{
+ "wins_fy26": {
+  "title": "Pursuit Wins, FY26 (site snapshot, Sep 2025)",
+  "rows": [
+   {
+    "label": "Win revenue",
+    "value": "$47M"
+   },
+   {
+    "label": "Total TCV",
+    "value": "$260M"
+   },
+   {
+    "label": "Total Pursuit count",
+    "value": "240"
+   }
+  ]
+ },
+ "wins_fy25": {
+  "title": "Pursuit Wins, FY25 (site snapshot, Sep-Oct 2024)",
+  "rows": [
+   {
+    "label": "Win revenue",
+    "value": "$35M"
+   },
+   {
+    "label": "Total TCV",
+    "value": "$310M"
+   },
+   {
+    "label": "Total Pursuit count",
+    "value": "275"
+   }
+  ]
+ },
+ "thank_it_forward": {
+  "title": "Thank It Forward stats, June 2023 - December 2024",
+  "rows": [
+   {
+    "label": "Outstanding Awards",
+    "value": "4"
+   },
+   {
+    "label": "Applause Awards",
+    "value": "41"
+   },
+   {
+    "label": "Spot Awards",
+    "value": "72"
+   }
+  ]
+ },
+ "brightstar": {
+  "title": "BrightStar Awards stats, June 2023 - December 2024",
+  "rows": [
+   {
+    "label": "Marvelous Mentor",
+    "value": "2"
+   },
+   {
+    "label": "Astute Collaborator",
+    "value": "1"
+   },
+   {
+    "label": "Promising Rookie",
+    "value": "7"
+   },
+   {
+    "label": "Team Terrific",
+    "value": "16"
+   },
+   {
+    "label": "Knowledge Enthusiast",
+    "value": "1"
+   },
+   {
+    "label": "Proactive Stalwart",
+    "value": "2"
+   }
+  ]
+ },
+ "learning": {
+  "title": "L&D metrics",
+  "rows": [
+   {
+    "label": "Learning hours completed",
+    "value": "870"
+   },
+   {
+    "label": "AI learning hours completed",
+    "value": "26"
+   },
+   {
+    "label": "Hours of leadership training completed",
+    "value": "30"
+   }
+  ]
+ }
+}

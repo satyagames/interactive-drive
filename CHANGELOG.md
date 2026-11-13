@@ -2,6 +2,21 @@
 
 Pursuit Arena build log. One entry per phase (see `docs/pursuit-arena/06-phased-prompts.md`).
 
+## 2D site import — PursuitArena content into the 3D arena (2026-11-12)
+
+- **Backup** of the whole 2D PursuitArena site in `docs/content-backup/` (site map, people directory, metrics, 27 photo
+  albums, publications, toolkit and links, copy deck, brand and mascots, decade archive, 3D integration plan) plus
+  machine-readable `data/*.json` and `people.csv`.
+- **Re-runnable importer** `tools/site-export/import_site_export.py` (Python + Pillow + bs4 + pdftoppm); team
+  assignments with evidence and confidence in `tools/site-export/teams.py`.
+- **Arena content**: every station now has real copy; HQ shows the FY26/FY25 win snapshots; R&R shows Thank It Forward
+  and BrightStar counts; L&D shows learning hours and links; Toolkit ships 5 guides and 32 quick links; The
+  Intelligence Update ships all 13 issues; rosters for 10 sub-team stations (high/medium confidence only, still
+  marked placeholder until confirmed); Percy greets at the RFP Gate.
+- 43 optimised WebP images (2.1 MB) and 19 PDFs (10.7 MB) under `public/content/`, all lazy-loaded (first load unchanged).
+- Schema: links may point to bundled `content/docs/*.pdf` (checked by `content:check`). Panel body keeps line breaks.
+- Privacy: no emails, bio details or personal fun facts in the runtime; email-bearing backup files are git-ignored.
+
 ## Phase 11 — QA and ship
 
 - **QA checklist** (`docs/pursuit-arena/QA-checklist.md`) covers build and tooling, content and IA, gameplay,

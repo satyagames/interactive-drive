@@ -40,6 +40,15 @@ if (problems === 0) {
       }
     }
   }
+  // Links to PDFs bundled under public/content/docs/ must exist too.
+  for (const node of model.nodes.values()) {
+    for (const link of node.links ?? []) {
+      if (link.url.startsWith('content/') && !existsSync(join(root, 'public', link.url))) {
+        console.error(`content: ${node.id} link "${link.url}" not found in public/`)
+        problems += 1
+      }
+    }
+  }
   const placeholders = [...model.nodes.values()].filter((node) => node.placeholder).length
   console.log(`${model.nodes.size} content nodes, ${placeholders} still marked placeholder.`)
 }
