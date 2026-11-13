@@ -13,7 +13,7 @@ import { t } from '../content/ui.js'
  *     25 m, then how to open the station you're in, a nudge towards your
  *     first station, and a Passport pointer after the first stamp.
  */
-export function createHud({ root, hint, vehicle, areas, content, game, isTouch }) {
+export function createHud({ root, hint, vehicle, areas, content, game, showcase = null, isTouch }) {
   let drivingFor = 0
   let faded = false
   let lastHint = null
@@ -44,6 +44,9 @@ export function createHud({ root, hint, vehicle, areas, content, game, isTouch }
       const title = content.get(active.id)?.title
       if (title) return t(touch ? 'hud.hintTap' : 'hud.hintEnter', { title })
     }
+    // An exhibit in reach (src/showcase/hotspots.js).
+    const spot = showcase?.activeHotspot
+    if (spot && !active) return t(touch ? 'hud.hintTap' : 'hud.hintEnter', { title: spot.label })
     const state = game.store.state
     if ((state.counters.distance ?? 0) < settings.game.firstDriveDistance) return t(touch ? 'hud.hintTouch' : 'hud.hintDrive')
     if (Object.keys(state.opened).length === 0) return t('hud.hintFindStation')

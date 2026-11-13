@@ -326,6 +326,26 @@
     "pursuit_legend": {
       "title": "Pursuit Legend",
       "description": "Fill the whole Pursuit Passport."
+    },
+    "people_of_pursuits": {
+      "title": "People of Pursuits",
+      "description": "Open a roster station in all six team territories."
+    },
+    "gen_ai_insider": {
+      "title": "Gen AI Insider",
+      "description": "Read three issues of The Intelligence Update at the Innovation newsstand."
+    },
+    "chronicles_collector": {
+      "title": "Chronicles Collector",
+      "description": "Find every Deloitte Chronicles champion name plate hidden around the arena."
+    },
+    "spot_on": {
+      "title": "Spot On",
+      "description": "Knock over every Thank It Forward trophy at the R&R Arena."
+    },
+    "memory_maker": {
+      "title": "Memory Maker",
+      "description": "Visit ten photo albums along Memory Lane in Culture Commons."
     }
   },
   "sound": {
@@ -354,5 +374,36 @@
     "reverse": "Reverse",
     "interact": "Interact",
     "respawn": "Respawn"
+  },
+  "showcase": {
+    "hotspotAnnounce": "{label}. Press Enter to open it.",
+    "buddyHint": "Next stamp: {place}",
+    "buddyDone": "Every stamp collected. See you at HQ!",
+    "winsSnapshot": "Site snapshot · not decade totals",
+    "openWins": "Pursuit Wins",
+    "wallTitle": "People of Pursuits",
+    "wallPending": "Roster awaiting confirmation",
+    "wallEmpty": "Roster coming soon",
+    "openWall": "meet the {team} team",
+    "trophyBin": "{label} · {count}",
+    "openTrophies": "Thank It Forward",
+    "star": "{label} · {count}",
+    "openStars": "BrightStar Awards",
+    "albumKicker": "Memory Lane",
+    "albumOpen": "the {title} album",
+    "albumMeta": "{photos} photos",
+    "albumNoPhoto": "The full album lives on the PursuitArena site.",
+    "issueKicker": "The Intelligence Update",
+    "issueOpen": "the {label} issue",
+    "issueBody": "Generative AI news, industry updates and colleagues' stories: the {label} edition.",
+    "issueLink": "Read the {label} issue (PDF)",
+    "issueNew": "NEW",
+    "signpostKicker": "Toolkit Depot · {group}",
+    "signpostOpen": "{label}",
+    "signpostBody": "A quick link from the Toolkit Depot.",
+    "bar": "{value} {unit}",
+    "openGarden": "the learning metrics",
+    "championPlate": "Chronicles champion",
+    "championFound": "Champion found: {name} ({n} / {total})"
   }
 }

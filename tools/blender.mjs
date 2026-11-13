@@ -6,7 +6,8 @@
  *   npm run art:validate   validate.py on each .blend   -> blender/reports/*.json (+ cross-file checks)
  *   npm run art:export     export_arena.py on each      -> public/models/{kit,district_*}.glb + arena.manifest.json
  *   npm run art:cart       gen_cart.py                  -> blender/vehicle/cart.blend, public/models/cart.glb, cart AO
- *   npm run art:build      gen, polish, validate, export, cart, in that order
+ *   npm run art:mascots    gen_mascots.py               -> blender/characters/mascots.blend, public/models/mascots.glb
+ *   npm run art:build      gen, polish, validate, export, cart, mascots, in that order
  *
  *   node tools/blender.mjs gen --only audit      one district
  *
@@ -59,7 +60,7 @@ function run(script, { blend = null, extra = [] } = {}) {
   const result = spawnSync(blender, argv, { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
   const lines = `${result.stdout ?? ''}${result.stderr ?? ''}`.split(/\r?\n/)
   for (const line of lines) {
-    if (/^\[(gen|polish|validate|export|cart)/.test(line) || /Error|Traceback|^\s+File /.test(line)) console.log(line)
+    if (/^\[(gen|polish|validate|export|cart|mascots)/.test(line) || /Error|Traceback|^\s+File /.test(line)) console.log(line)
   }
   if (result.status !== 0) {
     console.error(`\n${script} failed (exit ${result.status})${blend ? ` on ${blend}` : ''}`)
@@ -160,13 +161,15 @@ else if (command === 'polish') polish(only)
 else if (command === 'validate') validate()
 else if (command === 'export') exportAll()
 else if (command === 'cart') run('gen_cart.py')
+else if (command === 'mascots') run('gen_mascots.py')
 else if (command === 'build') {
   gen(only)
   polish(only)
   validate()
   exportAll()
   run('gen_cart.py')
+  run('gen_mascots.py')
 } else {
-  console.error('usage: node tools/blender.mjs <gen|polish|validate|export|cart|build> [--only <id|kit|base>]')
+  console.error('usage: node tools/blender.mjs <gen|polish|validate|export|cart|mascots|build> [--only <id|kit|base>]')
   process.exit(2)
 }

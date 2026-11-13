@@ -20,6 +20,7 @@ function blank() {
     skin: 'default',
     best: {},            // 'dash' | 'paceLap' -> seconds
     counters: {},        // loops, horns, paint seconds, distance...
+    exhibits: {},        // exhibit badge counter -> { key: true } (game/exhibitBadges.js)
     finale: false,
   }
 }

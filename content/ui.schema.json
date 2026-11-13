@@ -256,7 +256,7 @@
     },
     "badges": {
       "type": "object",
-      "description": "One entry per badge id in src/game/progression.js BADGES.",
+      "description": "One entry per badge id: src/game/progression.js BADGES plus content/arena.seed.json gamification.exhibitBadges.",
       "required": [
         "first_drive",
         "decade_historian",
@@ -274,7 +274,12 @@
         "loop_the_0",
         "airtime",
         "deadline_hero",
-        "pursuit_legend"
+        "pursuit_legend",
+        "people_of_pursuits",
+        "gen_ai_insider",
+        "chronicles_collector",
+        "spot_on",
+        "memory_maker"
       ],
       "additionalProperties": {
         "type": "object",
@@ -292,6 +297,41 @@
         },
         "additionalProperties": false
       }
+    },
+    "showcase": {
+      "$ref": "#/$defs/strings",
+      "description": "Labels on and around the content-driven exhibits (src/showcase/).",
+      "required": [
+        "hotspotAnnounce",
+        "buddyHint",
+        "buddyDone",
+        "winsSnapshot",
+        "openWins",
+        "wallTitle",
+        "wallPending",
+        "wallEmpty",
+        "openWall",
+        "trophyBin",
+        "openTrophies",
+        "star",
+        "openStars",
+        "albumKicker",
+        "albumOpen",
+        "albumMeta",
+        "albumNoPhoto",
+        "issueKicker",
+        "issueOpen",
+        "issueBody",
+        "issueLink",
+        "issueNew",
+        "signpostKicker",
+        "signpostOpen",
+        "signpostBody",
+        "bar",
+        "openGarden",
+        "championPlate",
+        "championFound"
+      ]
     }
   },
   "additionalProperties": false,

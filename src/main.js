@@ -28,6 +28,7 @@ import { loadRenderAssets, syncRenderSettings, syncShaderEffects } from './rende
 import { createPostProcessing } from './render/post.js'
 import { createShadowBlob } from './render/shadowBlob.js'
 import { createSky } from './render/sky.js'
+import { createShowcase } from './showcase/index.js'
 import { createGame } from './game/index.js'
 import { createGameHud } from './ui/gameHud.js'
 import { createHud } from './ui/hud.js'
@@ -192,6 +193,12 @@ async function bootstrap() {
   for (const id of Object.keys(game.store.state.opened)) progress.markFound(id)
   stationPanel.onChange((node) => {
     if (!node) return
+    // Exhibit cards (an album, an issue, a signpost) aren't stations: they
+    // count only towards their exhibit's badge, never the "visited" tally.
+    if (node.kind === 'exhibit') {
+      if (node.exhibit) game.events.emit('exhibit', node.exhibit)
+      return
+    }
     progress.markFound(node.id)
     game.stationOpened(node.id)
   })
@@ -226,6 +233,18 @@ async function bootstrap() {
   })
 
   const cameraRig = createCameraRig(camera, canvas)
+
+  // Layer 2 (docs/content-backup/10 §2): exhibits shaped by the content.
+  // Created before the reveal so each district's exhibits hide and reveal
+  // with it.
+  const showcase = await createShowcase({
+    scene, world, RAPIER, seed: arena, gameWorld, renderAssets, blobs, game, content, vehicle, camera,
+    openNode: (node, options) => stationPanel.show(node, options),
+    announce(text) {
+      announcer.textContent = text
+    },
+    overlayRoot: document.getElementById('speech'),
+  })
 
   // District reveals; the opening (letters falling at the RFP Gate) plays below.
   const reveal = createReveal({
@@ -299,7 +318,7 @@ async function bootstrap() {
   const hud = createHud({
     root: hudChrome,
     hint: document.getElementById('hint'),
-    vehicle, areas, content, game,
+    vehicle, areas, content, game, showcase,
     isTouch: () => document.body.classList.contains('has-touch-pad'),
   })
   const minimap = createMinimap({ root: document.getElementById('minimap'), seed: arena, game, camera, vehicle })
@@ -349,7 +368,7 @@ async function bootstrap() {
     window.__proto = {
       vehicle, world, scene, camera, settings, input, stationPanel, explore, content, progress, gameWorld,
       renderer, renderAssets, post, shadowBlob, sky, fps, cameraRig, floor, blobs, propStress, areas, reveal,
-      game, passport, vfx, impacts, audio, soundPanel, menu, hud, minimap,
+      game, passport, vfx, impacts, audio, soundPanel, menu, hud, minimap, showcase,
       benchmark: {
         run: (options) => runPostBenchmark({ renderer, scene, camera }, options),
         vfx: (options) => runVfxBenchmark({ renderer, scene, camera, vfx }, options),
@@ -407,6 +426,8 @@ async function bootstrap() {
     // Enter areas consume `interact`; unconsumed presses are dropped at the
     // next update.
     const { hold } = areas.update(delta, { vehicle, interact: () => input.consume('interact') })
+    // Exhibit hotspots get Enter only when no station area has it.
+    showcase.update(delta, { car: vehicle, interact: () => input.consume('interact'), blocked: Boolean(areas.active) })
     // Just opened a station: a soft brake holds the car unless you accelerate.
     if (hold && inputState.throttle === 0) inputState.brake = true
     // The Deadline Dash countdown holds the car outright.

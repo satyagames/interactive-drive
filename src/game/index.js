@@ -2,6 +2,7 @@ import { createAchievements } from './achievements.js'
 import { createCollectibles } from './collectibles.js'
 import { createDash } from './dash.js'
 import { createEvents } from './events.js'
+import { createExhibitBadges } from './exhibitBadges.js'
 import { createMinigames } from './minigames.js'
 import { SKINS, createProgression } from './progression.js'
 import { createStore } from './store.js'
@@ -20,6 +21,7 @@ export function createGame({ seed, content, gameWorld, vehicle, scene, world, RA
   const dash = createDash({ seed, gameWorld, events, progression, store })
   const minigames = createMinigames({ seed, gameWorld, events, progression, store, scene })
   const achievements = createAchievements({ events, progression, store, scene, world, RAPIER, renderAssets })
+  const exhibitBadges = createExhibitBadges({ seed, store, events, progression })
 
   let clock = 0
 
@@ -38,6 +40,7 @@ export function createGame({ seed, content, gameWorld, vehicle, scene, world, RA
     dash,
     minigames,
     achievements,
+    exhibitBadges,
 
     /** Per frame, after physics. Returns { hold } -- the dash countdown holds the car. */
     update(dt) {

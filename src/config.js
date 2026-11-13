@@ -405,6 +405,35 @@ export const settings = {
     closeDelay: 1.0,
   },
 
+  /**
+   * The content-driven exhibits (`src/showcase/`, phase LD-C): hotspots you
+   * open with Enter, and how the mascots react to the car.
+   */
+  showcase: {
+    /** A point hotspot (a board, a wall, a garden) is in reach within this, m. */
+    hotspotRadius: 4.5,
+    /** Galleries pick the item nearest the car within this, m (Memory Lane). */
+    galleryReach: 3.2,
+    /** Mascots turn to watch the car inside this radius, m. */
+    mascotLookRadius: 18,
+    /** ... wave inside this one, m. */
+    mascotWaveRadius: 9,
+    /** ... and speak (the speech bubble) inside this one, m. */
+    mascotTalkRadius: 8,
+    /** Turn rate towards the car, 1/s (exponential). */
+    mascotTurnRate: 4,
+    /** Idle squash-and-stretch amplitude (fraction of height). */
+    mascotSquash: 0.035,
+    /** Seconds between the HQ wins board's flips. */
+    winsFlipInterval: 7,
+    /** A trophy counts as knocked once moved this far from home, m (or tipped past 50°). */
+    trophyKnockDistance: 0.6,
+    /** Memory Lane loads its album photos once the car is this close, m. */
+    streamRadius: 40,
+    /** A champion plate is found within this radius, m. */
+    championPickup: 2.4,
+  },
+
   /** District reveals and the intro (`world/reveal.js`). */
   reveal: {
     /** A district reveals when the car comes within its radius + this, m. */
@@ -779,6 +808,64 @@ export const rebuild = {
     yawOffset: Math.PI,
     /** GLB loaded into the vehicle's `chassis-visual` group. */
     url: 'models/vehicle.glb',
+  },
+  /**
+   * Where the content-driven exhibits stand (`src/showcase/`, phase LD-C).
+   * Every position is in its district's local layout frame -- the same frame
+   * as blender/scripts/_common.py `Frame.facing_centre`: origin at the
+   * district centre, local -Z towards HQ (the gateway side), +X to the right
+   * when you face it -- so they follow the district if the map moves. `yaw`
+   * is in that frame too (0 = the exhibit's front faces local +Z, the back
+   * of the district; 180 = it faces the gateway). Spots were chosen on clear
+   * ground from the generated layout: the side band opposite each district's
+   * playground, the gateway wings, the plaza rim inside the tree ring.
+   * The data itself (names, numbers, covers) is content: content/arena.seed.json `exhibits`.
+   */
+  showcase: {
+    mascotsUrl: 'models/mascots.glb',
+    mascots: {
+      // Beside the spawn, in the first shot of the intro camera.
+      percy: { district: 'rfp_gate', lx: -6, lz: 9, yaw: 108 },
+      // Buddies stand just inside each pillar's gateway, beside the left or
+      // right post (the pillar gateways sit on the Outer Loop road itself).
+      rnr: { district: 'rnr', lx: -6.5, lz: -15, yaw: 180 },
+      lnd: { district: 'lnd', lx: 6.5, lz: -15, yaw: 180 },
+      toolkit: { district: 'toolkit', lx: -6.5, lz: -15, yaw: 180 },
+      innovation: { district: 'innovation', lx: 6.5, lz: -15, yaw: 180 },
+      culture: { district: 'culture', lx: -6.5, lz: -15, yaw: 180 },
+    },
+    /** Where the blobs gather at HQ for the Decade Finale: a ring round the tower, m. */
+    finaleRing: 15,
+    /** The split-flap board on the HQ plaza (world frame: HQ's frame is the arena's). */
+    winsBoard: { lx: -12.5, lz: 12.5, yaw: 25, width: 7.2, height: 3.6, lift: 2.2 },
+    /** People of Pursuits: the two gateway wings of each team territory. */
+    peopleWall: { inner: 5.2, outer: 11, lz: -14, height: 2.6, cols: 4, tile: [1.22, 0.42], gap: 0.08 },
+    rnr: {
+      /** Thank It Forward trays, one per award (the award id from the content). */
+      trays: {
+        spot: { lx: -10.6, lz: 4.2, cols: 9, pitch: 0.52 },
+        applause: { lx: -11.4, lz: -0.6, cols: 7, pitch: 0.52 },
+        outstanding: { lx: -7.6, lz: -0.6, cols: 2, pitch: 0.8 },
+      },
+      /** BrightStar: six star sculptures, in content order. */
+      stars: [
+        { lx: 7.4, lz: 4.6 }, { lx: 10.6, lz: 4.6 }, { lx: 7.4, lz: 8.4 },
+        { lx: 10.6, lz: 8.4 }, { lx: 7.4, lz: 12.2 }, { lx: 10.6, lz: 12.2 },
+      ],
+      starHeight: [1.4, 4.6],
+    },
+    /** Memory Lane: frames on an arc round the Culture plaza (degrees from the gateway, clockwise seen from above). */
+    memoryLane: { radius: 16.3, from: -66, to: -162, frame: 0.86, lift: 0.95 },
+    /** The Intelligence Update newsstand: a carousel kiosk you drive round. */
+    newsstand: { lx: 10.5, lz: 2, radius: 1.5, height: 3.4 },
+    /** The learning bar garden: one planted bar per metric, along local X. */
+    learningGarden: { lx: 7.4, lz: 2.6, spacing: 2.6, base: 0.5, perDecade: 1.45 },
+    /** Signpost forest: one fingerpost per quick-link group; drive round a post to browse its arms. */
+    signposts: [
+      { lx: -12, lz: -0.6 },
+      { lx: -7.2, lz: 3.2 },
+      { lx: -12.4, lz: 6.4 },
+    ],
   },
   physics: {
     gravity: { x: 0, y: -9.81, z: 0 },

@@ -499,6 +499,40 @@ html, body {
   pointer-events: none;
 }
 .hud__hint.is-empty { display: none; }
+
+/* Percy and the blob family speak in a bubble above their heads (src/showcase/mascots.js). */
+.speech {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 9;
+  margin: 0;
+  max-width: min(78vw, 300px);
+  padding: 10px 14px;
+  border-radius: 16px;
+  border: 2px solid var(--speaker, var(--brand));
+  background: #ffffff;
+  color: #1a1a1a;
+  font-size: 14px;
+  line-height: 1.35;
+  pointer-events: none;
+  will-change: transform;
+}
+.speech[hidden] { display: none; }
+.speech::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  width: 14px;
+  height: 14px;
+  background: #ffffff;
+  border-right: 2px solid var(--speaker, var(--brand));
+  border-bottom: 2px solid var(--speaker, var(--brand));
+  transform: translateX(-50%) rotate(45deg);
+}
+.speech strong { display: block; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: #26890d; }
+.speech strong[hidden] { display: none; }
 .has-touch-pad .hud__hint { bottom: calc(max(24px, env(safe-area-inset-bottom)) + 230px); }
 
 .hud__map {

@@ -26,6 +26,8 @@ export const SKINS = {
 
 export function createProgression({ seed, content, store, events }) {
   const g = seed.gamification
+  // Plus the exhibit badges, whose rules are content (src/game/exhibitBadges.js).
+  const badgeIds = [...BADGES, ...(g.exhibitBadges ?? []).map((b) => b.id)]
   const districts = [...seed.territories, ...seed.pillars]
   const districtIds = districts.map((d) => d.id)
   const stationDistrict = new Map()
@@ -54,7 +56,7 @@ export function createProgression({ seed, content, store, events }) {
   }
 
   function awardBadge(id) {
-    if (!BADGES.includes(id) || s().badges[id]) return false
+    if (!badgeIds.includes(id) || s().badges[id]) return false
     s().badges[id] = Date.now()
     store.save()
     events.emit('badge', { id })
@@ -148,7 +150,7 @@ export function createProgression({ seed, content, store, events }) {
       return districtIds.map((id) => ({ id, stamped: Boolean(s().stamps[id]), district: districts.find((d) => d.id === id) }))
     },
     get badges() {
-      return BADGES.map((id) => ({ id, unlocked: Boolean(s().badges[id]) }))
+      return badgeIds.map((id) => ({ id, unlocked: Boolean(s().badges[id]) }))
     },
     get skins() {
       return Object.keys(SKINS).map((id) => ({ id, unlocked: Boolean(s().skins[id]), active: s().skin === id }))

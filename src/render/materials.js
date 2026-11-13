@@ -132,9 +132,13 @@ export function applyMatcapMaterials(root, assets, { bakeFor = null } = {}) {
   }
 }
 
-/** Builds a matcap material directly, for geometry that never came from glTF. */
-export function createMatcapMaterial(assets, matcapName) {
-  return getMaterial(assets, matcapName, null)
+/**
+ * Builds a matcap material directly, for geometry that never came from glTF.
+ * `tint` multiplies the matcap like an `mc_<matcap>__<RRGGBB>` material name;
+ * the result is shared through the same cache as the arena's materials.
+ */
+export function createMatcapMaterial(assets, matcapName, tint = null) {
+  return getMaterial(assets, matcapName, null, effectProfile(matcapName), tint)
 }
 
 /**
