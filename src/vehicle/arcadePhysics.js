@@ -102,6 +102,8 @@ export function createArcadePhysics({ world, RAPIER, position, rotation }) {
     speed: 0,
     forwardSpeed: 0,
     lateralSpeed: 0,
+    forwardAccel: 0,
+    handbrake: false,
     steerAngle: 0,
     engineForce: 0,
     groundedWheels: 0,
@@ -165,7 +167,11 @@ export function createArcadePhysics({ world, RAPIER, position, rotation }) {
   function update(dt, input) {
     const a = settings.arcade
     applyLiveParameters(input.handbrake)
+    const speedBefore = state.forwardSpeed
     readBodyState()
+    // Forward acceleration over the last step, m/s² (read only: tyre screech).
+    state.forwardAccel = (state.forwardSpeed - speedBefore) / dt
+    state.handbrake = Boolean(input.handbrake)
 
     // Steering chases the input at a constant rate in both directions,
     // including back to centre -- the reference's linear steer.
@@ -262,6 +268,9 @@ export function createArcadePhysics({ world, RAPIER, position, rotation }) {
     body.resetForces(true)
     body.resetTorques(true)
     state.steerAngle = 0
+    // A teleport is not an acceleration.
+    state.forwardSpeed = 0
+    state.forwardAccel = 0
     flipTimer = 0
     flipCooldown = 0
     for (let i = 0; i < wheels.length; i++) {

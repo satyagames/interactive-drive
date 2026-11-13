@@ -366,17 +366,86 @@ export const settings = {
     /** Impacts and one-shots further than this from the car are not played, m. */
     hearing: 60,
     engine: {
-      /** Pitch multiplier at rest and at top speed (doc 05 §3: 0.8 -> 1.8). */
+      /**
+       * The reference's engine "progress" (folio-2019 Sounds.js / Car.js), 0..1:
+       *   |forward speed| x speedMultiplier + throttle x accelMultiplier
+       * with speed in reference units per 60 Hz frame (m/s / worldScale / 60)
+       * and throttle counted as 0.5, or 1 while boosting. It rises fast and
+       * falls slowly (`easeUp` / `easeDown` are the reference's per-frame
+       * factors at 60 Hz, applied frame-rate independently), and it drives
+       * the layer crossfade, the pitch, the level and the brightness.
+       * Cruising at the cap is about 0.61, boosting 1, coasting at the cap 0.41.
+       */
+      speedMultiplier: 2.5,
+      accelMultiplier: 0.4,
+      easeUp: 0.3,
+      easeDown: 0.15,
+      /** Pitch multiplier at progress 0 and 1 (doc 05 §3: 0.8 -> 1.8). */
       pitchMin: 0.8,
       pitchMax: 1.8,
-      /** Engine level coasting, and added at full throttle. */
-      idleGain: 0.22,
-      throttleGain: 0.3,
+      /** Engine level at full progress, and the share of it left at progress 0 (the reference: 0.4 -> 1). */
+      gain: 0.52,
+      volumeMin: 0.4,
+      volumeMax: 1,
       /** Sideways speed (m/s) where the skid starts, and where it is at full level. */
       skidFrom: 2,
       skidFull: 7,
       /** A landing this fast (downward, m/s) thuds; full level 8 m/s above it. */
       landingSpeed: 3.5,
+    },
+    /**
+     * Tyre screech (the reference plays one when forward acceleration spikes,
+     * at most once per 5 s). Ours fires on a hard launch (forward acceleration
+     * past `accel`, smoothed over `accelSmoothing` s, while a tyre is on the
+     * ground and the throttle is down) and on a hard handbrake slide (sideways
+     * speed past `handbrakeSlip` with the handbrake held). One shared cooldown,
+     * so it can never machine-gun. Level runs from `volumeMin` to `volumeMax`
+     * with the slip (how far past the threshold, up to `slipFull` x it); the
+     * pitch is random in `rateMin`..`rateMax` so two never sound the same.
+     */
+    screech: {
+      enabled: true,
+      /** m/s². Measured peaks (smoothed): a standing start 21.7, a boost start 35.5. */
+      accel: 18,
+      accelSmoothing: 0.05,
+      /**
+       * Only from low speed, m/s: the drive force is constant up to the cap, so
+       * acceleration alone cannot tell a launch from throttle re-applied at speed.
+       */
+      launchMaxSpeed: 6,
+      /** After the threshold is crossed, the launch is judged for this long (s) and the peak sets the volume. */
+      judgeTime: 0.08,
+      /** m/s sideways with the handbrake held. Measured: about 2.2 at the cap, 6 to 8 at boost speed. */
+      handbrakeSlip: 1.8,
+      /** Below this speed (m/s) a handbrake slide makes no screech. */
+      handbrakeMinSpeed: 8,
+      slipFull: 2,
+      /** Seconds between screeches, whatever caused them (the reference: 5). */
+      cooldown: 5,
+      volumeMin: 0.75,
+      volumeMax: 1,
+      rateMin: 0.9,
+      rateMax: 1.1,
+      /** Level of the one-shot at volume 1. */
+      gain: 0.3,
+    },
+    /**
+     * Impact sounds per material class (the reference's per-sound table;
+     * speeds here are m/s, its units x worldScale). For each hit:
+     *   skipped if the same class played less than `minDelta` ms ago,
+     *   or if the hit's speed change is not above `velocityMin`;
+     *   volume = clamp((speed - velocityMin) x velocityMultiplier, volumeMin, volumeMax)²
+     *   rate   = random in rateMin..rateMax (pitch; this is what stops repetition).
+     * `car` is the car's own body against something that does not move.
+     */
+    impacts: {
+      metal: { minDelta: 60, velocityMin: 1.5, velocityMultiplier: 0.3, volumeMin: 0.35, volumeMax: 0.9, rateMin: 0.8, rateMax: 1.25 },
+      wood: { minDelta: 30, velocityMin: 1.5, velocityMultiplier: 0.6, volumeMin: 0.5, volumeMax: 1, rateMin: 0.75, rateMax: 1.5 },
+      paper: { minDelta: 80, velocityMin: 1.5, velocityMultiplier: 0.4, volumeMin: 0.35, volumeMax: 0.8, rateMin: 0.8, rateMax: 1.3 },
+      plastic: { minDelta: 60, velocityMin: 1.5, velocityMultiplier: 0.4, volumeMin: 0.35, volumeMax: 0.85, rateMin: 0.8, rateMax: 1.35 },
+      brick: { minDelta: 100, velocityMin: 1.6, velocityMultiplier: 0.47, volumeMin: 0.45, volumeMax: 0.92, rateMin: 0.8, rateMax: 1.2 },
+      rubber: { minDelta: 80, velocityMin: 1.5, velocityMultiplier: 0.4, volumeMin: 0.4, volumeMax: 0.9, rateMin: 0.85, rateMax: 1.2 },
+      car: { minDelta: 100, velocityMin: 3.2, velocityMultiplier: 0.6, volumeMin: 0.45, volumeMax: 0.78, rateMin: 0.8, rateMax: 1.25 },
     },
     music: {
       bpm: 108,

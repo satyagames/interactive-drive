@@ -196,8 +196,9 @@ src/
     index.js          sound: the AudioContext (first gesture only), levels, mute, prefs
     mixer.js          Music / SFX / Ambience -> Master -> limiter -> meter
     synth.js          placeholder synthesis helpers + the 12-voice limiter
-    engine.js         engine layers, turbo, road, skid, landing thud
-    sounds.js         event one-shots: impacts by sfx class, chimes, stamp, Dash, horn
+    carSoundModel.js  the rules, no AudioContext: engine progress, screech trigger, impact table
+    engine.js         engine layers (driven by the progress value), turbo, road, skid, thud, screech
+    sounds.js         event one-shots: impacts by class (settings.audio.impacts), chimes, stamp, Dash, horn
     ambience.js       positional ambiences on the sfx_ empties
     music.js          the theme's four stems, unlocked by passport stamps
   vfx/

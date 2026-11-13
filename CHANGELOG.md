@@ -2,6 +2,36 @@
 
 Pursuit Arena build log. One entry per phase (see `docs/pursuit-arena/06-phased-prompts.md`).
 
+## R2 — Reference audio micro-features (2026-11-13)
+
+Plan: `docs/pursuit-arena/11-reference-features-prompt.md` R2. Techniques and tuning numbers from folio-2019
+`Sounds.js` / `Car.js`; code and sounds are ours (still synthesised). New audio test: 22 of 22.
+
+- **Engine progress** (`audio/carSoundModel.js`, no AudioContext inside): forward speed x 2.5 + throttle x 0.4
+  (throttle counts 0.5, or 1 while boosting), eased up fast and down slowly (the reference's 0.3 / 0.15 per
+  frame, applied frame-rate independently: 90% of a step in 0.11 s up, 0.24 s down). It now drives the three
+  engine layers' crossfade, pitch, level (0.4 to 1) and brightness. Cruising reads 0.61, boosting 1, coasting 0.37.
+- **Tyre screech**: one on a hard launch from low speed (forward acceleration past 18 m/s²; measured peaks 21.7
+  for a standing start, 35.5 with boost) and one on a handbrake slide (sideways past 1.8 m/s at speed). One
+  shared 5 s cooldown; volume 0.75 to 1 by how far past the threshold; random pitch 0.9 to 1.1.
+- **Impact table** (`settings.audio.impacts`): per class a repeat delay, a speed floor, a speed multiplier,
+  volume and rate ranges, and a random rate on every hit. A new `car` class for the car's own body against
+  walls. The `impact` event now carries `speed` (m/s). 300 brick hits in a second play 10 sounds.
+- **Mute**: a hidden tab drops the master, then suspends the context; coming back restores the visitor's levels
+  and their own mute. `M` still toggles.
+- **Loop**: a frame delta can no longer be negative (the R1 "tab came back" reset could make the first one so).
+- **Audio test** (`src/debug/audioTest.js`, dev builds: **Debug → Run audio test** or `await __proto.audioTest()`):
+  P engine progress (6), S screech (7), I impact table (5), V voices and mute (4). V2 renders the loudest case
+  offline (engine at full progress, 18 one-shots asked for, 12 playing, master and SFX at 100%): peak 0.81, no
+  sample at full scale.
+- **Checks**: audio test 22/22 and nav test 55/55 on repeat runs, `probe:feel` 19/19, `content:check` OK,
+  `build` OK (JS 3,932.64 kB, +4.2 kB).
+- **Departures from the reference, on purpose**: its screech threshold (0.03 units per frame, per frame) is
+  only ever reached there by frame-time noise, so ours is a measured launch threshold plus a low-speed gate;
+  reversing revs the engine too; synth rates are spread around 1 rather than pitched down like its samples.
+- **Not done**: listening. Every number above is measured, none of it has been heard by a person: the screech
+  timbre and level, the engine's new rise and fall, and the impact levels need ears (doc 11 playtest list).
+
 ## R1 — Harden the navigation features (2026-11-13)
 
 Plan: `docs/pursuit-arena/11-reference-features-prompt.md` R1. Nav test: 55 of 55 (was 31 of 34).

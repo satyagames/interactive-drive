@@ -36,3 +36,12 @@
 - Shell heredocs fail in this environment when the text has an odd number of apostrophes: write patch scripts
   with the Write tool instead.
 - A key in `KEY_MAP` that should fire once must also be in `EDGE_ACTIONS`, or `input.consume` never sees it.
+- The drive force is constant up to the speed cap, so forward acceleration cannot tell a launch from throttle
+  re-applied at 50% speed (both about 21.7 m/s²): gate launch effects on speed as well.
+- Handbrake slides at the normal cap only reach about 2.2 m/s sideways (6 to 8 at boost): thresholds for slide
+  effects must be measured, not guessed.
+- A requestAnimationFrame timestamp can be earlier than a `performance.now()` taken in an event handler just
+  before it: clamp frame deltas at 0.
+- Debug tests that respawn the car "where it was" must flatten y, or back-to-back runs stack the drop height.
+- A trusted click (the browser tool's own click, not `element.click()`) is what unlocks the AudioContext;
+  OfflineAudioContext renders the mixer chain with no gesture at all, which is how clipping is measured.

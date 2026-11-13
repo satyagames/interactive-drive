@@ -4,7 +4,7 @@ Source: `brunosimon/folio-2019` (MIT, three 0.164, cannon 0.6, Howler, GSAP) and
 (MIT, three 0.183 WebGPU + TSL, Rapier 0.17), both read in full on 2026-10-28.
 This doc describes **techniques and tuning numbers**, not code. Never copy code or assets from either repo (CLAUDE.md rule 1).
 "Ours" shows the status in this repo, re-audited in R0 (2026-11-13, commit `56875d8`, doc 11): ✅ done, 🟡 partial, ❌ missing.
-R0 tally for §A: 22 done, 17 partial, 5 missing, 1 n/a. After R1 (#19, #22, #28): 25 done, 14 partial, 5 missing, 1 n/a. Measured evidence comes from `npm run probe:feel` and **Debug → Run nav test** (`src/debug/navTest.js`).
+R0 tally for §A: 22 done, 17 partial, 5 missing, 1 n/a. After R1 (#19, #22, #28): 25 done, 14 partial, 5 missing, 1 n/a. After R2 (#43, #44, and the tyre screech): see the rows; the audio checks are **Debug → Run audio test** (`src/debug/audioTest.js`). Measured evidence comes from `npm run probe:feel` and **Debug → Run nav test** (`src/debug/navTest.js`).
 
 ## A. 2019: the micro-feature catalogue
 
@@ -73,8 +73,8 @@ R0 tally for §A: 22 done, 17 partial, 5 missing, 1 n/a. After R1 (#19, #22, #28
 ### A6. Audio
 | # | Feature | Detail | Ours |
 |---|---|---|---|
-| 43 | Engine | single sample; "progress" = |speed|·2.5 + max(accel, 0)·0.4, eased up 0.3 and down 0.15; rate 0.4–1.4, volume 0.4–1 | 🟡 layered synth driven by speed and throttle (`audio/engine.js`); no acceleration term, no fast-up / slow-down easing |
-| 44 | Impact table | per sound: minimum repeat delay, minimum velocity, velocity multiplier, volume and rate ranges (e.g. brick: 100 ms, v ≥ 1, ×0.75, vol 0.2–0.85, rate 0.5–0.75). **Rate randomisation is what stops repetition** | 🟡 one global repeat delay and threshold (`config.js` `impacts`: 80 ms, Δv 1.5); per-class synth voices, random pitch only on `metal` (`audio/sounds.js:77`); no per-class table |
+| 43 | Engine | single sample; "progress" = |speed|·2.5 + max(accel, 0)·0.4, eased up 0.3 and down 0.15; rate 0.4–1.4, volume 0.4–1 | ✅ R2: the layered synth follows the reference progress value (`audio/carSoundModel.js`; audioTest P1–P6) |
+| 44 | Impact table | per sound: minimum repeat delay, minimum velocity, velocity multiplier, volume and rate ranges (e.g. brick: 100 ms, v ≥ 1, ×0.75, vol 0.2–0.85, rate 0.5–0.75). **Rate randomisation is what stops repetition** | ✅ R2: `settings.audio.impacts`, seven classes, random rate per hit (audioTest I1–I5) |
 | 45 | Mute | `M`; auto-mute when the tab is hidden | ✅ `M` (`main.js`), context suspended while the tab is hidden and resumed after (`audio/index.js:83`) |
 
 ## B. What the 2025 site adds (the "AAA" step up, same author)

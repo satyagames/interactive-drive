@@ -26,6 +26,8 @@ Nothing under an attribution-required or non-commercial licence.
 | `tyre_skid.ogg` | skid (loop) | band-passed noise | CC0 |
 | `road_roll.ogg` | rolling rumble (loop) | low-passed brown noise | CC0 |
 | `land_thud_{1..3}.ogg` | landing | sine drop + noise | CC0 |
+| `tyre_screech_{1..2}.ogg` | one-shot on a hard launch or handbrake slide (at most one per 5 s) | narrow noise band + falling squeal (`engine.js` `screech`) | CC0 |
+| `impact_car_{1..4}.ogg` | the car's own body against a wall (`car` row of `settings.audio.impacts`) | panel thump + rattle | CC0 |
 | `impact_metal_{1..4}.ogg` | impacts, `sfx: metal` | inharmonic partials | CC0 |
 | `impact_wood_{1..4}.ogg` | `sfx: wood` | knock + noise | CC0 |
 | `impact_paper_{1..4}.ogg` | `sfx: paper` | high-passed swish | CC0 |

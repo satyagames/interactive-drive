@@ -2,14 +2,17 @@ import * as THREE from 'three'
 
 import { settings } from '../config.js'
 import { morseTimeline } from '../game/morse.js'
+import { impactDecision } from './carSoundModel.js'
 import { noise, note, tone } from './synth.js'
 
 /**
  * Every one-shot in doc 05 §3, synthesised, wired to the game's event bus:
  *
  *   impact ....... by \`sfx\` class -- metal ring, wood knock, paper swish,
- *                  plastic tick, brick thump, rubber boing; level and pitch
- *                  from the impact's strength, faded and panned by distance
+ *                  plastic tick, brick thump, rubber boing, and the car's own
+ *                  body. Whether it plays, how loud and at what pitch come
+ *                  from the per-class table (settings.audio.impacts); the
+ *                  pitch is random per hit. Faded and panned by distance
  *   collect ...... pentatonic chime climbing with the combo; golden = chord;
  *                  shuriken = a metallic "shing"
  *   stamp ........ ink thunk + crowd cheer      badge / rank .. sparkle arpeggio
@@ -71,35 +74,61 @@ export function createSounds({ ctx, bus, noiseBuffers, voices, vehicle, camera }
   // ---- impacts ----------------------------------------------------------------
 
   const IMPACTS = {
-    metal: (out, at, s) => {
-      const f = 520 * (1.3 - 0.5 * s) * (0.9 + Math.random() * 0.2)
+    metal: (out, at, s, r) => {
+      const f = 520 * r
       let end = noise(ctx, out, { buffer: white, filter: 'highpass', freq: 3000, at, decay: 0.03, gain: 0.25 })
       for (const [ratio, level] of [[1, 0.22], [2.76, 0.12], [5.4, 0.07], [8.93, 0.04]]) {
         end = Math.max(end, tone(ctx, out, { freq: f * ratio, at, decay: 0.25 + 0.35 * s / ratio, gain: level }))
       }
       return end
     },
-    wood: (out, at, s) => {
-      tone(ctx, out, { freq: 190 * (1.2 - 0.3 * s), to: 150, at, decay: 0.12, gain: 0.35 })
-      return noise(ctx, out, { buffer: white, freq: 900, q: 3, at, decay: 0.07, gain: 0.4 })
+    wood: (out, at, s, r) => {
+      tone(ctx, out, { freq: 190 * r, to: 150 * r, at, decay: 0.12, gain: 0.35 })
+      return noise(ctx, out, { buffer: white, freq: 900 * r, q: 3, at, decay: 0.07, gain: 0.4 })
     },
-    paper: (out, at, s) =>
-      noise(ctx, out, { buffer: white, filter: 'highpass', freq: 2500, to: 5000, at, attack: 0.03, decay: 0.18 + 0.1 * s, gain: 0.25 }),
-    plastic: (out, at, s) => {
-      tone(ctx, out, { type: 'triangle', freq: 420 * (1.2 - 0.3 * s), at, decay: 0.06, gain: 0.2 })
-      return noise(ctx, out, { buffer: white, freq: 1600, q: 4, at, decay: 0.05, gain: 0.35 })
+    paper: (out, at, s, r) =>
+      noise(ctx, out, { buffer: white, filter: 'highpass', freq: 2500 * r, to: 5000 * r, at, attack: 0.03, decay: 0.18 + 0.1 * s, gain: 0.25 }),
+    plastic: (out, at, s, r) => {
+      tone(ctx, out, { type: 'triangle', freq: 420 * r, at, decay: 0.06, gain: 0.2 })
+      return noise(ctx, out, { buffer: white, freq: 1600 * r, q: 4, at, decay: 0.05, gain: 0.35 })
     },
-    brick: (out, at, s) => {
-      tone(ctx, out, { freq: 95, to: 55, at, decay: 0.2, gain: 0.45 })
-      return noise(ctx, out, { buffer: brown, filter: 'lowpass', freq: 700, at, decay: 0.22 + 0.1 * s, gain: 0.6 })
+    brick: (out, at, s, r) => {
+      tone(ctx, out, { freq: 95 * r, to: 55 * r, at, decay: 0.2, gain: 0.45 })
+      return noise(ctx, out, { buffer: brown, filter: 'lowpass', freq: 700 * r, at, decay: 0.22 + 0.1 * s, gain: 0.6 })
     },
-    rubber: (out, at, s) =>
-      tone(ctx, out, { type: 'triangle', freq: 170 * (1.1 - 0.2 * s), to: 85, at, decay: 0.2, gain: 0.4 }),
+    rubber: (out, at, s, r) =>
+      tone(ctx, out, { type: 'triangle', freq: 170 * r, to: 85 * r, at, decay: 0.2, gain: 0.4 }),
+    // The car's own body against a wall: a dull panel thump with a short rattle.
+    car: (out, at, s, r) => {
+      tone(ctx, out, { freq: 120 * r, to: 60 * r, at, decay: 0.16, gain: 0.5 })
+      tone(ctx, out, { type: 'triangle', freq: 610 * r, at, decay: 0.09, gain: 0.08 })
+      return noise(ctx, out, { buffer: brown, filter: 'lowpass', freq: 900 * r, at, decay: 0.14 + 0.1 * s, gain: 0.55 })
+    },
   }
 
-  function impact({ position, sfx, strength }) {
-    const make = IMPACTS[sfx] ?? IMPACTS.plastic
-    play((out, at) => make(out, at, strength), { gain: 0.25 + 0.6 * strength, position })
+  const lastImpact = new Map()
+  const impactStats = { played: 0, tooSoon: 0, tooSoft: 0, lastRate: 1, lastVolume: 0 }
+
+  /**
+   * An `impact` event from the game bus. `speed` is the speed change of the
+   * hit, m/s; `withCar` with no prop is the car against the world. Returns
+   * the table's { volume, rate }, or null when it was not played.
+   */
+  function impact({ position, sfx, strength, speed, withCar, prop }) {
+    const kind = withCar && !prop ? 'car' : (IMPACTS[sfx] ? sfx : 'plastic')
+    const row = settings.audio.impacts[kind] ?? settings.audio.impacts.plastic
+    const v = speed ?? strength * settings.impacts.fullDeltaV
+    const decision = impactDecision(kind, v, lastImpact, ctx.currentTime * 1000)
+    if (!decision) {
+      if (v > row.velocityMin) impactStats.tooSoon += 1
+      else impactStats.tooSoft += 1
+      return null
+    }
+    impactStats.lastRate = decision.rate
+    impactStats.lastVolume = decision.volume
+    const make = IMPACTS[kind]
+    if (play((out, at) => make(out, at, strength, decision.rate), { gain: decision.volume, position })) impactStats.played += 1
+    return decision
   }
 
   // ---- pickups and progress -----------------------------------------------------
@@ -208,6 +237,7 @@ export function createSounds({ ctx, bus, noiseBuffers, voices, vehicle, camera }
   return {
     play,
     impact,
+    impactStats,
     horn,
     /** Subscribe to the game's events. */
     listen(events) {

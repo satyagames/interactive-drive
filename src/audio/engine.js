@@ -2,16 +2,21 @@
  * The car's continuous sounds (doc 05 §3), all synthesised:
  *
  *   engine  three layers (idle, mid, high), each a sawtooth and a detuned
- *           square through a low-pass; crossfaded by speed, pitch 0.8 -> 1.8
- *           with speed, level and brightness up with throttle
+ *           square through a low-pass. All of it follows one value, the
+ *           reference engine "progress" (carSoundModel.js): speed plus
+ *           throttle, rising fast and falling slowly. It sets the layer
+ *           crossfade, the pitch (0.8 -> 1.8), the level and the brightness
  *   turbo   a whine plus a hiss while boosting
  *   road    low rumble rising with speed
  *   skid    band-passed noise, level from sideways slip while grounded
  *   landing a thud scaled by how fast the car came down
+ *   screech a one-shot squeal on a hard launch or handbrake slide (the
+ *           model decides when; `screech()` is the sound)
  *
  * Parameters glide with `setTargetAtTime`, so per-frame updates never click.
  */
 import { settings } from '../config.js'
+import { createCarSoundModel } from './carSoundModel.js'
 import { noise, tone } from './synth.js'
 
 const LAYERS = [
@@ -79,8 +84,14 @@ export function createEngineSound({ ctx, destination, noiseBuffers, vehicle }) {
   let wasAirborne = false
   let fallSpeed = 0
   let throttle = 0
+  const model = createCarSoundModel({ vehicle })
+  const result = { landing: 0, screech: 0, screechRate: 1, progress: 0 }
 
-  /** Per frame. `input`: this frame's { throttle, boost }. Returns a landing strength (0 = none). */
+  /**
+   * Per frame. `input`: this frame's { throttle, boost }. Returns (the same
+   * object each time) `landing`: a landing strength, 0 = none; `screech`: the
+   * volume of a screech to start now, 0 = none, with its `screechRate`.
+   */
   function update(dt, input) {
     const e = settings.audio.engine
     const st = vehicle.state
@@ -88,16 +99,18 @@ export function createEngineSound({ ctx, destination, noiseBuffers, vehicle }) {
     const k = 0.06
     const speed = Math.min(st.speed / Math.max(vehicle.topSpeed * 1.3, 1), 1)
     throttle += (Math.abs(input.throttle) - throttle) * Math.min(dt * 10, 1)
-    const pitch = e.pitchMin + (e.pitchMax - e.pitchMin) * speed
+    const car = model.update(dt, input)
+    const progress = car.progress
+    const pitch = e.pitchMin + (e.pitchMax - e.pitchMin) * progress
 
-    out.gain.setTargetAtTime(e.idleGain + e.throttleGain * throttle, now, k)
+    out.gain.setTargetAtTime(e.gain * (e.volumeMin + (e.volumeMax - e.volumeMin) * progress), now, k)
     for (const layer of layers) {
-      const d = Math.abs(speed - layer.spec.centre) / layer.spec.width
+      const d = Math.abs(progress - layer.spec.centre) / layer.spec.width
       const weight = Math.max(0, 1 - d * d)
       const freq = layer.spec.base * pitch * (1 + 0.15 * throttle)
       layer.saw.frequency.setTargetAtTime(freq, now, k)
       layer.square.frequency.setTargetAtTime(freq, now, k)
-      layer.filter.frequency.setTargetAtTime(300 + 900 * throttle + 1200 * speed, now, k)
+      layer.filter.frequency.setTargetAtTime(300 + 900 * throttle + 1200 * progress, now, k)
       layer.gain.gain.setTargetAtTime(weight * 0.33, now, k)
     }
 
@@ -120,7 +133,23 @@ export function createEngineSound({ ctx, destination, noiseBuffers, vehicle }) {
       fallSpeed = 0
     }
     wasAirborne = st.airborne
-    return landing
+    result.landing = landing
+    result.screech = car.screech
+    result.screechRate = car.screechRate
+    result.progress = progress
+    return result
+  }
+
+  /**
+   * Tyre screech into `voice` at `at`: a narrow band of noise and a thin
+   * squeal over it, both sagging in pitch as the tyre bites.
+   */
+  function screech(voice, at, rate = 1) {
+    const f = 1750 * rate
+    const seconds = 0.55 / rate
+    noise(ctx, voice, { buffer: noiseBuffers.white, filter: 'bandpass', freq: f * 1.15, to: f * 0.8, q: 14, at, attack: 0.03, hold: seconds * 0.35, decay: seconds * 0.65, gain: 1.6 })
+    tone(ctx, voice, { type: 'sawtooth', freq: f * 2.02, to: f * 1.55, at, attack: 0.04, hold: seconds * 0.3, decay: seconds * 0.5, gain: 0.05 })
+    return tone(ctx, voice, { type: 'triangle', freq: f * 1.05, to: f * 0.78, at, attack: 0.03, hold: seconds * 0.35, decay: seconds * 0.65, gain: 0.22 })
   }
 
   /** The thud itself, scheduled into `voice` at `at` (the caller owns the voice slot). */
@@ -130,5 +159,5 @@ export function createEngineSound({ ctx, destination, noiseBuffers, vehicle }) {
   }
 
 
-  return { update, thud }
+  return { update, thud, screech, model, last: result }
 }

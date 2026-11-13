@@ -49,6 +49,8 @@ export function createAudio({ vehicle, camera, game, gameWorld, seed, isDucked }
   const stampTotal = seed.territories.length + seed.pillars.length
   let parts = null // everything that needs a context, built on the first gesture
   let ducked = false
+  let hidden = false
+  const counts = { screech: 0 }
 
   const forward = new THREE.Vector3()
 
@@ -80,10 +82,24 @@ export function createAudio({ vehicle, camera, game, gameWorld, seed, isDucked }
     progress()
     music.start()
     ctx.resume?.()
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) ctx.suspend()
-      else ctx.resume()
-    })
+    // Auto-mute while the tab is hidden (as the reference does): the master
+    // drops first so nothing clicks, then the context is suspended so no
+    // audio work is done at all. Coming back restores the visitor's levels,
+    // their own mute included.
+    const onVisibility = () => {
+      hidden = document.hidden
+      if (hidden) {
+        mixer.setLevel('master', 0)
+        setTimeout(() => {
+          if (hidden) ctx.suspend()
+        }, 150)
+      } else {
+        ctx.resume()
+        applyLevels()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    if (document.hidden) onVisibility()
   }
 
   for (const type of GESTURES) window.addEventListener(type, unlock, true)
@@ -121,8 +137,15 @@ export function createAudio({ vehicle, camera, game, gameWorld, seed, isDucked }
       listener.setOrientation?.(forward.x, forward.y, forward.z, 0, 1, 0)
     }
 
-    const landing = engine.update(dt, input)
-    if (landing > 0) sounds.play((out, at) => engine.thud(out, at, landing))
+    const car = engine.update(dt, input)
+    if (car.landing > 0) {
+      const landing = car.landing
+      sounds.play((out, at) => engine.thud(out, at, landing))
+    }
+    if (car.screech > 0) {
+      const rate = car.screechRate
+      if (sounds.play((out, at) => engine.screech(out, at, rate), { gain: car.screech ** 2 * settings.audio.screech.gain })) counts.screech += 1
+    }
     ambience.update(vehicle.position)
 
     const duck = isDucked()
@@ -175,6 +198,10 @@ export function createAudio({ vehicle, camera, game, gameWorld, seed, isDucked }
         limiterDb: mixer.reduction,
         stems: music.stems,
         ambience: ambience.live,
+        hidden,
+        screeches: counts.screech,
+        impacts: parts.sounds.impactStats,
+        engineProgress: parts.engine.last.progress,
       }
     },
     get sounds() {

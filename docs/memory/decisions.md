@@ -65,3 +65,13 @@ A deliberate departure from the reference to remove top-speed surging; top speed
 
 ## 2026-11-13 — Rosters: show everyone, mark low confidence
 Hiding low-confidence people made teams look empty. All 103 are shown; low-confidence placements say "team to confirm".
+
+## 2026-11-13 — Car sound decisions live in a model with no AudioContext
+`audio/carSoundModel.js` computes the engine progress, the screech trigger and the impact table decision as plain
+numbers; `engine.js` and `sounds.js` only make the sound. Why: the rules can be tested by stepping the game
+(no gesture, no speakers), and real files can replace the synth voices later without touching the rules.
+
+## 2026-11-13 — Screech threshold is ours, not a literal conversion
+The reference's 0.03 units per frame per frame equals about 173 m/s², which driving never reaches; it fires
+there on frame-time noise. Ours is a measured launch threshold (18 m/s²) below 6 m/s, plus handbrake slides,
+with the reference's 5 s limit.

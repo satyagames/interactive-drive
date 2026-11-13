@@ -359,6 +359,15 @@ async function bootstrap() {
     })
     : null
 
+  // Audio checks (doc 11 R2): engine progress, screech, impact table, clipping, mute.
+  const audioTest = import.meta.env.DEV
+    ? async (options) => (await import('./debug/audioTest.js')).runAudioTest({
+      loop, vehicle, input, audio, cameraRig, post, world, RAPIER, gameWorld,
+      isReady: () => started && !menu.isOpen,
+      ...options,
+    })
+    : null
+
   // The tuning panel (and any tune saved from it) is a `#debug` tool, as in
   // the reference; visitors get the clean HUD.
   if (debugMode) {
@@ -366,6 +375,7 @@ async function bootstrap() {
       vehicle, camera: cameraRig, hud: hudEl, resize, respawn: respawnVehicle, RAPIER, debugMode, propStress,
       gameTest: () => runGameTest({ game, gameWorld, vehicle, reveal, stationPanel, content, seed: arena, showcase }),
       navTest,
+      audioTest,
     })
   }
   // Speed / fps readout: a development tool, so only with #debug.
@@ -524,6 +534,7 @@ async function bootstrap() {
   if (import.meta.env.DEV) {
     window.__proto.loop = loop
     window.__proto.navTest = navTest
+    window.__proto.audioTest = audioTest
   }
 }
 

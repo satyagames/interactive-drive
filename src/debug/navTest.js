@@ -49,7 +49,8 @@ export async function runNavTest({
     interpolate: settings.render.interpolate, cameraMode: settings.cameraMode, render: post.render,
     reducedMotion: settings.vfx.reducedMotion, forceTouch: settings.debug.forceTouchControls,
   }
-  const homeSpawn = { position: vehicle.position.clone(), quaternion: vehicle.quaternion.clone() }
+  // Ground level: taken mid-drop (a run straight after another) it would stack the respawn height.
+  const homeSpawn = { position: vehicle.position.clone().setY(0.6), quaternion: vehicle.quaternion.clone() }
 
   loop.stop()
   // Every district in place first: the clear spots and straights found below

@@ -14,7 +14,7 @@ const PRESETS = ['arcade2019', 'sim']
  * Tuned values can be stashed in localStorage so a good feel survives a
  * refresh, and dumped as JSON to paste back into `src/config.js`.
  */
-export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, debugMode, propStress, gameTest, navTest }) {
+export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, debugMode, propStress, gameTest, navTest, audioTest }) {
   const gui = new GUI({ title: 'Tuning', width: Math.min(300, window.innerWidth - 30) })
   // On a phone the panel would cover most of the screen, so start it shut.
   if (window.matchMedia?.('(pointer: coarse)').matches) gui.close()
@@ -135,6 +135,36 @@ export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, 
   panFolder.add({ overview: () => camera.toggleOverview() }, 'overview').name('Toggle overview (O)')
   panFolder.add({ home: () => camera.recenter() }, 'home').name('Back to car (F)')
   isoFolder.add({ intro: () => camera.playIntro() }, 'intro').name('Replay intro dolly')
+
+  // ---- car sound (doc 11 R2) -----------------------------------------------
+  const soundFolder = gui.addFolder('Car sound').close()
+  const eng = settings.audio.engine
+  soundFolder.add(eng, 'speedMultiplier', 0, 5, 0.05).name('progress: speed x')
+  soundFolder.add(eng, 'accelMultiplier', 0, 2, 0.05).name('progress: throttle x')
+  soundFolder.add(eng, 'easeUp', 0.01, 1, 0.01).name('progress: ease up')
+  soundFolder.add(eng, 'easeDown', 0.01, 1, 0.01).name('progress: ease down')
+  soundFolder.add(eng, 'pitchMin', 0.2, 2, 0.05).name('pitch min')
+  soundFolder.add(eng, 'pitchMax', 0.5, 4, 0.05).name('pitch max')
+  soundFolder.add(eng, 'gain', 0, 1, 0.01).name('engine level')
+  soundFolder.add(eng, 'volumeMin', 0, 1, 0.01).name('level at progress 0')
+  const scr = settings.audio.screech
+  soundFolder.add(scr, 'enabled').name('screech')
+  soundFolder.add(scr, 'accel', 5, 60, 0.5).name('screech: launch (m/s²)')
+  soundFolder.add(scr, 'launchMaxSpeed', 0, 30, 0.5).name('screech: below (m/s)')
+  soundFolder.add(scr, 'handbrakeSlip', 0.5, 10, 0.1).name('screech: slide (m/s)')
+  soundFolder.add(scr, 'cooldown', 0, 10, 0.5).name('screech: cooldown (s)')
+  soundFolder.add(scr, 'gain', 0, 1, 0.01).name('screech level')
+  const impactFolder = soundFolder.addFolder('Impact table').close()
+  for (const [name, r] of Object.entries(settings.audio.impacts)) {
+    const f = impactFolder.addFolder(name).close()
+    f.add(r, 'minDelta', 0, 500, 5).name('repeat delay (ms)')
+    f.add(r, 'velocityMin', 0, 10, 0.1).name('speed floor (m/s)')
+    f.add(r, 'velocityMultiplier', 0, 2, 0.01).name('speed x')
+    f.add(r, 'volumeMin', 0, 1, 0.01).name('volume min')
+    f.add(r, 'volumeMax', 0, 1, 0.01).name('volume max')
+    f.add(r, 'rateMin', 0.1, 2, 0.01).name('rate min')
+    f.add(r, 'rateMax', 0.1, 3, 0.01).name('rate max')
+  }
 
   const cameraFolder = gui.addFolder('Chase camera').close()
   const c = settings.camera
@@ -271,6 +301,17 @@ export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, 
         console.log(report.passed ? 'Nav test: all checks passed.' : 'Nav test: some checks failed.', report)
       },
     }, 'run').name('Run nav test (console)')
+  }
+  if (import.meta.env.DEV && audioTest) {
+    // Doc 11 R2: engine progress, tyre screech, impact table, clipping and mute (dev builds only).
+    debugFolder.add({
+      async run() {
+        const report = await audioTest()
+        console.table(report.rows)
+        for (const note of report.notes) console.log(note)
+        console.log(report.passed ? 'Audio test: all checks passed.' : 'Audio test: some checks failed.', report)
+      },
+    }, 'run').name('Run audio test (console)')
   }
   if (propStress) {
     // Phase 2 budget check: 300 blob shadows under 0.3 ms (see stats in the console).

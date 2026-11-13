@@ -42,9 +42,13 @@ The rfp_gate row was taken before R&R was revealed (trophies not yet visible).
 - 2026-11-13: **R0 (doc 11) done**: baseline, 45-feature audit (doc 08 §A: 22 done, 17 partial, 5 missing, 1 n/a),
   `src/debug/navTest.js`. No feature changes.
 
-- 2026-11-13: **R1 (doc 11) done, not yet committed**: R0 gaps 1 to 8 fixed, map-look UX, zone blur, minimap
+- 2026-11-13: **R1 (doc 11) done**, commit `abdc09c`: R0 gaps 1 to 8 fixed, map-look UX, zone blur, minimap
   pan, Alt + arrows, Overview. Nav test 55/55 on repeat runs; probe:feel 19/19; content:check and build green.
   Owed: lookdev/R1 screenshots, GPU ms per tier, Lighthouse, base ground re-polish, hand playtest. Next: R2.
+
+- 2026-11-13: **R2 (doc 11) done**: engine progress model, tyre screech, per-class impact table, hidden-tab
+  mute, `src/debug/audioTest.js` (22 checks). Audio test 22/22, nav test 55/55, probe:feel 19/19, build green.
+  Owed: a listening pass (nothing has been heard by a person). Next: R3.
 
 ### R0 baseline (2026-11-13, commit `56875d8`)
 - `probe:feel` 19/19 (V1 −1.9%, V4 −0.3%, V12 −5.0%, **V13 −6.5%**: inside ±10% but it was +0.2% in doc 07 §5,
@@ -105,4 +109,4 @@ The rfp_gate row was taken before R&R was revealed (trophies not yet visible).
 - 9 colleagues placed with low confidence ("team to confirm"); the Israel Catalyst roster (3) is inferred from creation order.
 - Birthday/service names exist only inside banner images in the export (not imported).
 - `_to_delete/` holds temporary PNGs, superseded script copies and build-check zips: safe to delete.
-- Not yet from the reference: tyre screech SFX, area "fence" pop-up, paving tiles along paths, in-world start label, warm indirect bounce in the matcap shader.
+- Not yet from the reference: area "fence" pop-up, paving tiles along paths, in-world start label, warm indirect bounce in the matcap shader.

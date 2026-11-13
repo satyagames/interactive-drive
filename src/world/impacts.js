@@ -7,7 +7,7 @@ import { rebuild, settings } from '../config.js'
  * contact-force events above a per-collider threshold (`dynamicProps.js`,
  * `arcadePhysics.js`); after every physics step this drains them and emits
  *
- *   impact { position, sfx, strength 0..1, withCar, prop }
+ *   impact { position, sfx, strength 0..1, speed (m/s), withCar, prop }
  *
  * on the game's event bus. `sfx` is the prop's material class (paper, wood,
  * metal, plastic, brick, rubber), or 'metal' for the car scraping a wall.
@@ -69,6 +69,8 @@ export function createImpacts({ world, queue, props, vehicle, events }) {
       position: contactPoint(h1, h2, subject),
       sfx: prop?.sfx ?? 'metal',
       strength: Math.min(deltaV / cfg.fullDeltaV, 1),
+      // The speed change itself: the sound table works in m/s.
+      speed: deltaV,
       withCar: car,
       prop: prop?.name ?? null,
     })
