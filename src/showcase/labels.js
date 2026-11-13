@@ -195,7 +195,13 @@ export function drawPlate(ctx, w, h, { title, sub = null, bg = '#FFFFFF', fg = '
  * threshold for glowing signs.
  */
 export function createAtlasMaterial(texture, { transparent = false, color = 0xffffff, hdr = 1, side = THREE.FrontSide } = {}) {
-  const material = new THREE.MeshBasicMaterial({ map: texture, transparent, side, fog: true })
+  const material = new THREE.MeshBasicMaterial({
+    map: texture, transparent, side, fog: true,
+    // Label quads sit flush on plates, walls and the floor. A depth offset
+    // pulls them towards the camera so they never z-fight (the flicker seen on
+    // the R&R floor labels and the People of Pursuits wall headers).
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4,
+  })
   material.color.set(color).multiplyScalar(hdr)
   material.name = 'showcase:atlas'
   material.onBeforeCompile = (shader) => {

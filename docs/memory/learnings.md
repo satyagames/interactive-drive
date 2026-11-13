@@ -16,3 +16,9 @@
 - Prop batches (`dynamicProps`) are never frustum-culled: keep per-prop triangle counts small when adding many.
 - A hidden Browser pane pauses requestAnimationFrame: debug tests that await frames hang until the pane is shown.
 - Shelf-packed atlases overflow fast when mixing wide headers and small tiles: pack headers first.
+- Zoomforth: every section numbers its tiles 0..N; the cards created in one batch with (or just after) a team
+  heading, filling that section's free positions, are that team. Several headings can share one section.
+- Coplanar label quads z-fight at the iso camera distance: use polygonOffset on overlay materials, never mm lifts.
+- Judge smoothness with synthetic uneven frames through `__proto.loop.step(dt)` (headless GPU is too slow for
+  real-time tests); exclude camera-zone transitions from the measurement.
+- Dev bundle with `__proto`: `NODE_ENV=development npx vite build --mode development`.

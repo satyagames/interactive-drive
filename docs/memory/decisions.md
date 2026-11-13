@@ -43,3 +43,17 @@ at runtime (no network, no new assets). Revisit when the importer can render PDF
 ## 2026-11-12 — Station links may point to bundled PDFs
 Schema link pattern now also allows `content/docs/*.pdf`; content-check verifies the file exists. Panel body uses
 `white-space: pre-line` so imported paragraphs and metric lines keep their breaks.
+
+## 2026-11-13 — Render interpolation instead of variable-step physics
+Keep the deterministic fixed step (feel probe, parity) and blend visuals by `step.alpha`. Why: the reference's
+smoothness came from per-frame stepping; interpolation gives the same smoothness without changing the physics.
+
+## 2026-11-13 — Reference depth post (tilt-shift + glow), DPR cap unchanged
+Own GLSL ShaderPasses in the current EffectComposer (the WebGPU/TSL port is still planned in LD1). Tilt-shift off
+on touch and on the low tier. DPR stays 1.5: the measured AA cost at 2x still exceeds the frame budget.
+
+## 2026-11-13 — Speed cap tapers instead of gating
+A deliberate departure from the reference to remove top-speed surging; top speed within 2%, probe green.
+
+## 2026-11-13 — Rosters: show everyone, mark low confidence
+Hiding low-confidence people made teams look empty. All 103 are shown; low-confidence placements say "team to confirm".

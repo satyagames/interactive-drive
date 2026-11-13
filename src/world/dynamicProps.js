@@ -182,11 +182,28 @@ export function createDynamicProps({ world, RAPIER, blobs }) {
     return prop
   }
 
-  function writeInstance(prop) {
+  /** Remember the pose before a physics step (render interpolation). */
+  function snapshot(prop) {
+    const t = prop.body.translation()
+    const r = prop.body.rotation()
+    if (!prop.prevPos) {
+      prop.prevPos = new THREE.Vector3()
+      prop.prevQuat = new THREE.Quaternion()
+    }
+    prop.prevPos.set(t.x, t.y, t.z)
+    prop.prevQuat.set(r.x, r.y, r.z, r.w)
+  }
+
+  function writeInstance(prop, alpha = 1) {
     const t = prop.body.translation()
     const r = prop.body.rotation()
     position.set(t.x, t.y, t.z)
     quaternion.set(r.x, r.y, r.z, r.w)
+    // Blend from the pre-step pose; skip after a teleport (reset, drop-in end).
+    if (alpha < 1 && prop.prevPos && settings.render.interpolate && prop.prevPos.distanceToSquared(position) < 25) {
+      position.lerpVectors(prop.prevPos, position, alpha)
+      quaternion.slerpQuaternions(prop.prevQuat, quaternion, alpha)
+    }
     bodyMatrix.compose(position, quaternion, one)
     prop.batch.mesh.setMatrixAt(prop.index, instanceMatrix.multiplyMatrices(bodyMatrix, prop.visualLocal))
     blobs.set(prop.blob, position, quaternion)
@@ -211,6 +228,7 @@ export function createDynamicProps({ world, RAPIER, blobs }) {
 
   /** Called once per fixed physics step, before `world.step()`. */
   function fixedUpdate(dt) {
+    for (const prop of props) if (!prop.body.isSleeping()) snapshot(prop)
     for (const prop of floaters) {
       // Only while awake: a floater asleep at the end of its tether just hangs there.
       if (prop.body.isSleeping()) continue
@@ -239,14 +257,14 @@ export function createDynamicProps({ world, RAPIER, blobs }) {
    * Per frame: sync awake bodies to their instances, put idle ones to sleep
    * and enforce the awake budget.
    */
-  function update(dt = 1 / 60) {
+  function update(dt = 1 / 60, alpha = 1) {
     const awakeByDistrict = new Map()
     for (const batch of batches) {
       let dirty = false
       for (const prop of batch.members) {
         const sleeping = prop.body.isSleeping()
         if (!sleeping || prop.awake) {
-          writeInstance(prop)
+          writeInstance(prop, sleeping ? 1 : alpha)
           dirty = true
         }
         prop.awake = !sleeping

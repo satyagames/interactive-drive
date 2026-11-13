@@ -417,6 +417,7 @@ async function bootstrap() {
     }
     if (input.consume('mute')) audio.toggleMute()
     if (input.consume('camera')) cameraRig.toggle()
+    if (input.consume('recenter')) cameraRig.recenter()
     if (input.consume('passport')) passport.toggle()
     // Explore's camera hold ends as soon as you drive off (driving keys only
     // reach here when focus is outside the Explore list).
@@ -443,17 +444,19 @@ async function bootstrap() {
       vehicle.update(fixedDelta, inputState)
     }, impacts.drain)
 
-    vehicle.sync()
+    vehicle.sync(step.alpha)
     triggerWatcher(vehicle.position)
     reveal.update(delta, vehicle.position)
     gameWorld.animate(delta)
     gameWorld.updateLod(camera.position)
     interactionTarget = areas.active ? 1 : 0
     interaction += (interactionTarget - interaction) * (1 - Math.exp(-8 * delta))
-    cameraRig.update(delta, vehicle)
+    cameraRig.update(delta, vehicle, {
+      driving: inputState.throttle !== 0 || inputState.steer !== 0 || Boolean(inputState.brake),
+    })
     sky.update(camera)
     shadowBlob.update()
-    gameWorld.props.update(delta)
+    gameWorld.props.update(delta, step.alpha)
     dashHold = game.update(delta).hold
     vfx.update(delta)
     audio.update(delta, inputState)
@@ -511,6 +514,7 @@ function applyQualityTier(name) {
   settings.post.aa.mode = tier.aaMode
   settings.post.enabled = tier.postEnabled
   settings.post.bloom.enabled = tier.bloom
+  settings.post.tiltShift.enabled = tier.tiltShift
   settings.vfx.density = tier.vfxDensity
   settings.lod.distance = tier.lodDistance
 }

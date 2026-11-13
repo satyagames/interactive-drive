@@ -115,6 +115,7 @@ what was tested, how, and what's still open, with owners.
 | Switch camera (iso / chase) | `C` | Y / △ | — |
 | Respawn at the nearest spawn | `R` | View / Share | ⟲ |
 | Zoom | mouse wheel | — | pinch |
+| Look around the map | drag with the mouse · `F` re-centres | drive to return | drag one finger |
 | Mute · Passport · Menu | `M` · `P` · `Esc` | — · D-pad up · Menu | Menu button |
 
 Nothing moves until **Start** (which also turns the sound on). `M` mutes

@@ -216,6 +216,14 @@
           "status": "placeholder",
           "roles": [
             {
+              "name": "Rajat Mishra",
+              "role": "AVP · USI Strategic segment"
+            },
+            {
+              "name": "Ranjit Rao",
+              "role": "Executive Manager · USI Strategic segment"
+            },
+            {
               "name": "Skandh Suresh",
               "role": "Executive Manager · Audit"
             },
@@ -236,12 +244,16 @@
               "role": "Assistant Manager · Audit"
             },
             {
-              "name": "Sai Shyam Somala",
-              "role": "Assistant Manager · Deloitte Private"
+              "name": "Khushboo Sharma",
+              "role": "Assistant Manager · team to confirm"
             },
             {
               "name": "Shankha Sen",
               "role": "Assistant Manager · Deployment"
+            },
+            {
+              "name": "Dhruv Ahuja",
+              "role": "Senior Analyst · team to confirm"
             },
             {
               "name": "Ahmed Muzammil",
@@ -256,8 +268,8 @@
               "role": "Manager · Audit"
             },
             {
-              "name": "Pujitha Annamraju",
-              "role": "Manager"
+              "name": "Sandeep Mishra",
+              "role": "Manager · USI Strategic segment"
             },
             {
               "name": "Sushma Yanamadala",
@@ -278,6 +290,14 @@
               "role": "Executive Manager"
             },
             {
+              "name": "Mohammad Raqeeb",
+              "role": "Deputy Manager"
+            },
+            {
+              "name": "Pramodh Kumar Peddagani",
+              "role": "Deputy Manager"
+            },
+            {
               "name": "Akhila Gadepalli",
               "role": "Assistant Manager"
             },
@@ -286,8 +306,20 @@
               "role": "Assistant Manager"
             },
             {
+              "name": "Shailaja Rana",
+              "role": "Assistant Manager"
+            },
+            {
               "name": "Tripti Rungta",
               "role": "Assistant Manager"
+            },
+            {
+              "name": "Iti Mishra",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Kavin Prabahar",
+              "role": "Senior Analyst"
             },
             {
               "name": "Mohit Acharya",
@@ -299,7 +331,7 @@
             },
             {
               "name": "Purwa Tiwari",
-              "role": "Senior Analyst"
+              "role": "Senior Analyst · team to confirm"
             },
             {
               "name": "Shloka Mathur",
@@ -310,12 +342,48 @@
               "role": "Senior Analyst"
             },
             {
-              "name": "Sivaley Pawar",
-              "role": "Senior Analyst · Audit"
-            },
-            {
               "name": "Sravya Sudha",
               "role": "Senior Analyst"
+            },
+            {
+              "name": "Sumit Kumar Shrivastava",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Ujwal Pachode",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Yashaswini Singh",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Aprajita Suman",
+              "role": "Analyst · XFSS"
+            },
+            {
+              "name": "Harshika Chopra",
+              "role": "Analyst"
+            },
+            {
+              "name": "Rishika Sahare",
+              "role": "Analyst"
+            },
+            {
+              "name": "Soham Banerjee",
+              "role": "Analyst"
+            },
+            {
+              "name": "Tanisha Puri",
+              "role": "Analyst · Audit"
+            },
+            {
+              "name": "Chayan Banerjee",
+              "role": "Manager"
+            },
+            {
+              "name": "Kartik Lalit",
+              "role": "Manager"
             },
             {
               "name": "Tripti Gupta",
@@ -332,7 +400,19 @@
           "status": "placeholder",
           "roles": [
             {
+              "name": "Priyanka Lole",
+              "role": "Deputy Manager · team to confirm"
+            },
+            {
+              "name": "Mithilesh Kumar",
+              "role": "Assistant Manager"
+            },
+            {
               "name": "Kriti Srivastava",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Nidhi Vijay Sharma",
               "role": "Senior Analyst"
             },
             {
@@ -371,6 +451,10 @@
           "status": "placeholder",
           "roles": [
             {
+              "name": "Ripunjay Nandikonda",
+              "role": "AVP · USI Strategic segment"
+            },
+            {
               "name": "P. Prasad Nandula",
               "role": "Executive Manager"
             },
@@ -389,6 +473,10 @@
             {
               "name": "Karan Singh",
               "role": "Manager"
+            },
+            {
+              "name": "Vamsee Krishna Sonti",
+              "role": "Manager · team to confirm"
             }
           ]
         },
@@ -426,6 +514,10 @@
             },
             {
               "name": "Kummara Palli Mohan Kumar",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Rishabh Chhabra",
               "role": "Senior Analyst"
             },
             {
@@ -476,8 +568,40 @@
           "status": "placeholder",
           "roles": [
             {
+              "name": "Chandrasekhar Chandramsetti",
+              "role": "Deputy Manager · Shift 1 Lead"
+            },
+            {
+              "name": "Vaseem Kader",
+              "role": "Deputy Manager · Shift 2"
+            },
+            {
               "name": "Anirban Mondal",
               "role": "Assistant Manager · Consulting"
+            },
+            {
+              "name": "Nandini Rathi",
+              "role": "Assistant Manager · Shift 2"
+            },
+            {
+              "name": "Muskan Dharod",
+              "role": "Senior Analyst · Shift 2"
+            },
+            {
+              "name": "Subhajyoti Pal",
+              "role": "Senior Analyst · Shift 1"
+            },
+            {
+              "name": "Mohammad Afrid Hussain",
+              "role": "Analyst · Shift 2"
+            },
+            {
+              "name": "Uma Keerthi Akkinapally",
+              "role": "Analyst · Shift 1"
+            },
+            {
+              "name": "Richa Saxena",
+              "role": "Manager · Shift 2 Lead"
             }
           ]
         }
@@ -511,11 +635,15 @@
               "role": "Deputy Manager · ARA ESG"
             },
             {
-              "name": "Khushpreet Singh",
+              "name": "Abhinav Kodavati",
+              "role": "Assistant Manager · team to confirm"
+            },
+            {
+              "name": "Jaspreet Singh Saluja",
               "role": "Assistant Manager"
             },
             {
-              "name": "Maha Waseem Jan",
+              "name": "Khushpreet Singh",
               "role": "Assistant Manager"
             },
             {
@@ -523,11 +651,35 @@
               "role": "Assistant Manager · Audit"
             },
             {
+              "name": "Sai Shyam Somala",
+              "role": "Assistant Manager · Deloitte Private"
+            },
+            {
+              "name": "Vahista Variava",
+              "role": "Assistant Manager · team to confirm"
+            },
+            {
               "name": "Sukanya Tripathi",
               "role": "Senior Analyst · ESG"
             },
             {
+              "name": "Kristi Saha",
+              "role": "Analyst · Audit"
+            },
+            {
               "name": "Archana Anand",
+              "role": "Manager"
+            },
+            {
+              "name": "Divya Singh",
+              "role": "Manager · team to confirm"
+            },
+            {
+              "name": "Lakshmi Nair",
+              "role": "Manager · team to confirm"
+            },
+            {
+              "name": "Pujitha Annamraju",
               "role": "Manager"
             }
           ]
@@ -543,6 +695,10 @@
             {
               "name": "Sephin Alexander",
               "role": "Assistant Manager"
+            },
+            {
+              "name": "Sivaley Pawar",
+              "role": "Senior Analyst · Audit"
             },
             {
               "name": "Surabhi Cholkar",
@@ -580,20 +736,8 @@
               "role": "Executive Manager · USI Emerging Media Lead"
             },
             {
-              "name": "Chandrasekhar Chandramsetti",
-              "role": "Deputy Manager · Shift 1 Lead"
-            },
-            {
               "name": "Premshankar Rama",
               "role": "Deputy Manager"
-            },
-            {
-              "name": "Vaseem Kader",
-              "role": "Deputy Manager · Shift 2"
-            },
-            {
-              "name": "Nandini Rathi",
-              "role": "Assistant Manager · Shift 2"
             },
             {
               "name": "Arojit Sen",
@@ -604,10 +748,6 @@
               "role": "Senior Analyst · Shift 1"
             },
             {
-              "name": "Muskan Dharod",
-              "role": "Senior Analyst · Shift 2"
-            },
-            {
               "name": "Rudrasish Sengupta",
               "role": "Senior Analyst · Shift 1"
             },
@@ -616,28 +756,8 @@
               "role": "Senior Analyst · Shift 2"
             },
             {
-              "name": "Subhajyoti Pal",
-              "role": "Senior Analyst · Shift 1"
-            },
-            {
-              "name": "Mohammad Afrid Hussain",
-              "role": "Analyst · Shift 2"
-            },
-            {
               "name": "Swathi Mutyala",
               "role": "Analyst · Shift 1"
-            },
-            {
-              "name": "Uma Keerthi Akkinapally",
-              "role": "Analyst · Shift 1"
-            },
-            {
-              "name": "Vineeth Kumar Yadav",
-              "role": "Analyst · Shift 2"
-            },
-            {
-              "name": "Richa Saxena",
-              "role": "Manager · Shift 2 Lead"
             }
           ]
         }
@@ -664,7 +784,21 @@
           "body": "The Israel Catalyst Team. Team members are not identifiable in the 2D site export: please supply the roster.",
           "image": "content/site/team-1-our-team-final-layout-for-the-bg-01.webp",
           "links": [],
-          "status": "placeholder"
+          "status": "placeholder",
+          "roles": [
+            {
+              "name": "Maha Waseem Jan",
+              "role": "Assistant Manager"
+            },
+            {
+              "name": "Pratyasha Dutta",
+              "role": "Senior Analyst"
+            },
+            {
+              "name": "Vineeth Kumar Yadav",
+              "role": "Analyst · Shift 2"
+            }
+          ]
         }
       ]
     }

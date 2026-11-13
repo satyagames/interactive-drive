@@ -35,7 +35,7 @@ from bs4 import BeautifulSoup
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from teams import CONFIRMED_TEAMS, LEADERSHIP, TEAMS, TEAM_LABELS  # noqa: E402
+from teams import CONFIRMED_TEAMS, LEADERS, TEAMS, TEAM_LABELS  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 BACKUP = REPO / 'docs' / 'content-backup'
@@ -301,7 +301,7 @@ def parse_people(ex):
         people[key] = rec
     out = []
     for key, p in people.items():
-        team, conf, ev = LEADERSHIP.get(key) or TEAMS.get(key) or ('unassigned', 'low', 'No team signal in the export')
+        team, conf, ev = TEAMS.get(key) or ('unassigned', 'low', 'No team signal in the export')
         p.update(key=key, team=team, team_label=TEAM_LABELS[team], confidence=conf, evidence=ev)
         out.append(p)
     out.sort(key=lambda p: (list(TEAM_LABELS).index(p['team']), ROLE_RANK.get(p['role'], 99), p['name']))
@@ -769,8 +769,10 @@ def merge_seed(ex, people, metrics, events, issues, links):
         stations[st]['links'] = add + [l for l in stations[st].get('links', []) if l not in add]
 
     # --- rosters
-    shown = [p for p in people if p['confidence'] in ('high', 'medium')]
+    shown = people  # everyone is shown; low-confidence placements say so
     def role_line(p):
+        if p['confidence'] == 'low':
+            return ' · '.join([p['role']] + [t for t in p['tags'] if t not in ('USI Pursuits COE Lead',)][:2] + ['team to confirm'])
         return ' · '.join([p['role']] + [t for t in p['tags'] if t not in ('USI Pursuits COE Lead',)][:2])
     for team in TEAM_LABELS:
         if team in stations:
@@ -787,7 +789,8 @@ def merge_seed(ex, people, metrics, events, issues, links):
                 s['image'] = im[0]
             s['status'] = 'final' if confirmed else 'placeholder'
     if 'hq_leadership' in stations:
-        leaders = [p for p in people if p['team'] == 'leadership']
+        bykey = {p['key']: p for p in people}
+        leaders = [bykey[k] for k in LEADERS if k in bykey]
         stations['hq_leadership']['roles'] = [dict(name=p['name'], role=role_line(p)) for p in leaders]
         stations['hq_leadership']['title'] = 'Leadership'
     if 'innovation_4' in stations:

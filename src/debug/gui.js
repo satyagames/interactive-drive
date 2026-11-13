@@ -139,6 +139,7 @@ export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, 
   // 0 and both post passes off is the pre-polish look, for A/B comparison.
   const renderFolder = gui.addFolder('Rendering')
   renderFolder.add(settings.render, 'bakedAo', 0, 1, 0.01).name('baked AO strength')
+  renderFolder.add(settings.render, 'interpolate').name('render interpolation')
 
   // A preset that just assigns `render.pixelRatioCap` / `post.aa.mode` /
   // `post.enabled` / bloom / `vfx.density` / `lod.distance` and resizes -- picking one and then hand-tuning a field
@@ -152,6 +153,7 @@ export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, 
       settings.post.aa.mode = tier.aaMode
       settings.post.enabled = tier.postEnabled
       settings.post.bloom.enabled = tier.bloom
+      settings.post.tiltShift.enabled = tier.tiltShift
       settings.vfx.density = tier.vfxDensity
       settings.lod.distance = tier.lodDistance
       resize()
@@ -208,6 +210,18 @@ export function createDebugGui({ vehicle, camera, hud, resize, respawn, RAPIER, 
   bloomFolder.add(settings.post.bloom, 'strength', 0, 1.5, 0.01).name('strength')
   bloomFolder.add(settings.post.bloom, 'radius', 0, 1.5, 0.01).name('radius')
   bloomFolder.add(settings.post.bloom, 'threshold', 0, 1.5, 0.01).name('threshold')
+  const tiltFolder = postFolder.addFolder('Tilt-shift (reference depth)').close()
+  tiltFolder.add(settings.post.tiltShift, 'enabled').name('enabled')
+  tiltFolder.add(settings.post.tiltShift, 'strength', 0, 4, 0.05).name('strength (px)')
+  tiltFolder.add(settings.post.tiltShift, 'falloff', 0.25, 4, 0.05).name('falloff')
+  tiltFolder.add(settings.post.tiltShift, 'onTouch').name('on touch screens')
+  const glowFolder = postFolder.addFolder('Glow (reference)').close()
+  glowFolder.add(settings.post.glow, 'enabled').name('enabled')
+  glowFolder.addColor(settings.post.glow, 'color').name('color')
+  glowFolder.add(settings.post.glow, 'x', -1, 2, 0.01).name('position x')
+  glowFolder.add(settings.post.glow, 'y', -1, 2, 0.01).name('position y')
+  glowFolder.add(settings.post.glow, 'radius', 0, 2, 0.01).name('radius')
+  glowFolder.add(settings.post.glow, 'alpha', 0, 1, 0.01).name('alpha')
   const vignetteFolder = postFolder.addFolder('Vignette').close()
   vignetteFolder.add(settings.post.vignette, 'enabled').name('enabled')
   vignetteFolder.add(settings.post.vignette, 'offset', 0, 3, 0.01).name('offset')

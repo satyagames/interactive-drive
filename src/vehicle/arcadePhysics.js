@@ -182,11 +182,16 @@ export function createArcadePhysics({ world, RAPIER, position, rotation }) {
     const cap = (boost ? a.boostMaxSpeed : a.maxSpeed) * s
     const force = (boost ? a.boostEngineForce : a.engineForce) * s
     const goingForward = state.forwardSpeed > 0
+    // Fade over the top `capSoftness` of the cap (1 below it, 0 just above it).
+    const soft = Math.max(a.capSoftness ?? 0, 0)
+    const taper = soft > 0
+      ? 1 - THREE.MathUtils.clamp((state.speed - cap * (1 - soft)) / (cap * soft * 1.1), 0, 1)
+      : state.speed < cap ? 1 : 0
     let engine = 0
     if (input.throttle > 0) {
-      if (state.speed < cap || !goingForward) engine = force * input.throttle
+      engine = goingForward ? force * input.throttle * taper : force * input.throttle
     } else if (input.throttle < 0) {
-      if (state.speed < cap || goingForward) engine = force * input.throttle
+      engine = goingForward ? force * input.throttle : force * input.throttle * taper
     }
     for (const i of REAR_WHEELS) controller.setWheelEngineForce(i, engine)
     state.engineForce = engine

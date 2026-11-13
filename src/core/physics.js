@@ -31,7 +31,13 @@ export function createStepper(world, eventQueue) {
   const { timestep, maxSubSteps } = rebuild.physics
   let accumulator = 0
 
-  return function step(frameDelta, onStep, afterStep) {
+  /**
+   * After a call, `step.alpha` (0..1) is how far the frame sits between the
+   * last two physics states. Renderers blend previous -> current pose by it, so
+   * motion is smooth at any refresh rate (frames with 0 or 2 steps no longer
+   * stutter). Rendering lags the simulation by under one step (< 17 ms).
+   */
+  function step(frameDelta, onStep, afterStep) {
     // Clamp so an alt-tab or a slow first frame cannot queue up 300 steps.
     accumulator = Math.min(accumulator + frameDelta, timestep * maxSubSteps)
 
@@ -43,6 +49,9 @@ export function createStepper(world, eventQueue) {
       accumulator -= timestep
       steps += 1
     }
+    step.alpha = Math.min(accumulator / timestep, 1)
     return steps
   }
+  step.alpha = 1
+  return step
 }

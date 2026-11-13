@@ -38,14 +38,14 @@ export function createCameraRig(camera, canvas) {
     return modes[settings.cameraMode] ?? modes.iso
   }
 
-  function update(dt, vehicle) {
+  function update(dt, vehicle, options) {
     // The debug panel can change the mode directly, not just `toggle()`.
     if (settings.cameraMode !== lastMode) {
       lastMode = settings.cameraMode
       active().reset()
     }
     removeFx()
-    active().update(dt, vehicle)
+    active().update(dt, vehicle, options)
     applyFx(dt)
   }
 
@@ -124,6 +124,10 @@ export function createCameraRig(camera, canvas) {
       trauma = Math.min(trauma + amount, 1)
     },
     reset: () => active().reset(),
+    recenter: () => modes.iso.recenter(),
+    get panned() {
+      return settings.cameraMode === 'iso' && modes.iso.panned
+    },
     playIntro: () => modes.iso.playIntro(),
     focusOn,
     clearFocus,

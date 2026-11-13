@@ -75,6 +75,13 @@ export const settings = {
     /** Speed gate, units/s: drive force is cut at or above it (not faded). */
     maxSpeed: 9.706,
     boostMaxSpeed: 19.41,
+    /**
+     * Game-feel change from the reference: instead of switching the drive
+     * force off at the cap (which toggles every step at full throttle and makes
+     * the car surge), fade it over the last `capSoftness` of the cap. Top speed
+     * stays within about 1% of the gate; 0 restores the hard gate.
+     */
+    capSoftness: 0.04,
     /** Brake applied to all four wheels while Space/Ctrl is held. */
     brakeForce: 1.35,
     /**
@@ -208,7 +215,40 @@ export const settings = {
      * Seconds of velocity added to the aim point. 0 = the reference (no
      * look-ahead); a small value (~0.15) leads the car slightly at speed.
      */
-    lookAhead: 0,
+    /**
+     * Seconds of the car's velocity the aim point leads by (smoothed), capped
+     * at `lookAheadMax` m. The reference has none; a little lets you see where
+     * you are going at boost speed without changing the framing at rest.
+     */
+    lookAhead: 0.12,
+    lookAheadMax: 5,
+    lookAheadRate: 3,
+    /** Highest wheel/pinch zoom (1 = the reference's max distance). Above 1 is an overview. */
+    maxZoom: 1.8,
+    /**
+     * Drag the floor to look around (the reference's camera pan). The grabbed
+     * point stays under the pointer; any driving input eases the view back.
+     */
+    pan: {
+      enabled: true,
+      /** Furthest the view may wander from the arena centre, m. */
+      maxRadius: 150,
+      /** How fast the view returns to the car once you drive, 1/s. */
+      returnRate: 3.5,
+      /** Pixels the pointer must move before a press becomes a drag (taps stay clicks). */
+      dragThreshold: 6,
+    },
+    /**
+     * Zone camera angles (the reference tilts steeper over its project boards).
+     * Inside a zone the pitch and zoom ease to the zone's values; leaving
+     * restores the default. Circles in game space (x, z, radius m).
+     */
+    zoneRate: 1.6,
+    zones: [
+      { id: 'decade_drive', x: 0, z: 70, radius: 26, pitch: 46, zoom: 0.45 },
+      { id: 'hq', x: 0, z: 0, radius: 24, pitch: 38, zoom: 0.7 },
+      { id: 'memory_lane', x: -91, z: -52, radius: 22, pitch: 42, zoom: 0.4 },
+    ],
     /**
      * Opening shot: start at this zoom (negative = closer than minDistance)
      * and ease out to `defaultZoom` over `introDuration` seconds while the car
@@ -658,6 +698,37 @@ export const settings = {
       offset: 1.0,
       darkness: 1.05,
     },
+    /**
+     * The reference's "miniature" depth (folio-2019 Application.js setPasses):
+     * a separable 9-tap blur, horizontal then vertical, mixed in by
+     * 1 - sin(pi * y), so the middle band of the screen stays sharp and the
+     * top and bottom go soft. Like the reference it is off on touch screens
+     * (it reads as out-of-focus on small displays) and on the low tier.
+     */
+    tiltShift: {
+      enabled: true,
+      /** Blur radius multiplier in pixels (the reference uses 1 on each axis). */
+      strength: 1.2,
+      /** Pixel-ratio aware: the radius is in CSS pixels, scaled by the DPR. */
+      onTouch: false,
+      /** Shape: 1 = the reference's 1 - sin(pi*y); higher keeps a wider sharp band. */
+      falloff: 1,
+    },
+    /**
+     * The reference's soft radial glow (Application.js: #ffcfe0, at (0, 0.25),
+     * radius 0.7, alpha 0.55). Retinted to our golden-hour palette and placed
+     * where the warm light comes from (upper left), a little lighter so the
+     * sand floor does not wash out.
+     */
+    glow: {
+      enabled: true,
+      color: '#fff0d9',
+      /** Screen UV of the glow centre (0,0 = bottom left). */
+      x: 0.0,
+      y: 0.85,
+      radius: 0.85,
+      alpha: 0.35,
+    },
   },
 
   /** Shading knobs that are read live by the material library. */
@@ -684,6 +755,12 @@ export const settings = {
      * on realistic art. Read live by `renderer.js`'s resize handler.
      */
     pixelRatioCap: 1.5,
+    /**
+     * Render interpolation: blend the car and awake props between the last two
+     * fixed physics steps (src/core/physics.js `step.alpha`). Off = snap to the
+     * latest step, which stutters whenever a frame runs 0 or 2 steps.
+     */
+    interpolate: true,
   },
 
   /**
@@ -1048,7 +1125,7 @@ export const defaultSettings = structuredClone(settings)
  * test them on yet (the 2020 integrated-GPU laptop target).
  */
 export const qualityTiers = {
-  high: { pixelRatioCap: 1.5, aaMode: 'smaa', postEnabled: true, bloom: true, vfxDensity: 1, lodDistance: 95 },
-  medium: { pixelRatioCap: 1, aaMode: 'fxaa', postEnabled: true, bloom: true, vfxDensity: 0.6, lodDistance: 70 },
-  low: { pixelRatioCap: 1, aaMode: 'fxaa', postEnabled: true, bloom: false, vfxDensity: 0.35, lodDistance: 45 },
+  high: { pixelRatioCap: 1.5, aaMode: 'smaa', postEnabled: true, bloom: true, tiltShift: true, vfxDensity: 1, lodDistance: 95 },
+  medium: { pixelRatioCap: 1, aaMode: 'fxaa', postEnabled: true, bloom: true, tiltShift: true, vfxDensity: 0.6, lodDistance: 70 },
+  low: { pixelRatioCap: 1, aaMode: 'fxaa', postEnabled: true, bloom: false, tiltShift: false, vfxDensity: 0.35, lodDistance: 45 },
 }

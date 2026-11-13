@@ -35,6 +35,10 @@ the trophy batches (3; prop batches are never culled; 117 × ~150 tris). The pla
 (35: trays, stars, labels on top of the constant 15). GPU differences are within noise at this resolution.
 The rfp_gate row was taken before R&R was revealed (trophies not yet visible).
 
+- 2026-11-13 (later): rosters v2 (all 103 shown), label z-fighting fixed, render interpolation, exact camera
+  follow, tilt-shift + glow passes, speed-cap taper, drag-to-pan, zone camera angles, wider zoom. probe:feel 19/19,
+  content:check, build green. Verified headless: flicker heatmaps, interpolation (CV 1.225 → 0), pan return.
+
 ## Next
 1. Pursuits team confirms rosters (`docs/content-backup/data/people.csv`) → add confirmed ids to `CONFIRMED_TEAMS` → re-run import.
 2. Birthdays/service-anniversary feeds; Decade Drive Years 1–10; Israel Catalyst roster.
@@ -45,6 +49,7 @@ The rfp_gate row was taken before R&R was revealed (trophies not yet visible).
 4. LD0–LD11 look-dev.
 
 ## Known issues
-- 17 colleagues unassigned to a team; Consulting Services has only 1 identified member.
+- 9 colleagues placed with low confidence ("team to confirm"); the Israel Catalyst roster (3) is inferred from creation order.
 - Birthday/service names exist only inside banner images in the export (not imported).
-- `_to_delete/` holds 3 temporary PNGs and a build-check zip from the import session: safe to delete.
+- `_to_delete/` holds temporary PNGs, superseded script copies and build-check zips: safe to delete.
+- Not yet from the reference: tyre screech SFX, area "fence" pop-up, paving tiles along paths, in-world start label, warm indirect bounce in the matcap shader.

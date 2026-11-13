@@ -69,9 +69,87 @@ export function createIsoFollowCamera(camera, canvas) {
   canvas.addEventListener('touchstart', onTouchStart, { passive: true })
   canvas.addEventListener('touchmove', onTouchMove, { passive: false })
 
+  // ---- drag the floor to look around (the reference's camera pan) ---------
+  //
+  // The point grabbed on the floor stays under the pointer while dragging.
+  // One mouse button or one finger pans; a second finger hands over to pinch.
+  // Any driving input eases the view back to the car (see `update`).
+
+  const panOffset = new THREE.Vector3()
+  const lead = new THREE.Vector3()
+  const leadTarget = new THREE.Vector3()
+  const raycaster = new THREE.Raycaster()
+  const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
+  const ndc = new THREE.Vector2()
+  const grabbed = new THREE.Vector3()
+  const under = new THREE.Vector3()
+  const pointers = new Map()
+  let drag = null // { id, startX, startY, active }
+  let pitchCurrent = settings.isoCamera.pitch
+  // Follow smoothing state (exact solution for a target moving in a line).
+  const prevTarget = new THREE.Vector3()
+  const targetVel = new THREE.Vector3()
+  const lag = new THREE.Vector3()
+
+  function floorPointAt(clientX, clientY, out) {
+    const rect = canvas.getBoundingClientRect()
+    ndc.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1)
+    camera.updateMatrixWorld()
+    raycaster.setFromCamera(ndc, camera)
+    return raycaster.ray.intersectPlane(floorPlane, out)
+  }
+
+  const onPointerDown = (event) => {
+    if (!settings.isoCamera.pan.enabled || settings.cameraMode !== 'iso') return
+    if (event.pointerType === 'mouse' && event.button !== 0) return
+    pointers.set(event.pointerId, true)
+    if (pointers.size > 1) { // second finger: pinch takes over
+      drag = null
+      return
+    }
+    drag = { id: event.pointerId, startX: event.clientX, startY: event.clientY, active: false }
+  }
+
+  const onPointerMove = (event) => {
+    if (!drag || event.pointerId !== drag.id) return
+    if (!drag.active) {
+      const moved = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY)
+      if (moved < settings.isoCamera.pan.dragThreshold) return
+      if (!floorPointAt(drag.startX, drag.startY, grabbed)) return
+      drag.active = true
+      canvas.setPointerCapture?.(event.pointerId)
+      canvas.classList.add('is-panning')
+    }
+    if (!floorPointAt(event.clientX, event.clientY, under)) return
+    const dx = grabbed.x - under.x
+    const dz = grabbed.z - under.z
+    // Move the view at once so the grabbed point stays under the pointer.
+    panOffset.x += dx
+    panOffset.z += dz
+    targetEased.x += dx
+    targetEased.z += dz
+    camera.position.x += dx
+    camera.position.z += dz
+  }
+
+  const onPointerUp = (event) => {
+    pointers.delete(event.pointerId)
+    if (drag && event.pointerId === drag.id) {
+      if (drag.active) canvas.releasePointerCapture?.(event.pointerId)
+      drag = null
+      canvas.classList.remove('is-panning')
+    }
+  }
+
+  canvas.addEventListener('pointerdown', onPointerDown)
+  canvas.addEventListener('pointermove', onPointerMove)
+  canvas.addEventListener('pointerup', onPointerUp)
+  canvas.addEventListener('pointercancel', onPointerUp)
+  canvas.classList.add('can-pan')
+
   // ---- per frame ----------------------------------------------------------
 
-  function update(dt, vehicle) {
+  function update(dt, vehicle, { driving = false } = {}) {
     const c = settings.isoCamera
 
     if (intro) {
@@ -86,15 +164,42 @@ export function createIsoFollowCamera(camera, canvas) {
 
     if (focusPoint) {
       target.copy(focusPoint)
+      lead.set(0, 0, 0)
     } else {
       target.set(vehicle.position.x, 0, vehicle.position.z)
-      if (c.lookAhead > 0) {
-        target.x += vehicle.velocity.x * c.lookAhead
-        target.z += vehicle.velocity.z * c.lookAhead
+      // Smoothed velocity lead, so the view drifts ahead at speed without twitching on steering.
+      leadTarget.set(vehicle.velocity.x, 0, vehicle.velocity.z).multiplyScalar(c.lookAhead)
+      if (leadTarget.length() > c.lookAheadMax) leadTarget.setLength(c.lookAheadMax)
+      lead.lerp(leadTarget, 1 - Math.exp(-c.lookAheadRate * dt))
+      target.add(lead)
+    }
+
+    // Pan: driving (or Explore) brings the view home; dragging holds it.
+    const pan = c.pan
+    if (!drag?.active && (driving || focusPoint)) panOffset.multiplyScalar(Math.exp(-pan.returnRate * dt))
+    if (panOffset.lengthSq() < 1e-6) panOffset.set(0, 0, 0)
+    // Keep the view inside the arena.
+    const wanted = under.set(target.x + panOffset.x, 0, target.z + panOffset.z)
+    if (wanted.length() > pan.maxRadius) {
+      wanted.setLength(pan.maxRadius)
+      panOffset.set(wanted.x - target.x, 0, wanted.z - target.z)
+    }
+    target.add(panOffset)
+
+    // Zone angles: steeper over boards and plazas, eased in and out.
+    let zonePitch = c.pitch
+    if (!focusPoint) {
+      for (const z of c.zones) {
+        if (Math.hypot(vehicle.position.x - z.x, vehicle.position.z - z.z) < z.radius) {
+          zonePitch = z.pitch
+          break
+        }
       }
     }
+    pitchCurrent += (zonePitch - pitchCurrent) * (1 - Math.exp(-c.zoneRate * dt))
     if (!initialised) {
       targetEased.copy(target)
+      prevTarget.copy(target)
       initialised = true
     }
     if (flight) {
@@ -104,11 +209,23 @@ export function createIsoFollowCamera(camera, canvas) {
       const t = Math.min(flight.time / flight.duration, 1)
       targetEased.lerpVectors(flight.from, target, easeInOutCubic(t))
       if (t >= 1) flight = null
-    } else {
-      targetEased.lerp(target, 1 - Math.exp(-c.followRate * dt))
+    } else if (drag?.active) {
+      targetEased.copy(target) // the pointer drives the view directly
+    } else if (dt > 0) {
+      // Same exponential follow as before (rate `followRate`), but integrated
+      // exactly for a target moving in a straight line during the frame. The
+      // plain per-frame lerp makes the lag depend on each frame's length, so
+      // uneven frame times read as camera judder; this keeps the lag at v/k.
+      const k = c.followRate
+      const e = Math.exp(-k * dt)
+      targetVel.copy(target).sub(prevTarget).divideScalar(dt)
+      if (targetVel.lengthSq() > 80 * 80) targetVel.setLength(80) // teleports, not driving
+      lag.copy(prevTarget).sub(targetEased).multiplyScalar(e).addScaledVector(targetVel, (1 - e) / k)
+      targetEased.copy(target).sub(lag)
     }
+    prevTarget.copy(target)
 
-    const pitch = THREE.MathUtils.degToRad(c.pitch)
+    const pitch = THREE.MathUtils.degToRad(pitchCurrent)
     const azimuth = THREE.MathUtils.degToRad(c.azimuth)
     // Azimuth is measured from due south (+Z) towards east (+X).
     offsetDir.set(
@@ -137,6 +254,7 @@ export function createIsoFollowCamera(camera, canvas) {
     const next = point ? new THREE.Vector3(point.x ?? point[0], 0, point.z ?? point[2]) : null
     if (!next && !focusPoint) return
     focusPoint = next
+    panOffset.set(0, 0, 0)
     flight = reducedMotion || !initialised
       ? null
       : { time: 0, duration: settings.isoCamera.flyDuration, from: targetEased.clone() }
@@ -146,6 +264,8 @@ export function createIsoFollowCamera(camera, canvas) {
 
   function reset() {
     initialised = false
+    panOffset.set(0, 0, 0)
+    lead.set(0, 0, 0)
   }
 
   /** The opening dolly: start close, ease out while the car drops in. */
@@ -160,6 +280,10 @@ export function createIsoFollowCamera(camera, canvas) {
     canvas.removeEventListener('wheel', onWheel)
     canvas.removeEventListener('touchstart', onTouchStart)
     canvas.removeEventListener('touchmove', onTouchMove)
+    canvas.removeEventListener('pointerdown', onPointerDown)
+    canvas.removeEventListener('pointermove', onPointerMove)
+    canvas.removeEventListener('pointerup', onPointerUp)
+    canvas.removeEventListener('pointercancel', onPointerUp)
   }
 
   return {
@@ -169,6 +293,14 @@ export function createIsoFollowCamera(camera, canvas) {
     focusOn,
     get focused() {
       return focusPoint !== null
+    },
+    /** True while the view is panned away from the car (for a "back to car" hint). */
+    get panned() {
+      return panOffset.lengthSq() > 4
+    },
+    /** Snap the pan back to the car (keyboard: the reset-view control). */
+    recenter() {
+      panOffset.set(0, 0, 0)
     },
     /** The Explore focus point, or null while following the car. */
     get focusPoint() {
@@ -187,7 +319,7 @@ export function createIsoFollowCamera(camera, canvas) {
 }
 
 function clampZoom(value) {
-  return Math.min(Math.max(value, MIN_USER_ZOOM), 1)
+  return Math.min(Math.max(value, MIN_USER_ZOOM), settings.isoCamera.maxZoom ?? 1)
 }
 
 /** Tall viewports see less floor across, so back away a little (never closer). */

@@ -36,10 +36,10 @@ This doc describes **techniques and tuning numbers**, not code. Never copy code 
 |---|---|---|---|
 | 17 | Lens | FOV 40, near 1, **far 80** (a short far plane keeps depth precision high) | 🟡 check the far plane |
 | 18 | Angle | fixed direction vector, never rotates with the car | ✅ |
-| 19 | **Zone angles** | entering the projects zone tweens the camera to a steeper, more top-down angle over 2 s (power1.inOut), so boards on the floor read better; leaving restores it | ❌ |
+| 19 | **Zone angles** | entering the projects zone tweens the camera to a steeper, more top-down angle over 2 s (power1.inOut), so boards on the floor read better; leaving restores it | ✅ `isoCamera.zones` (Decade Drive, HQ, Memory Lane), pitch eases in/out |
 | 20 | Follow | exponential easing 0.15 per frame; follows x/y only (not jumps) | ✅ |
 | 21 | Zoom | wheel/pinch over a range, eased 0.1 | ✅ |
-| 22 | **Pan** | drag on the floor (raycast) to look around; any drive key snaps back | ❌ |
+| 22 | **Pan** | drag on the floor (raycast) to look around; any drive key snaps back | ✅ drag with mouse or one finger; driving eases back; `F` re-centres |
 
 ### A4. Rendering and look (the "secret sauce")
 | # | Feature | Detail | Ours |
@@ -49,8 +49,8 @@ This doc describes **techniques and tuning numbers**, not code. Never copy code 
 | 25 | **Indirect bounce** | the matcap shader mixes in a warm floor-bounce colour on down-facing surfaces near the ground (strength by height falloff × facing angle). This is what makes objects feel *sat in* a warm world | ❌ |
 | 26 | Baked floor shadows | per-object contact-shadow textures under static objects, tinted the **same warm colour** (never grey) | 🟡 ours bake AO; tint check |
 | 27 | Dynamic blob shadows | per prop; offset along a fixed sun vector by height; alpha = ((maxD − h)/maxD)² with maxD 3; extra fade by orientation | ✅ |
-| 28 | **Tilt-shift** | separable 9-tap blur whose strength is 1 − sin(π·y): sharp centre band, soft top and bottom, which makes the world feel miniature. Off on touch; fades to 0 in the projects zone | ❌ |
-| 29 | **Radial glow** | a full-screen pass mixing a pale pink toward the upper-centre of the frame (alpha 0.55, radius 0.7), like a soft sky haze | ❌ |
+| 28 | **Tilt-shift** | separable 9-tap blur whose strength is 1 − sin(π·y): sharp centre band, soft top and bottom, which makes the world feel miniature. Off on touch; fades to 0 in the projects zone | ✅ `post.tiltShift` (own shader); off on touch and low tier |
+| 29 | **Radial glow** | a full-screen pass mixing a pale pink toward the upper-centre of the frame (alpha 0.55, radius 0.7), like a soft sky haze | ✅ `post.glow`, retinted warm for our palette |
 | 30 | Pixel ratio | forced to 2 (desktop crispness over speed) | 🟡 ours caps at 1.5 |
 | 31 | **Reveal** | the matcap shader has a reveal progress (0 → 1 over 3 s); floor shadows and blob alpha fade in afterwards with staggered delays | 🟡 ours drops props in; no shader reveal |
 | 32 | Static merge | all static meshes merged per material at load | ✅ |

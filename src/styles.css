@@ -831,3 +831,7 @@ html, body {
   will-change: transform, opacity;
 }
 .vfx-floater--gold { color: #E3B505; font-size: 22px; }
+
+/* Drag the floor to look around (src/camera/isoFollowCamera.js). */
+canvas.can-pan { cursor: grab; }
+canvas.can-pan.is-panning { cursor: grabbing; }

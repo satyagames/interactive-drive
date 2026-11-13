@@ -112,6 +112,12 @@
         "touch": "Pinch"
       },
       {
+        "action": "Look around the map",
+        "keyboard": "Drag with the mouse · F re-centres",
+        "gamepad": "Drive to return",
+        "touch": "Drag one finger"
+      },
+      {
         "action": "Mute",
         "keyboard": "M",
         "gamepad": "—",
@@ -143,7 +149,7 @@
   "hud": {
     "speedUnit": "km/h",
     "found": "visited",
-    "hintDrive": "W A S D or arrow keys to drive · Shift boost · Space brake",
+    "hintDrive": "W A S D or arrow keys to drive · Shift boost · Space brake · Drag the map to look around",
     "hintTouch": "Point the joystick where you want to go",
     "hintFindStation": "Drive into a glowing square to open a station",
     "hintEnter": "Enter: open {title}",

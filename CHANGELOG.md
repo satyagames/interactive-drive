@@ -2,6 +2,31 @@
 
 Pursuit Arena build log. One entry per phase (see `docs/pursuit-arena/06-phased-prompts.md`).
 
+## Rosters v2, flicker fix, reference depth post-processing, smooth motion, map pan (2026-11-13)
+
+- **Our team rosters rebuilt** (`tools/site-export/teams.py` v2). The 2D export has no section layout, so it was
+  reconstructed from Zoomforth section positions and creation batches (e.g. the complete Aug 2026 Audit designers
+  grid; the cards created right after the PACE and Israel Catalyst headings), bio CoP lines and the 2020 skills
+  survey (CoE vs Studio designers). **All 103 colleagues now appear** (56 high, 38 medium, 9 low marked "team to
+  confirm"). Consulting Services designers 1 → 9, Israel Catalyst 0 → 3, Audit designers 26.
+- **Flicker fixed**: exhibit label quads (R&R floor labels, People of Pursuits wall headers, all atlas labels)
+  z-fought with their backing. One depth offset on the shared atlas material (`showcase/labels.js`).
+- **Smooth motion**: render interpolation. The fixed-step physics now exposes `step.alpha`; the car (body, wheel
+  spin, suspension) and awake props blend between the last two steps (`settings.render.interpolate`). Measured
+  with uneven ~144 Hz frames: car speed variation 1.225 → 0.000 (coefficient of variation). The iso camera follow
+  is integrated exactly for a moving target, so frame-time jitter no longer shows (0.031 → 0.004).
+- **Reference depth stack** (folio-2019 `setPasses`, own shaders): tilt-shift blur (x then y, 1 − sin(π·y)) and a
+  radial glow retinted to the golden-hour palette (`settings.post.tiltShift`, `settings.post.glow`, debug
+  folders). Tilt-shift is off on touch (as in the reference) and on the low tier. Pixel ratio stays capped at 1.5
+  (the AA cost measurements still apply).
+- **Car feel**: the hard speed gate (force on/off every step at full throttle, felt as surging) is now a short
+  taper over the top 4% (`arcade.capSoftness`). A small smoothed velocity look-ahead on the camera
+  (`isoCamera.lookAhead`). Feel probe: all 19 targets pass.
+- **Map navigation**: drag the floor to pan (mouse or one finger; the grabbed point stays under the pointer,
+  limited to the arena). Driving eases the view back; `F` re-centres. Wider zoom-out (`isoCamera.maxZoom` 1.8).
+  Zone camera angles over Decade Drive, HQ and Memory Lane (`isoCamera.zones`). Controls table, hint and README
+  updated.
+
 ## LD-C — Layer 2: the content shapes the world (2026-11-13)
 
 Plan: `docs/content-backup/10-3d-integration-plan.md` §2–3. One commit per district (LD-C 1–9).

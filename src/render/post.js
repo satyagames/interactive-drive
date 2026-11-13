@@ -11,6 +11,75 @@ import { VignetteShader } from 'three/examples/jsm/shaders/VignetteShader.js'
 import { settings } from '../config.js'
 
 /**
+ * Tilt-shift: one axis of a separable 9-tap Gaussian (linear-sampling
+ * offsets 1.385 and 3.231 px), blended in by how far the pixel sits from the
+ * horizontal middle of the screen. Run twice (x, then y). Same idea as the
+ * reference's blur pass; written for this project.
+ */
+const TiltShiftShader = {
+  name: 'TiltShiftShader',
+  uniforms: {
+    tDiffuse: { value: null },
+    uTexel: { value: new THREE.Vector2(1, 1) },
+    uDirection: { value: new THREE.Vector2(1, 0) },
+    uStrength: { value: 1 },
+    uFalloff: { value: 1 },
+  },
+  vertexShader: /* glsl */ `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }`,
+  fragmentShader: /* glsl */ `
+    uniform sampler2D tDiffuse;
+    uniform vec2 uTexel;
+    uniform vec2 uDirection;
+    uniform float uStrength;
+    uniform float uFalloff;
+    varying vec2 vUv;
+    void main() {
+      vec4 base = texture2D(tDiffuse, vUv);
+      // 0 in the middle band, 1 at the top and bottom edges.
+      float amount = pow(1.0 - sin(vUv.y * 3.14159265), uFalloff);
+      vec2 step1 = uDirection * uTexel * 1.3846153846 * uStrength;
+      vec2 step2 = uDirection * uTexel * 3.2307692308 * uStrength;
+      vec4 blurred = base * 0.2270270270;
+      blurred += texture2D(tDiffuse, vUv + step1) * 0.3162162162;
+      blurred += texture2D(tDiffuse, vUv - step1) * 0.3162162162;
+      blurred += texture2D(tDiffuse, vUv + step2) * 0.0702702703;
+      blurred += texture2D(tDiffuse, vUv - step2) * 0.0702702703;
+      gl_FragColor = mix(base, blurred, clamp(amount, 0.0, 1.0));
+    }`,
+}
+
+/** A soft radial wash of light colour, strongest at uPosition (screen UV). */
+const GlowShader = {
+  name: 'GlowShader',
+  uniforms: {
+    tDiffuse: { value: null },
+    uPosition: { value: new THREE.Vector2(0, 0.85) },
+    uRadius: { value: 0.85 },
+    uColor: { value: new THREE.Color() },
+    uAlpha: { value: 0.35 },
+    uAspect: { value: 1 },
+  },
+  vertexShader: TiltShiftShader.vertexShader,
+  fragmentShader: /* glsl */ `
+    uniform sampler2D tDiffuse;
+    uniform vec2 uPosition;
+    uniform float uRadius;
+    uniform vec3 uColor;
+    uniform float uAlpha;
+    varying vec2 vUv;
+    void main() {
+      vec4 base = texture2D(tDiffuse, vUv);
+      float glow = clamp((1.0 - distance(vUv, uPosition) / uRadius) * uAlpha, 0.0, 1.0);
+      gl_FragColor = vec4(mix(base.rgb, uColor, glow), base.a);
+    }`,
+}
+
+/**
  * Post-processing chain: bloom, then vignette, then anti-aliasing + output.
  *
  * Both effects are meant to be almost invisible -- enough to stop the frame
@@ -60,6 +129,17 @@ export function createPostProcessing({ renderer, scene, camera, canvas }) {
     settings.post.bloom.threshold,
   )
   composer.addPass(bloomPass)
+
+  // Reference depth stack: tilt-shift (x then y), then the glow.
+  const tiltShiftX = new ShaderPass(TiltShiftShader)
+  const tiltShiftY = new ShaderPass(TiltShiftShader)
+  tiltShiftY.uniforms.uDirection.value.set(0, 1)
+  composer.addPass(tiltShiftX)
+  composer.addPass(tiltShiftY)
+  const glowPass = new ShaderPass(GlowShader)
+  composer.addPass(glowPass)
+  const isTouch = window.matchMedia?.('(pointer: coarse)').matches ?? false
+  let glowHex = null
 
   const vignettePass = new ShaderPass(VignetteShader)
   composer.addPass(vignettePass)
@@ -132,6 +212,35 @@ export function createPostProcessing({ renderer, scene, camera, canvas }) {
     bloomPass.threshold = bloom.threshold
     bloomPass.highPassUniforms.smoothWidth.value = bloom.softness
 
+    const tilt = settings.post.tiltShift
+    const tiltOn = tilt.enabled && tilt.strength > 0 && (tilt.onTouch || !isTouch)
+    tiltShiftX.enabled = tiltOn
+    tiltShiftY.enabled = tiltOn
+    if (tiltOn) {
+      const target = composer.readBuffer
+      const texel = tiltShiftX.uniforms.uTexel.value.set(1 / target.width, 1 / target.height)
+      tiltShiftY.uniforms.uTexel.value.copy(texel)
+      // Radius in CSS pixels, so the look holds at any pixel ratio.
+      const k = tilt.strength * renderer.getPixelRatio()
+      tiltShiftX.uniforms.uStrength.value = k
+      tiltShiftY.uniforms.uStrength.value = k
+      tiltShiftX.uniforms.uFalloff.value = tilt.falloff
+      tiltShiftY.uniforms.uFalloff.value = tilt.falloff
+    }
+
+    const glow = settings.post.glow
+    glowPass.enabled = glow.enabled && glow.alpha > 0
+    if (glowPass.enabled) {
+      if (glow.color !== glowHex) {
+        glowHex = glow.color
+        // The composer works in linear space before OutputPass.
+        glowPass.uniforms.uColor.value.set(glow.color)
+      }
+      glowPass.uniforms.uPosition.value.set(glow.x, glow.y)
+      glowPass.uniforms.uRadius.value = glow.radius
+      glowPass.uniforms.uAlpha.value = glow.alpha
+    }
+
     vignettePass.enabled = vignette.enabled
     vignettePass.uniforms.offset.value = vignette.offset
     vignettePass.uniforms.darkness.value = vignette.darkness
@@ -164,5 +273,5 @@ export function createPostProcessing({ renderer, scene, camera, canvas }) {
     composer.dispose()
   }
 
-  return { composer, render, setSize, dispose, passes: { renderPass, bloomPass, vignettePass } }
+  return { composer, render, setSize, dispose, passes: { renderPass, bloomPass, tiltShiftX, tiltShiftY, glowPass, vignettePass } }
 }

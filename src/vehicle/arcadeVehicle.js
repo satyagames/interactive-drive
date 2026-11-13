@@ -97,7 +97,27 @@ export async function createArcadeVehicle({ scene, world, RAPIER, renderAssets }
   const backFlat = new THREE.Vector2()
   const rightFlat = new THREE.Vector2()
 
+  // Render interpolation: the pose before the latest physics step.
+  const prevPos = new THREE.Vector3()
+  const prevQuat = new THREE.Quaternion()
+  const curPos = new THREE.Vector3()
+  const curQuat = new THREE.Quaternion()
+  let hasPrev = false
+
+  function snapshot() {
+    const t = body.translation()
+    const r = body.rotation()
+    prevPos.set(t.x, t.y, t.z)
+    prevQuat.set(r.x, r.y, r.z, r.w)
+    for (const wheel of wheels) {
+      wheel.prevSpin = wheel.spin
+      wheel.prevSusp = wheel.suspLength
+    }
+    hasPrev = true
+  }
+
   function update(dt, input) {
+    snapshot()
     physics.update(dt, input)
 
     for (let i = 0; i < wheels.length; i++) {
@@ -149,17 +169,24 @@ export async function createArcadeVehicle({ scene, world, RAPIER, renderAssets }
     antenna.pivot.rotation.z = -antennaOffset.dot(rightFlat) * ANTENNA_TILT
   }
 
-  /** Copy the simulated transform onto the meshes. Call once per frame. */
-  function sync() {
+  /**
+   * Copy the simulated transform onto the meshes. Call once per frame with the
+   * stepper's `alpha` to blend between the last two physics states.
+   */
+  function sync(alpha = 1) {
     const t = body.translation()
     const r = body.rotation()
-    object3D.position.set(t.x, t.y, t.z)
-    object3D.quaternion.set(r.x, r.y, r.z, r.w)
+    curPos.set(t.x, t.y, t.z)
+    curQuat.set(r.x, r.y, r.z, r.w)
+    const blend = hasPrev && settings.render.interpolate ? alpha : 1
+    object3D.position.lerpVectors(prevPos, curPos, blend)
+    object3D.quaternion.slerpQuaternions(prevQuat, curQuat, blend)
 
     for (const wheel of wheels) {
-      wheel.mesh.position.set(wheel.connection.x, wheel.connection.y - wheel.suspLength, wheel.connection.z)
+      const susp = hasPrev ? THREE.MathUtils.lerp(wheel.prevSusp, wheel.suspLength, blend) : wheel.suspLength
+      wheel.mesh.position.set(wheel.connection.x, wheel.connection.y - susp, wheel.connection.z)
       wheel.mesh.rotation.y = wheel.front ? state.steerAngle : 0
-      wheel.mesh.rotation.x = wheel.spin
+      wheel.mesh.rotation.x = hasPrev ? THREE.MathUtils.lerp(wheel.prevSpin, wheel.spin, blend) : wheel.spin
     }
 
     brakeLights.setLevel(state.braking ? LIT : DIM)
@@ -175,6 +202,7 @@ export async function createArcadeVehicle({ scene, world, RAPIER, renderAssets }
       wheel.spin = 0
       wheel.spinRate = 0
     }
+    hasPrev = false // a teleport: never blend across it
     sync()
   }
 

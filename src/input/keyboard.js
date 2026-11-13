@@ -19,6 +19,7 @@ const KEY_MAP = {
   KeyH: 'horn',
   Enter: 'interact', NumpadEnter: 'interact', KeyE: 'interact',
   KeyC: 'camera',
+  KeyF: 'recenter',
   KeyM: 'mute',
   KeyP: 'passport',
   Escape: 'menu',
