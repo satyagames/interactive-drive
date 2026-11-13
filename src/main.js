@@ -34,6 +34,7 @@ import { createGameHud } from './ui/gameHud.js'
 import { createHud } from './ui/hud.js'
 import { createMenu } from './ui/menu.js'
 import { createMinimap } from './ui/minimap.js'
+import { createPanChip } from './ui/panChip.js'
 import { createPassportScreen } from './ui/passportScreen.js'
 import { createScreenFade } from './ui/screenFade.js'
 import { createSoundPanel } from './ui/soundPanel.js'
@@ -321,7 +322,23 @@ async function bootstrap() {
     vehicle, areas, content, game, showcase,
     isTouch: () => document.body.classList.contains('has-touch-pad'),
   })
-  const minimap = createMinimap({ root: document.getElementById('minimap'), seed: arena, game, camera, vehicle })
+  const minimap = createMinimap({
+    root: document.getElementById('minimap'), seed: arena, game, camera, vehicle,
+    // Click or tap the map: the view pans there (and the chip below offers the way back).
+    onPick: (point) => cameraRig.panTo(point.x, point.z),
+    getView: () => (cameraRig.panned ? cameraRig.viewPoint : null),
+  })
+  // "Back to car", while the view is away from it (drag, Alt + arrows, minimap, Overview).
+  const panChip = createPanChip({
+    button: document.getElementById('pan-home'),
+    gameFocus: canvas,
+    isPanned: () => cameraRig.panned,
+    isOverview: () => cameraRig.inOverview,
+    onHome: () => cameraRig.recenter(),
+    announce(text) {
+      announcer.textContent = text
+    },
+  })
 
   /** R: fade out, drop back in at the nearest `spawn_`, fade in. */
   const respawnVehicle = () => {
@@ -335,7 +352,8 @@ async function bootstrap() {
   // builds only, so the module never reaches the production bundle.
   const navTest = import.meta.env.DEV
     ? async (options) => (await import('./debug/navTest.js')).runNavTest({
-      loop, vehicle, cameraRig, camera, canvas, renderer, scene, post, world, RAPIER, gameWorld, reveal,
+      loop, vehicle, cameraRig, camera, canvas, renderer, scene, post, world, RAPIER, gameWorld, reveal, menu, input,
+      panChip, announcer,
       isReady: () => started && !menu.isOpen,
       ...options,
     })
@@ -379,7 +397,7 @@ async function bootstrap() {
     window.__proto = {
       vehicle, world, scene, camera, settings, input, stationPanel, explore, content, progress, gameWorld,
       renderer, renderAssets, post, shadowBlob, sky, fps, cameraRig, floor, blobs, propStress, areas, reveal,
-      game, passport, vfx, impacts, audio, soundPanel, menu, hud, minimap, showcase,
+      game, passport, vfx, impacts, audio, soundPanel, menu, hud, minimap, showcase, panChip,
       benchmark: {
         run: (options) => runPostBenchmark({ renderer, scene, camera }, options),
         vfx: (options) => runVfxBenchmark({ renderer, scene, camera, vfx }, options),
@@ -394,6 +412,8 @@ async function bootstrap() {
 
   let streamed = false
   let dashHold = false
+  /** What the camera hears from the controls each frame (reused, never reallocated). */
+  const cameraInput = { driving: false, panX: 0, panY: 0 }
   const loop = createLoop((delta) => {
     elapsed += delta
     // The outer-ring districts load once the first frame is on screen.
@@ -402,6 +422,11 @@ async function bootstrap() {
       gameWorld.streamRest().catch((error) => console.error('[world] streaming failed', error))
     }
     const inputState = input.update({ camera, vehicle })
+    // The visitor's own driving input, read before the area and Dash holds add
+    // their brake: a hold must not count as "driving" and pull a panned view home.
+    cameraInput.driving = inputState.throttle !== 0 || inputState.steer !== 0 || Boolean(inputState.brake)
+    cameraInput.panX = inputState.panX
+    cameraInput.panY = inputState.panY
 
     // Esc peels back one layer at a time: station panel, Sound, Passport,
     // Explore, a menu sub-view, the menu; with nothing open it opens the menu.
@@ -429,6 +454,8 @@ async function bootstrap() {
     if (input.consume('mute')) audio.toggleMute()
     if (input.consume('camera')) cameraRig.toggle()
     if (input.consume('recenter')) cameraRig.recenter()
+    // The chip announces a pan once; entering the overview from an existing pan says so itself.
+    if (input.consume('overview') && cameraRig.toggleOverview()) announcer.textContent = t('hud.overviewAnnounce')
     if (input.consume('passport')) passport.toggle()
     // Explore's camera hold ends as soon as you drive off (driving keys only
     // reach here when focus is outside the Explore list).
@@ -462,9 +489,9 @@ async function bootstrap() {
     gameWorld.updateLod(camera.position)
     interactionTarget = areas.active ? 1 : 0
     interaction += (interactionTarget - interaction) * (1 - Math.exp(-8 * delta))
-    cameraRig.update(delta, vehicle, {
-      driving: inputState.throttle !== 0 || inputState.steer !== 0 || Boolean(inputState.brake),
-    })
+    cameraRig.update(delta, vehicle, cameraInput)
+    post.setTiltShiftScale(cameraRig.tiltShift)
+    panChip.update()
     sky.update(camera)
     shadowBlob.update()
     gameWorld.props.update(delta, step.alpha)

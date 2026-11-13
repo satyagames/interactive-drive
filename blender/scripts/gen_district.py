@@ -289,7 +289,9 @@ def landmark(coll, ident, frame, tint, radius):
         bridge(coll, 'landmark_consulting_bridge', frame, (0.0, radius + 2.5), white, deck=1.6, deck_len=6.0)
     elif ident == 'pace':   # mini oval track + pace-car tower + chequered flags
         px, pz = at(0, 0)
-        visual('landmark_pace_oval', coll, dark, lambda mb: (mb.annulus((0, 0.04, 0), 5.0, 7.0, y=0.04, segments=40)),
+        # 5 cm above the plaza's top (y = 0.04): at exactly 0.04 the two were
+        # coplanar and flickered from the overview camera (doc 11 R0, gap 3).
+        visual('landmark_pace_oval', coll, dark, lambda mb: (mb.annulus((0, 0.09, 0), 5.0, 7.0, y=0.09, segments=40)),
                location=(px, 0, pz))
         tx, tz = at(0, 0)
         solid_box('landmark_pace_tower', coll, main, (tx, 0, tz), (2.4, 11.0, 2.4), yaw=yaw)
@@ -641,7 +643,10 @@ def build_hq(coll, info):
     # art + feel job.
     visual('landmark_hq_one', coll, green, lambda mb: (
         mb.box((0, 3.75, 0), (1.6, 6.5, 1.6)),
-        mb.box((-0.95, 6.35, 0), (1.9, 0.9, 1.6)),
+        # The flag starts at the stem's side (x = -0.8). It used to run through
+        # the stem, so their front and back faces were coplanar and the two AO
+        # bakes fought as a stipple (doc 11 R1 flicker sweep).
+        mb.box((-1.35, 6.35, 0), (1.1, 0.9, 1.6)),
     ), location=(-14.0, 0, 6.0), yaw=math.radians(38))
     visual('landmark_hq_one_plinth', coll, white, lambda mb: mb.box((0, 0.25, 0), (3.4, 0.5, 2.4)),
            location=(-14.0, 0, 6.0), yaw=math.radians(38))

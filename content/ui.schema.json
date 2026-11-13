@@ -161,7 +161,12 @@
         "mapLabel",
         "objective",
         "objectiveDash",
-        "objectiveDone"
+        "objectiveDone",
+        "backToCar",
+        "backToCarHint",
+        "pannedAnnounce",
+        "overviewAnnounce",
+        "backAtCarAnnounce"
       ]
     },
     "panel": {

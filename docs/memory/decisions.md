@@ -44,6 +44,14 @@ at runtime (no network, no new assets). Revisit when the importer can render PDF
 Schema link pattern now also allows `content/docs/*.pdf`; content-check verifies the file exists. Panel body uses
 `white-space: pre-line` so imported paragraphs and metric lines keep their breaks.
 
+## 2026-11-13 — Camera zones change pitch and blur, never zoom
+The unused zone `zoom` field was removed rather than implemented: a zone that changed zoom would fight the
+wheel and pinch. Zoom stays the visitor's choice; the Overview key is the only thing that moves it, and it restores it.
+
+## 2026-11-13 — Toasts do not block a floor drag
+The HUD, minimap, hint and joystick area refuse a pan; toasts do not, because a stack of them would make the
+middle of the floor undraggable for seconds.
+
 ## 2026-11-13 — Render interpolation instead of variable-step physics
 Keep the deterministic fixed step (feel probe, parity) and blend visuals by `step.alpha`. Why: the reference's
 smoothness came from per-frame stepping; interpolation gives the same smoothness without changing the physics.

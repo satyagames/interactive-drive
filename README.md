@@ -115,7 +115,9 @@ what was tested, how, and what's still open, with owners.
 | Switch camera (iso / chase) | `C` | Y / △ | — |
 | Respawn at the nearest spawn | `R` | View / Share | ⟲ |
 | Zoom | mouse wheel | — | pinch |
-| Look around the map | drag with the mouse · `F` re-centres | drive to return | drag one finger |
+| Look around the map | drag with the mouse · `Alt` + arrow keys · click the minimap | — | drag one finger · tap the minimap |
+| Back to the car | `F` · double-click the floor · the **Back to car** chip · just drive | drive | double-tap the floor · **Back to car** |
+| Overview of the whole arena | `O` (again to return) | — | pinch out |
 | Mute · Passport · Menu | `M` · `P` · `Esc` | — · D-pad up · Menu | Menu button |
 
 Nothing moves until **Start** (which also turns the sound on). `M` mutes

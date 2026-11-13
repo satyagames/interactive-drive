@@ -78,15 +78,7 @@ export function createMinigames({ seed, gameWorld, events, progression, store, s
   }
 
   function resetProps(list) {
-    for (const p of list) {
-      const h = p.home.position
-      p.body.setTranslation({ x: h.x, y: h.y, z: h.z }, true)
-      p.body.setRotation(p.home.quaternion, true)
-      p.body.setLinvel({ x: 0, y: 0, z: 0 }, true)
-      p.body.setAngvel({ x: 0, y: 0, z: 0 }, true)
-      p.body.sleep()
-      p.awake = true
-    }
+    for (const p of list) gameWorld.props.resetProp(p)
   }
 
   const done = (badge) => Boolean(store.state.badges[badge])

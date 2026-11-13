@@ -18,15 +18,15 @@ import { createIsoFollowCamera } from './isoFollowCamera.js'
 const MODES = ['iso', 'chase']
 
 export function createCameraRig(camera, canvas) {
-  const modes = {
-    iso: createIsoFollowCamera(camera, canvas),
-    chase: createChaseCamera(camera),
-  }
-  let lastMode = settings.cameraMode
-
   // Read live: the OS setting can change mid-visit, and `settings.vfx.reducedMotion` can force it.
   const motionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)')
   const reducedMotion = () => settings.vfx.reducedMotion === 'auto' ? Boolean(motionQuery?.matches) : Boolean(settings.vfx.reducedMotion)
+  const modes = {
+    iso: createIsoFollowCamera(camera, canvas, { reducedMotion }),
+    chase: createChaseCamera(camera),
+  }
+  let lastMode = settings.cameraMode
+  let canPan = null
   let fovKick = 0
   let trauma = 0
   let fxTime = 0
@@ -43,6 +43,12 @@ export function createCameraRig(camera, canvas) {
     if (settings.cameraMode !== lastMode) {
       lastMode = settings.cameraMode
       active().reset()
+    }
+    // The grab cursor only where a drag would do something.
+    const pannable = settings.cameraMode === 'iso' && settings.isoCamera.pan.enabled
+    if (pannable !== canPan) {
+      canPan = pannable
+      canvas.classList.toggle('can-pan', pannable)
     }
     removeFx()
     active().update(dt, vehicle, options)
@@ -124,9 +130,25 @@ export function createCameraRig(camera, canvas) {
       trauma = Math.min(trauma + amount, 1)
     },
     reset: () => active().reset(),
+    /** Map look (iso view only): see isoFollowCamera.js. */
     recenter: () => modes.iso.recenter(),
+    panTo(x, z) {
+      if (settings.cameraMode === 'iso') modes.iso.panTo(x, z)
+    },
+    /** Returns true when the overview was entered, false when left (or unavailable). */
+    toggleOverview: () => settings.cameraMode === 'iso' && modes.iso.toggleOverview(),
     get panned() {
       return settings.cameraMode === 'iso' && modes.iso.panned
+    },
+    get inOverview() {
+      return settings.cameraMode === 'iso' && modes.iso.inOverview
+    },
+    get viewPoint() {
+      return modes.iso.viewPoint
+    },
+    /** 0..1 scale for the tilt-shift blur (camera zones with boards turn it down). */
+    get tiltShift() {
+      return settings.cameraMode === 'iso' ? modes.iso.tiltShift : 1
     },
     playIntro: () => modes.iso.playIntro(),
     focusOn,

@@ -159,6 +159,8 @@ export const settings = {
   },
 
   camera: {
+    /** Near clip plane, m. The chase view sits close to the car, so it stays small. */
+    near: 0.3,
     /** Horizontal distance the camera trails behind the car, m. */
     distance: 9.5,
     /** Height above the car, m. */
@@ -198,6 +200,12 @@ export const settings = {
    */
   isoCamera: {
     fov: 40,
+    /**
+     * Near clip plane, m. The iso view is never closer than ~11 m to what it
+     * looks at, and depth precision scales with this: 1 m (the reference's
+     * value) is ten times finer than the old 0.1 m at the overview distance.
+     */
+    near: 1,
     /** Degrees below horizontal (C2: atan(1.15 / hypot(1.135, 1.45))). */
     pitch: 32.0,
     /** Camera position seen from the car, degrees east of due south (C3). */
@@ -233,21 +241,40 @@ export const settings = {
       enabled: true,
       /** Furthest the view may wander from the arena centre, m. */
       maxRadius: 150,
-      /** How fast the view returns to the car once you drive, 1/s. */
-      returnRate: 3.5,
+      /**
+       * The glide back to the car (driving, F, a double-click, the Back to car
+       * chip) and to a minimap or Overview point: `returnDuration` s plus
+       * `returnPerMetre` s for every metre to go, never more than
+       * `returnMaxDuration`. Instant under reduced motion.
+       */
+      returnDuration: 0.7,
+      returnPerMetre: 0.008,
+      returnMaxDuration: 1.3,
       /** Pixels the pointer must move before a press becomes a drag (taps stay clicks). */
       dragThreshold: 6,
+      /** Two taps or clicks this close together (ms, CSS px) re-centre the view. */
+      doubleTapMs: 350,
+      doubleTapSlop: 30,
+      /** A press within this many CSS px of the touch joystick never pans. */
+      joystickMargin: 28,
+      /** Alt + arrow keys: camera distances per second (so it is faster when zoomed out). */
+      keySpeed: 0.9,
     },
     /**
-     * Zone camera angles (the reference tilts steeper over its project boards).
-     * Inside a zone the pitch and zoom ease to the zone's values; leaving
-     * restores the default. Circles in game space (x, z, radius m).
+     * Camera zones (the reference tilts steeper over its project boards and
+     * turns its blur off there). While the car is inside a zone the pitch
+     * eases to `pitch` (optional) and the tilt-shift blur to `tiltShift` x
+     * its normal strength (optional; 0 = none, for places with boards to
+     * read); leaving restores both. Circles in game space (x, z, radius m);
+     * the first zone that contains the car wins. Zoom stays the visitor's.
      */
     zoneRate: 1.6,
     zones: [
-      { id: 'decade_drive', x: 0, z: 70, radius: 26, pitch: 46, zoom: 0.45 },
-      { id: 'hq', x: 0, z: 0, radius: 24, pitch: 38, zoom: 0.7 },
-      { id: 'memory_lane', x: -91, z: -52, radius: 22, pitch: 42, zoom: 0.4 },
+      { id: 'decade_drive', x: 0, z: 70, radius: 26, pitch: 46, tiltShift: 0 },
+      { id: 'hq', x: 0, z: 0, radius: 24, pitch: 38 },
+      { id: 'memory_lane', x: -91, z: -52, radius: 22, pitch: 42, tiltShift: 0 },
+      // The Intelligence Update kiosk in the Innovation Lab: no tilt, just sharp covers.
+      { id: 'newsstand', x: -10.5, z: -107, radius: 9, tiltShift: 0 },
     ],
     /**
      * Opening shot: start at this zoom (negative = closer than minDistance)
@@ -761,6 +788,12 @@ export const settings = {
      * latest step, which stutters whenever a frame runs 0 or 2 steps.
      */
     interpolate: true,
+    /**
+     * A body that moved further than this in one physics step was teleported
+     * (a respawn, a reset, a debug placement), m: never blend across that.
+     * The car covers about 0.5 m in a step at boost speed.
+     */
+    teleportDistance: 3,
   },
 
   /**

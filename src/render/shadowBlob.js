@@ -30,6 +30,12 @@ export function createShadowBlob({ scene, world, RAPIER, vehicle }) {
     // Written into the depth buffer it would punch a hole in anything drawn
     // after it, and it sits only centimetres off the ground.
     depthWrite: false,
+    // The quad sits 3 cm up, exactly where the road markings and plaza tops
+    // are: pull it towards the camera so it never z-fights with them (the nav
+    // test caught the car's shadow flickering over a lane marking).
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -2,
     fog: true,
   })
 

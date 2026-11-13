@@ -113,9 +113,21 @@
       },
       {
         "action": "Look around the map",
-        "keyboard": "Drag with the mouse · F re-centres",
-        "gamepad": "Drive to return",
-        "touch": "Drag one finger"
+        "keyboard": "Drag with the mouse · Alt + arrow keys · click the minimap",
+        "gamepad": "—",
+        "touch": "Drag one finger · tap the minimap"
+      },
+      {
+        "action": "Back to the car",
+        "keyboard": "F · double-click the floor · just drive",
+        "gamepad": "Drive",
+        "touch": "Double-tap the floor · Back to car"
+      },
+      {
+        "action": "Overview of the arena",
+        "keyboard": "O (again to return)",
+        "gamepad": "—",
+        "touch": "Pinch out"
       },
       {
         "action": "Mute",
@@ -158,7 +170,12 @@
     "mapLabel": "Map. {objective}",
     "objective": "Next stamp: {place}, {m} m",
     "objectiveDash": "Dash: {place}, {m} m",
-    "objectiveDone": "Every stamp collected"
+    "objectiveDone": "Every stamp collected",
+    "backToCar": "Back to car",
+    "backToCarHint": "F",
+    "pannedAnnounce": "Looking around the map. Press F, or the Back to car button, to return to the car.",
+    "overviewAnnounce": "Overview of the whole arena. Press O or F to return to the car.",
+    "backAtCarAnnounce": "View back on the car."
   },
   "panel": {
     "regionLabel": "Station details",

@@ -178,6 +178,10 @@ export async function createArcadeVehicle({ scene, world, RAPIER, renderAssets }
     const r = body.rotation()
     curPos.set(t.x, t.y, t.z)
     curQuat.set(r.x, r.y, r.z, r.w)
+    // A pose that jumped (anything that moved the body directly, not only
+    // `respawn`) is shown where it is now, never smeared from the old place.
+    const limit = settings.render.teleportDistance
+    if (hasPrev && prevPos.distanceToSquared(curPos) > limit * limit) hasPrev = false
     const blend = hasPrev && settings.render.interpolate ? alpha : 1
     object3D.position.lerpVectors(prevPos, curPos, blend)
     object3D.quaternion.slerpQuaternions(prevQuat, curQuat, blend)

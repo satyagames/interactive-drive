@@ -87,6 +87,7 @@ export function createChaseCamera(camera) {
     const speedRatio = Math.min(vehicle.state.speed / Math.max(vehicle.topSpeed, 1e-3), 1)
     const targetFov = c.fov + c.speedFovBoost * speedRatio + (framing - 1) * 14
     camera.fov += (targetFov - camera.fov) * (1 - Math.exp(-3 * dt))
+    camera.near = c.near
     camera.updateProjectionMatrix()
   }
 

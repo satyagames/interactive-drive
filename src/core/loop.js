@@ -17,6 +17,12 @@ export function createLoop(update) {
 
   handle = requestAnimationFrame(tick)
 
+  // A hidden tab gets no frames. Without this the first frame back would be a
+  // 100 ms step (six physics steps at once) and the world would lurch forward.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) last = performance.now()
+  })
+
   return {
     stop() {
       running = false

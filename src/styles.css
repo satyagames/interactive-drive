@@ -25,6 +25,8 @@ html, body {
 #arena { height: 100%; }
 
 #app {
+  /* Drags and pinches on the floor are ours (map look), never the browser's. */
+  touch-action: none;
   display: block;
   width: 100%;
   height: 100%;
@@ -500,6 +502,35 @@ html, body {
 }
 .hud__hint.is-empty { display: none; }
 
+/* "Back to car": shown while the view is panned away (src/ui/panChip.js). */
+.hud__chip {
+  position: fixed;
+  left: 50%;
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 52px);
+  transform: translateX(-50%);
+  z-index: 12;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--brand);
+  background: var(--panel-bg);
+  color: var(--ui-fg);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.hud__chip[hidden] { display: none; }
+.hud__chip:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+/* Never dimmed with the rest of the HUD: it is the way back. */
+.hud.is-faded > .hud__chip { opacity: 1; }
+.has-touch-pad .hud__chip { bottom: calc(max(24px, env(safe-area-inset-bottom)) + 282px); }
+.has-touch-pad .hud__chip kbd { display: none; }
+
 /* Percy and the blob family speak in a bubble above their heads (src/showcase/mascots.js). */
 .speech {
   position: fixed;
@@ -549,6 +580,9 @@ html, body {
   pointer-events: none;
 }
 .hud__map svg { width: 120px; height: 120px; }
+/* Click or tap the map to pan the view there (src/ui/minimap.js). */
+.hud__map svg.is-pickable { pointer-events: auto; cursor: pointer; border-radius: 50%; touch-action: none; }
+.map__view { fill: none; stroke: #fff; stroke-width: 1.4; stroke-dasharray: 3 2; }
 .hud__map figcaption {
   max-width: 132px;
   padding: 3px 8px;
@@ -751,6 +785,9 @@ html, body {
   width: min(92vw, 460px);
 }
 .has-touch-pad #toasts { bottom: calc(max(24px, env(safe-area-inset-bottom)) + 250px); }
+/* The Back to car chip takes the toasts' slot while it shows; they stack above it. */
+body:has(#pan-home:not([hidden])) #toasts { bottom: calc(max(16px, env(safe-area-inset-bottom)) + 104px); }
+body.has-touch-pad:has(#pan-home:not([hidden])) #toasts { bottom: calc(max(24px, env(safe-area-inset-bottom)) + 334px); }
 .toast {
   padding: 8px 14px;
   border-radius: 999px;

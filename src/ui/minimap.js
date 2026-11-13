@@ -16,7 +16,7 @@ const NS = 'http://www.w3.org/2000/svg'
 const RADIUS = 54 // svg units, inside the -60..60 box
 const WORLD_RADIUS = 118 // m: the outer districts sit at ~105 m
 
-export function createMinimap({ root, seed, game, camera, vehicle }) {
+export function createMinimap({ root, seed, game, camera, vehicle, onPick = null, getView = null }) {
   const svg = root.querySelector('svg')
   const caption = root.querySelector('figcaption')
   const scale = RADIUS / WORLD_RADIUS
@@ -49,8 +49,30 @@ export function createMinimap({ root, seed, game, camera, vehicle }) {
 
   const objective = el('path', { class: 'map__objective', d: 'M0 -5 L5 0 L0 5 L-5 0 Z' }, world)
   const car = el('path', { class: 'map__car', d: 'M0 -5 L3.6 4 L0 2 L-3.6 4 Z' }, world)
+  // Where the view is looking while it is panned away from the car.
+  const view = el('circle', { class: 'map__view', r: 5 }, world)
+  view.style.display = 'none'
 
   const forward = new THREE.Vector3()
+  let mapYaw = 0
+
+  // Click or tap a point: the view pans there (the same pan as dragging the
+  // floor). A pointer shortcut; Alt + arrows and Explore do the same job
+  // from the keyboard.
+  if (onPick) {
+    svg.classList.add('is-pickable')
+    svg.addEventListener('click', (event) => {
+      const rect = svg.getBoundingClientRect()
+      if (!rect.width || !rect.height) return
+      // Client px -> svg units (the -60..60 box), then undo the map's turn.
+      const sx = ((event.clientX - rect.left) / rect.width) * 120 - 60
+      const sy = ((event.clientY - rect.top) / rect.height) * 120 - 60
+      if (Math.hypot(sx, sy) > RADIUS + 4) return
+      const c = Math.cos(mapYaw)
+      const s = Math.sin(mapYaw)
+      onPick({ x: (sx * c - sy * s) / scale, z: (sx * s + sy * c) / scale })
+    })
+  }
   let clock = 0
   let captionClock = Infinity
   let lastText = ''
@@ -93,7 +115,11 @@ export function createMinimap({ root, seed, game, camera, vehicle }) {
     // Turn the map so the camera's ground-forward points up.
     camera.getWorldDirection(forward)
     const yaw = Math.atan2(forward.x, -forward.z)
+    mapYaw = yaw
     world.setAttribute('transform', `rotate(${(-yaw * 180) / Math.PI})`)
+    const looking = getView?.()
+    view.style.display = looking ? '' : 'none'
+    if (looking) view.setAttribute('transform', `translate(${clamp(looking.x * scale)} ${clamp(looking.z * scale)})`)
     const p = vehicle.position
     const q = vehicle.quaternion
     forward.set(0, 0, -1).applyQuaternion(q)

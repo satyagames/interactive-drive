@@ -11,8 +11,9 @@ import { createTouchControls } from './touch.js'
  *   throttle  -1 (reverse) .. +1 (accelerate)
  *   steer     -1 (right) .. +1 (left)
  *   brake, boost, handbrake   held flags
+ *   panX, panY                map look (Alt + arrows), screen right / up
  * plus one-shot actions for this frame (respawn, horn, interact, camera,
- * mute, passport, menu): `consume(action)` returns true once if it was
+ * recenter, overview, mute, passport, menu): `consume(action)` returns true once if it was
  * pressed since the last `update()`. Presses nobody consumes that frame are
  * dropped, so a stray key can never fire a later phase's action late.
  */
@@ -30,7 +31,7 @@ export function createInput() {
 
   touch.setVisible(touch.isTouchDevice)
 
-  const state = { throttle: 0, steer: 0, brake: false, boost: false, handbrake: false }
+  const state = { throttle: 0, steer: 0, brake: false, boost: false, handbrake: false, panX: 0, panY: 0 }
   const frameEdges = new Set()
   let lastForcedVisibility = null
 
@@ -92,6 +93,9 @@ export function createInput() {
       state.brake = k.brake || g.brake || t.brake
       state.boost = k.boost || g.boost || t.boost
       state.handbrake = k.handbrake || g.handbrake
+      // Map look (Alt + arrows): screen right / up, -1..1. Never a driving input.
+      state.panX = k.panX
+      state.panY = k.panY
 
       frameEdges.clear()
       keyboard.drainEdges(frameEdges)

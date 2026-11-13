@@ -2,6 +2,35 @@
 
 Pursuit Arena build log. One entry per phase (see `docs/pursuit-arena/06-phased-prompts.md`).
 
+## R1 — Harden the navigation features (2026-11-13)
+
+Plan: `docs/pursuit-arena/11-reference-features-prompt.md` R1. Nav test: 55 of 55 (was 31 of 34).
+
+- **R0 gaps fixed**: `F` re-centres (the press is now queued); the return to the car is a timed glide
+  (82 m in 1.11 s, was 1.79 s); the PACE oval no longer shares a plane with its plaza and the HQ "1" no longer
+  has overlapping faces (generator fixes, `pace` and `hq` regenerated, polished and exported); the iso camera's
+  near plane is 1 m (`isoCamera.near`, ten times the depth precision); the dead zone `zoom` field is removed.
+- **Interpolation**: the car and props are never blended across a teleport (`render.teleportDistance`, also for
+  placements that bypass `respawn`; prop drop-ins and resets clear their history); a tab coming back starts from
+  a normal frame. Checked: chase camera, teleport, drop-in, menu pause and resume (navTest A4 to A7).
+- **Map look**: pinch uses only fingers that went down on the floor, so a thumb on the joystick is never the
+  second finger; a drag never starts on the HUD, the minimap or near the joystick; grab cursor only in the iso
+  view; double-click or double-tap re-centres; a focusable **Back to car** chip with an aria-live message;
+  click or tap the minimap to pan there (a dashed ring shows where the view is); `Alt` + arrow keys pan;
+  `O` eases to the overview and back. Reduced motion makes every pan and zoom transition instant. An area or
+  Dash hold no longer counts as driving, so it no longer pulls a panned view home.
+- **Camera zones**: the tilt-shift blur eases to 0 with the pitch over Decade Drive, Memory Lane and the
+  newsstand (`isoCamera.zones[].tiltShift`); both blur passes are skipped at 0.
+- **Shadows**: the car and prop shadow quads carry a depth offset (the car's shadow flickered over lane markings).
+- **Nav test**: sections A (7), B (9), E (11, new), C (11), D (17). The flicker sweep names the surfaces that
+  fight, can save a crop of them (`captureFlicker`), and its control is a planted coplanar pair.
+- **Checks**: `probe:feel` 19/19, `content:check` OK, `build` OK (JS 3,928.42 kB, +6.4 kB).
+- **Screenshots**: `docs/pursuit-arena/lookdev/R1/` (panned view with the chip, the overview, the Decade Drive
+  zone with the blur off). After only: these features had no "before".
+- **Not done**: GPU ms on high and low tiers (no new effect was added; zones skip two passes); Lighthouse
+  re-run; the ground AO bake (`base`) was not re-polished after the two district fixes; a hand playtest with a
+  real mouse, trackpad, phone and gamepad (doc 11 playtest list); tab hidden and visible on a real tab.
+
 ## R0 — Reference features: baseline and audit (2026-11-13)
 
 Plan: `docs/pursuit-arena/11-reference-features-prompt.md`. No feature changes in this phase.

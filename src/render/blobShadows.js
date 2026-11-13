@@ -70,6 +70,10 @@ export function createBlobShadows({ scene, capacity = 512 }) {
     fragmentShader: FRAGMENT,
     transparent: true,
     depthWrite: false,
+    // Same reason as the car's shadow (shadowBlob.js): never fight the floor art.
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -2,
     fog: true,
   })
 

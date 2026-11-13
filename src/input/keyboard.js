@@ -4,7 +4,9 @@
  * Bindings follow the 2019 reference (docs/pursuit-arena/01 §2.2) and doc 05
  * §4: Space or Ctrl brakes, Shift boosts, H honks, Enter/E interacts, C
  * switches camera, M mutes, P opens the passport, Esc the menu. Q (handbrake
- * drift) is our addition.
+ * drift) is our addition, and so is map look: F re-centres the view, O
+ * toggles the overview, and Alt + the arrow keys pan it (the arrows on their
+ * own still drive).
  */
 
 const KEY_MAP = {
@@ -20,13 +22,17 @@ const KEY_MAP = {
   Enter: 'interact', NumpadEnter: 'interact', KeyE: 'interact',
   KeyC: 'camera',
   KeyF: 'recenter',
+  KeyO: 'overview',
   KeyM: 'mute',
   KeyP: 'passport',
   Escape: 'menu',
 }
 
 /** Actions that fire once per press rather than being held. */
-export const EDGE_ACTIONS = new Set(['respawn', 'horn', 'interact', 'camera', 'mute', 'passport', 'menu'])
+export const EDGE_ACTIONS = new Set(['respawn', 'horn', 'interact', 'camera', 'recenter', 'overview', 'mute', 'passport', 'menu'])
+
+/** Alt + these pan the map instead of driving. */
+const PAN_KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' }
 
 /** Keys that activate a focused button or link. */
 const ACTIVATION_KEYS = new Set(['Space', 'Enter', 'NumpadEnter'])
@@ -48,10 +54,25 @@ function ownedByFocusedControl(event) {
 export function createKeyboard(target = window) {
   const held = new Set()
   const pressed = new Set()
+  const panHeld = new Set()
+  /** True from the first Alt + arrow until Alt comes up: that Alt press is ours. */
+  let altUsed = false
 
   const onKeyDown = (event) => {
     const action = KEY_MAP[event.code]
     if (!action) return
+    // Alt + arrows look around the map. Checked before the modifier rule
+    // below, and it must cancel the default: Alt + Left is "Back" in browsers.
+    const panKey = PAN_KEYS[event.code]
+    if (panKey && event.altKey && !event.ctrlKey && !event.metaKey) {
+      if (ownedByFocusedControl(event)) return
+      event.preventDefault()
+      // An arrow that was already driving stops driving (its repeats arrive here).
+      held.delete(action)
+      panHeld.add(panKey)
+      altUsed = true
+      return
+    }
     // Leave browser shortcuts alone (Ctrl+R reload etc.) -- Ctrl itself
     // still brakes, matching the reference.
     if ((event.ctrlKey || event.metaKey || event.altKey) && action !== 'brake') return
@@ -66,13 +87,25 @@ export function createKeyboard(target = window) {
   }
 
   const onKeyUp = (event) => {
+    if (event.code === 'AltLeft' || event.code === 'AltRight') {
+      panHeld.clear()
+      // Releasing Alt on its own focuses the browser's menu bar in some browsers.
+      if (altUsed) event.preventDefault()
+      altUsed = false
+      return
+    }
     const action = KEY_MAP[event.code]
     if (!action) return
     held.delete(action)
+    if (PAN_KEYS[event.code]) panHeld.delete(PAN_KEYS[event.code])
   }
 
   // Losing focus mid-throttle would otherwise leave the car pinned.
-  const onBlur = () => held.clear()
+  const onBlur = () => {
+    held.clear()
+    panHeld.clear()
+    altUsed = false
+  }
 
   target.addEventListener('keydown', onKeyDown)
   target.addEventListener('keyup', onKeyUp)
@@ -86,6 +119,9 @@ export function createKeyboard(target = window) {
         brake: held.has('brake'),
         boost: held.has('boost'),
         handbrake: held.has('handbrake'),
+        /** Map look: screen right and screen up, -1..1. */
+        panX: (panHeld.has('right') ? 1 : 0) - (panHeld.has('left') ? 1 : 0),
+        panY: (panHeld.has('up') ? 1 : 0) - (panHeld.has('down') ? 1 : 0),
       }
     },
     /** Moves this frame's one-shot presses into `into` and forgets them. */

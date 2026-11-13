@@ -78,6 +78,10 @@
       <!-- Bottom centre: the contextual hint (visual; the announcer and the
            Controls screen carry the same information for screen readers). -->
       <p id="hint" class="hud__hint" aria-hidden="true"></p>
+      <!-- Shown while the view is panned away from the car (src/ui/panChip.js). -->
+      <button id="pan-home" class="hud__chip" type="button" hidden>
+        <span data-ui="hud.backToCar"></span> <kbd data-ui="hud.backToCarHint"></kbd>
+      </button>
       <!-- Bottom right: compass / minimap (src/ui/minimap.js). -->
       <figure id="minimap" class="hud__map">
         <svg role="img" viewBox="-60 -60 120 120"></svg>

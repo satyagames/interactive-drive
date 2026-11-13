@@ -192,6 +192,7 @@ export function createDynamicProps({ world, RAPIER, blobs }) {
     }
     prop.prevPos.set(t.x, t.y, t.z)
     prop.prevQuat.set(r.x, r.y, r.z, r.w)
+    prop.hasPrev = true
   }
 
   function writeInstance(prop, alpha = 1) {
@@ -199,8 +200,10 @@ export function createDynamicProps({ world, RAPIER, blobs }) {
     const r = prop.body.rotation()
     position.set(t.x, t.y, t.z)
     quaternion.set(r.x, r.y, r.z, r.w)
-    // Blend from the pre-step pose; skip after a teleport (reset, drop-in end).
-    if (alpha < 1 && prop.prevPos && settings.render.interpolate && prop.prevPos.distanceToSquared(position) < 25) {
+    // Blend from the pre-step pose; never across a teleport (a reset, the
+    // start or end of a drop-in, anything that set the body's position).
+    const limit = settings.render.teleportDistance
+    if (alpha < 1 && prop.hasPrev && settings.render.interpolate && prop.prevPos.distanceToSquared(position) < limit * limit) {
       position.lerpVectors(prop.prevPos, position, alpha)
       quaternion.slerpQuaternions(prop.prevQuat, quaternion, alpha)
     }
@@ -218,7 +221,20 @@ export function createDynamicProps({ world, RAPIER, blobs }) {
     const p = prop.home.position
     prop.body.setTranslation({ x: p.x, y: p.y + height, z: p.z }, true)
     prop.body.setRotation(prop.home.quaternion, true)
+    prop.hasPrev = false
     dropping.push({ prop, height, delay, duration, time: 0 })
+  }
+
+  /** Put a prop back where it was authored, asleep (mini-game resets). Never blended. */
+  function resetProp(prop) {
+    const h = prop.home.position
+    prop.body.setTranslation({ x: h.x, y: h.y, z: h.z }, true)
+    prop.body.setRotation(prop.home.quaternion, true)
+    prop.body.setLinvel({ x: 0, y: 0, z: 0 }, true)
+    prop.body.setAngvel({ x: 0, y: 0, z: 0 }, true)
+    prop.body.sleep()
+    prop.hasPrev = false
+    prop.awake = true // one sync at the resting pose
   }
 
   /** Hide a not-yet-revealed district's blob shadows (its batches are hidden by the caller). */
@@ -247,6 +263,7 @@ export function createDynamicProps({ world, RAPIER, blobs }) {
         body.setLinvel({ x: 0, y: 0, z: 0 }, true)
         body.setAngvel({ x: 0, y: 0, z: 0 }, true)
         body.sleep()
+        drop.prop.hasPrev = false
         drop.prop.awake = true // one last sync at the resting pose
         dropping.splice(i, 1)
       }
@@ -309,6 +326,7 @@ export function createDynamicProps({ world, RAPIER, blobs }) {
     props,
     addDistrict,
     dropIn,
+    resetProp,
     hideDistrict,
     fixedUpdate,
     update,

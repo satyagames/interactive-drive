@@ -28,4 +28,11 @@
   frame-to-frame differences for the camera.
 - Synthetic `PointerEvent`s with `pointerId: 1, pointerType: 'mouse'` and `KeyboardEvent`s on `window` drive the
   real pan and key paths; with `post.render` stubbed the whole nav test runs in about 4 s.
+- Rapier shape queries do not see colliders added since the last `world.step`: step before searching for clear
+  spots right after districts stream in.
+- A flicker "control" must plant a known coplanar pair; removing depth offsets proves nothing once depth
+  precision is good. Identical coplanar quads do not fight: turn one so its depth rounds differently.
+- Overlapping boxes of the same material still flicker: their AO bakes differ on the shared faces (HQ "1").
+- Shell heredocs fail in this environment when the text has an odd number of apostrophes: write patch scripts
+  with the Write tool instead.
 - A key in `KEY_MAP` that should fire once must also be in `EDGE_ACTIONS`, or `input.consume` never sees it.

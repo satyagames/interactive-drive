@@ -140,6 +140,8 @@ export function createPostProcessing({ renderer, scene, camera, canvas }) {
   composer.addPass(glowPass)
   const isTouch = window.matchMedia?.('(pointer: coarse)').matches ?? false
   let glowHex = null
+  /** 0..1 from the camera zones: boards are read without the blur. */
+  let tiltShiftScale = 1
 
   const vignettePass = new ShaderPass(VignetteShader)
   composer.addPass(vignettePass)
@@ -213,7 +215,8 @@ export function createPostProcessing({ renderer, scene, camera, canvas }) {
     bloomPass.highPassUniforms.smoothWidth.value = bloom.softness
 
     const tilt = settings.post.tiltShift
-    const tiltOn = tilt.enabled && tilt.strength > 0 && (tilt.onTouch || !isTouch)
+    // At scale 0 the two passes are skipped outright, not run at zero strength.
+    const tiltOn = tilt.enabled && tilt.strength * tiltShiftScale > 0.01 && (tilt.onTouch || !isTouch)
     tiltShiftX.enabled = tiltOn
     tiltShiftY.enabled = tiltOn
     if (tiltOn) {
@@ -221,7 +224,7 @@ export function createPostProcessing({ renderer, scene, camera, canvas }) {
       const texel = tiltShiftX.uniforms.uTexel.value.set(1 / target.width, 1 / target.height)
       tiltShiftY.uniforms.uTexel.value.copy(texel)
       // Radius in CSS pixels, so the look holds at any pixel ratio.
-      const k = tilt.strength * renderer.getPixelRatio()
+      const k = tilt.strength * tiltShiftScale * renderer.getPixelRatio()
       tiltShiftX.uniforms.uStrength.value = k
       tiltShiftY.uniforms.uStrength.value = k
       tiltShiftX.uniforms.uFalloff.value = tilt.falloff
@@ -273,5 +276,10 @@ export function createPostProcessing({ renderer, scene, camera, canvas }) {
     composer.dispose()
   }
 
-  return { composer, render, setSize, dispose, passes: { renderPass, bloomPass, tiltShiftX, tiltShiftY, glowPass, vignettePass } }
+  /** Scale the tilt-shift blur, 0..1 (`cameraRig.tiltShift`, once per frame). */
+  function setTiltShiftScale(value) {
+    tiltShiftScale = Math.min(Math.max(value, 0), 1)
+  }
+
+  return { composer, render, setSize, setTiltShiftScale, dispose, passes: { renderPass, bloomPass, tiltShiftX, tiltShiftY, glowPass, vignettePass } }
 }

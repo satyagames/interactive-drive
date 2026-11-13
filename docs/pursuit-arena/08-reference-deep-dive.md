@@ -4,7 +4,7 @@ Source: `brunosimon/folio-2019` (MIT, three 0.164, cannon 0.6, Howler, GSAP) and
 (MIT, three 0.183 WebGPU + TSL, Rapier 0.17), both read in full on 2026-10-28.
 This doc describes **techniques and tuning numbers**, not code. Never copy code or assets from either repo (CLAUDE.md rule 1).
 "Ours" shows the status in this repo, re-audited in R0 (2026-11-13, commit `56875d8`, doc 11): ✅ done, 🟡 partial, ❌ missing.
-R0 tally for §A: 22 done, 17 partial, 5 missing, 1 n/a. Measured evidence comes from `npm run probe:feel` and **Debug → Run nav test** (`src/debug/navTest.js`).
+R0 tally for §A: 22 done, 17 partial, 5 missing, 1 n/a. After R1 (#19, #22, #28): 25 done, 14 partial, 5 missing, 1 n/a. Measured evidence comes from `npm run probe:feel` and **Debug → Run nav test** (`src/debug/navTest.js`).
 
 ## A. 2019: the micro-feature catalogue
 
@@ -37,10 +37,10 @@ R0 tally for §A: 22 done, 17 partial, 5 missing, 1 n/a. Measured evidence comes
 |---|---|---|---|
 | 17 | Lens | FOV 40, near 1, **far 80** (a short far plane keeps depth precision high) | 🟡 FOV 40 ✅; near 0.1 / far 1000 (`core/renderer.js:25`) against the reference's 1 / 80: depth precision is ~100× coarser, which is why coplanar surfaces fight when zoomed out (navTest D) |
 | 18 | Angle | fixed direction vector, never rotates with the car | ✅ `camera/isoFollowCamera.js` |
-| 19 | **Zone angles** | entering the projects zone tweens the camera to a steeper, more top-down angle over 2 s (power1.inOut), so boards on the floor read better; leaving restores it | 🟡 pitch eases in and out (navTest C, all 6 pass); the zones' `zoom` values in `config.js` are never read; tilt-shift does not fade in zones (#28) |
+| 19 | **Zone angles** | entering the projects zone tweens the camera to a steeper, more top-down angle over 2 s (power1.inOut), so boards on the floor read better; leaving restores it | ✅ R1: pitch eases in and out and the tilt-shift blur eases to 0 with it in the board zones (Decade Drive, Memory Lane, the newsstand): navTest C, 11 rows. The dead `zoom` field is gone (zoom stays the visitor's) |
 | 20 | Follow | exponential easing 0.15 per frame; follows x/y only (not jumps) | ✅ exact integration for a moving target (`camera/isoFollowCamera.js`; navTest A2 0.0003) |
 | 21 | Zoom | wheel/pinch over a range, eased 0.1 | ✅ wheel and pinch, `isoCamera.maxZoom` 1.8 |
-| 22 | **Pan** | drag on the floor (raycast) to look around; any drive key snaps back | 🟡 drag works (navTest B1–B4, B7–B9). **`F` does nothing**: `recenter` is missing from `EDGE_ACTIONS` (`input/keyboard.js:36`), so the press is never queued. A long pan (82 m) takes 1.79 s to return (target < 1.5 s). No "back to car" control, no keyboard or gamepad pan |
+| 22 | **Pan** | drag on the floor (raycast) to look around; any drive key snaps back | ✅ R1 (navTest B1–B9, E1–E11): drag, pinch (two fingers on the floor only), `F`, double-click, the Back to car chip, minimap click, `Alt` + arrows and Overview (`O`); the return is a timed glide (82 m in 1.11 s); never starts on the HUD, minimap or joystick. Gamepad pan is R6 |
 
 ### A4. Rendering and look (the "secret sauce")
 | # | Feature | Detail | Ours |
@@ -50,7 +50,7 @@ R0 tally for §A: 22 done, 17 partial, 5 missing, 1 n/a. Measured evidence comes
 | 25 | **Indirect bounce** | the matcap shader mixes in a warm floor-bounce colour on down-facing surfaces near the ground (strength by height falloff × facing angle). This is what makes objects feel *sat in* a warm world | ❌ |
 | 26 | Baked floor shadows | per-object contact-shadow textures under static objects, tinted the **same warm colour** (never grey) | 🟡 AO bakes; blob and car-shadow tints are warm umber `0x2b1d14` (`config.js` `blobShadows.tint`, `shadow.tint`); the baked AO multiply is untinted |
 | 27 | Dynamic blob shadows | per prop; offset along a fixed sun vector by height; alpha = ((maxD − h)/maxD)² with maxD 3; extra fade by orientation | ✅ `render/blobShadows.js` |
-| 28 | **Tilt-shift** | separable 9-tap blur whose strength is 1 − sin(π·y): sharp centre band, soft top and bottom, which makes the world feel miniature. Off on touch; fades to 0 in the projects zone | 🟡 `render/post.js` (own shader), off on touch and the low tier; **no fade to 0 inside zones** (`syncUniforms` has no zone input) |
+| 28 | **Tilt-shift** | separable 9-tap blur whose strength is 1 − sin(π·y): sharp centre band, soft top and bottom, which makes the world feel miniature. Off on touch; fades to 0 in the projects zone | ✅ `render/post.js` (own shader), off on touch and the low tier; R1: scaled by the camera zone (`isoCamera.zones[].tiltShift`, `post.setTiltShiftScale`), both passes skipped at 0 |
 | 29 | **Radial glow** | a full-screen pass mixing a pale pink toward the upper-centre of the frame (alpha 0.55, radius 0.7), like a soft sky haze | ✅ `post.glow`, retinted warm for our palette |
 | 30 | Pixel ratio | forced to 2 (desktop crispness over speed) | 🟡 ours caps at 1.5 (deliberate, `config.js` `render.pixelRatioCap`) |
 | 31 | **Reveal** | the matcap shader has a reveal progress (0 → 1 over 3 s); floor shadows and blob alpha fade in afterwards with staggered delays | 🟡 `world/reveal.js` scales districts in and drops props; no shader reveal, no staggered shadow fade |
