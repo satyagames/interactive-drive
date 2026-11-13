@@ -4,6 +4,7 @@ import { rebuild } from '../config.js'
 import { districtFrames } from './frame.js'
 import { createHotspots } from './hotspots.js'
 import { createMascots } from './mascots.js'
+import { createPeopleWalls } from './peopleWalls.js'
 import { createWinsBoard } from './winsBoard.js'
 
 /**
@@ -88,7 +89,7 @@ export async function createShowcase({ scene, world, RAPIER, seed, gameWorld, re
     },
   }
 
-  const modules = (await Promise.all([createMascots(ctx), createWinsBoard(ctx)])).filter(Boolean)
+  const modules = (await Promise.all([createMascots(ctx), createWinsBoard(ctx), createPeopleWalls(ctx)])).filter(Boolean)
 
   const built = new Set()
   const stats = new Map()
